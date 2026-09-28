@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 500" width="1024" height="500">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#63BEFF"/><stop offset=".8" stop-color="#CBEBFF"/></linearGradient>
+  </defs>
+  <rect width="1024" height="500" fill="url(#sky)"/>
+  <circle cx="930" cy="92" r="46" fill="#FFD54A"/>
+  <circle cx="930" cy="92" r="66" fill="#FFD54A" opacity=".22"/>
+  <g fill="#fff" opacity=".95">
+    <rect x="560" y="70" width="110" height="34" rx="17"/><circle cx="595" cy="70" r="24"/><circle cx="632" cy="76" r="17"/>
+    <rect x="96" y="380" width="0" height="0"/>
+  </g>
+  <ellipse cx="760" cy="600" rx="460" ry="200" fill="#8EDFA8"/>
+  <ellipse cx="880" cy="640" rx="420" ry="190" fill="#5CCB8A"/>
+  <path transform="translate(640 200) scale(0.55)" fill="#FFD54A" d="M0 -50 C6 -14 14 -6 50 0 C14 6 6 14 0 50 C-6 14 -14 6 -50 0 C-14 -6 -6 -14 0 -50Z"/>
+  <path transform="translate(930 300) scale(0.4)" fill="#FFFFFF" d="M0 -50 C6 -14 14 -6 50 0 C14 6 6 14 0 50 C-6 14 -14 6 -50 0 C-14 -6 -6 -14 0 -50Z"/>
+  
+  <defs>
+    <radialGradient id="fg-body" cx="36%" cy="30%" r="78%">
+      <stop offset="0" stop-color="#FFBCC8"/><stop offset=".58" stop-color="#FF8FA3"/><stop offset="1" stop-color="#EE6684"/>
+    </radialGradient>
+  </defs>
+  <g transform="translate(790 300) scale(1.75) translate(-100 -104)">
+    <ellipse cx="100" cy="191" rx="58" ry="8" fill="#000" opacity=".16"/>
+    <path d="M100 48 C98 36 102 28 100 16" stroke="#3FA86E" stroke-width="5" stroke-linecap="round" fill="none"/>
+    <path d="M100 32 C88 21 75 24 70 31 C79 40 92 40 100 32Z" fill="#5CCB8A"/>
+    
+      <path d="M100 25 C112 13 126 16 131 23 C123 33 108 33 100 25Z" fill="#76DDA0"/>
+      <circle cx="100" cy="7" r="6" fill="#FFD54A"/><circle cx="92" cy="13" r="6" fill="#FFD54A"/>
+      <circle cx="108" cy="13" r="6" fill="#FFD54A"/><circle cx="95" cy="21" r="6" fill="#FFD54A"/>
+      <circle cx="105" cy="21" r="6" fill="#FFD54A"/><circle cx="100" cy="15" r="5" fill="#FF8C42"/>
+    <ellipse cx="72" cy="179" rx="17" ry="9" fill="#E35C7A"/>
+    <ellipse cx="128" cy="179" rx="17" ry="9" fill="#E35C7A"/>
+    <ellipse cx="29" cy="134" rx="10" ry="17" fill="#F27A93" transform="rotate(22 29 134)"/>
+    <ellipse cx="171" cy="134" rx="10" ry="17" fill="#F27A93" transform="rotate(-22 171 134)"/>
+    <path d="M100 44 C150 44 176 84 176 124 C176 162 146 182 100 182 C54 182 24 162 24 124 C24 84 50 44 100 44Z" fill="url(#fg-body)"/>
+    <ellipse cx="100" cy="148" rx="46" ry="30" fill="#FFE4EA"/>
+    <ellipse cx="76" cy="106" rx="10" ry="13" fill="#2A2350"/><circle cx="79.5" cy="101" r="4.2" fill="#fff"/><circle cx="73" cy="111.5" r="1.8" fill="#fff"/>
+    <ellipse cx="124" cy="106" rx="10" ry="13" fill="#2A2350"/><circle cx="127.5" cy="101" r="4.2" fill="#fff"/><circle cx="121" cy="111.5" r="1.8" fill="#fff"/>
+    <ellipse cx="59" cy="127" rx="10" ry="6" fill="#FF5577" opacity=".5"/>
+    <ellipse cx="141" cy="127" rx="10" ry="6" fill="#FF5577" opacity=".5"/>
+    <path d="M86 121 Q100 146 114 121 Z" fill="#2A2350" stroke="#2A2350" stroke-width="4" stroke-linejoin="round"/><path d="M93 133 Q100 141 107 133" fill="#FF7A95"/>
+  </g>
+  <text x="72" y="215" font-family="Grandstander" font-size="120" fill="#2A2350">Desafia</text>
+  <text x="76" y="278" font-family="Atkinson Hyperlegible" font-weight="bold" font-size="34" fill="#2A2350">Pequenos desafios, grandes hábitos.</text>
+  <g font-family="Atkinson Hyperlegible" font-weight="bold" font-size="24" fill="#2A2350">
+    <rect x="76" y="318" width="150" height="48" rx="24" fill="#FFFFFF" opacity=".92"/><text x="151" y="350" text-anchor="middle">Missões</text>
+    <rect x="240" y="318" width="150" height="48" rx="24" fill="#FFFFFF" opacity=".92"/><text x="315" y="350" text-anchor="middle">Estrelas</text>
+    <rect x="404" y="318" width="150" height="48" rx="24" fill="#FFFFFF" opacity=".92"/><text x="479" y="350" text-anchor="middle">Prêmios</text>
+  </g>
+</svg>

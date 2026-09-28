@@ -1,0 +1,22 @@
+{
+  "name": "desafia",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Desafia: pequenos desafios, grandes hábitos. Jogo infantil de rotina com portal dos pais.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "icons": "python3 brand/gerar_icones.py"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.117.2"
+  },
+  "devDependencies": {
+    "vite": "^7.3.6"
+  }
+}
