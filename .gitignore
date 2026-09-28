@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+.vercel
+.DS_Store
+*.log
+# Android: nunca suba a chave de assinatura
+*.keystore
+*.jks
+android/twa/app/build/
+android/twa/.gradle/
+android/twa/local.properties
