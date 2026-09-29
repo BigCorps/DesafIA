@@ -1,74 +1,122 @@
-# DesafIA 0.3
+# DesafIA 0.4.0
 
-**Cuide do Pipo cuidando da sua rotina.**
+**Pequenos desafios, grandes hábitos.**
 
-O DesafIA é um jogo familiar de hábitos: a criança cumpre missões reais, um responsável confirma, ela recebe estrelas para recompensas e XP para fazer o Pipo crescer e transformar a casa dele.
+O DesafIA é um jogo familiar de hábitos: a criança cumpre missões reais, um responsável confirma, ela recebe estrelas para recompensas e XP para fazer seu personagem crescer e transformar o mundo dele.
 
-## Arquitetura
+## Arquitetura final
 
 - **Jogo infantil:** `/` — Vite/PWA, preparado para TWA Android.
-- **Portal dos pais:** `/pais/` — Magic Link, família, aprovações e configuração.
+- **Portal dos pais:** `/pais/` — Google OAuth, família, aprovações e configuração.
 - **Backend:** mesmo projeto Supabase da minhAi, em schema isolado `desafia`.
-- **Deploy:** projeto Vercel próprio para o repositório DesafIA.
-- **Modo infantil conectado:** segredo aleatório local do aparelho; **não usa Anonymous Auth**.
+- **Deploy:** projeto Vercel próprio do repositório DesafIA.
+- **Criança conectada:** segredo aleatório local do aparelho; **não usa Anonymous Auth**.
 - **Modo local:** funciona sem Supabase para demonstração e testes rápidos.
 
 ```text
 BigCorps/DesafIA
        │
-       ├── Vercel → desafia.app
+       ├── Vercel → desafia.vercel.app (teste)
+       │            depois: domínio definitivo
        │
        └── Supabase minhAi
               └── schema desafia
 ```
 
-## Por que o aparelho infantil não usa Supabase Anonymous Auth
+## Segurança do aparelho infantil
 
-O projeto Supabase é compartilhado por vários produtos BigCorps. Uma sessão criada com `signInAnonymously()` recebe o papel Postgres `authenticated`, o que obrigaria a revisar todas as políticas legadas dos outros produtos antes de ativar esse provider globalmente.
+O Supabase é compartilhado por vários produtos BigCorps. Para não habilitar Anonymous Auth globalmente, o aparelho infantil cria um segredo aleatório de 256 bits. O banco guarda somente o SHA-256 desse segredo em `desafia.devices`.
 
-Nesta versão o aparelho cria um segredo aleatório de 256 bits no navegador. O banco guarda apenas `SHA-256(segredo)` em `desafia.devices`. Todas as ações infantis passam por RPCs próprias e precisam apresentar esse segredo. O responsável pode revogar o aparelho a qualquer momento.
+As ações da criança passam por RPCs específicas e precisam apresentar o segredo. O responsável pode revogar o aparelho pelo portal a qualquer momento.
 
-Isso mantém o DesafIA isolado sem alterar o comportamento do Auth dos demais apps.
+## Funcionalidades desta versão
 
-## O que mudou
-
-- migration totalmente isolada em `desafia.*`;
-- nenhuma alteração global em `public`;
-- nenhuma tabela exposta diretamente a `anon` ou `authenticated`;
+- schema isolado `desafia.*`, sem alterações globais em `public`;
+- tabelas sem acesso direto para `anon` ou `authenticated`;
 - RPCs separadas para responsáveis e aparelhos infantis;
-- segredo de aparelho + hash criptográfico + código de pareamento de uso único;
-- limite de tentativas por aparelho durante o pareamento;
-- polling leve no jogo, evitando Realtime público para a criança;
+- Google OAuth para responsáveis, reutilizando o Auth da minhAi;
+- código de pareamento de uso único + segredo do aparelho;
 - XP separado de estrelas;
-- curva de níveis mais longa;
-- Casa do Pipo e desbloqueios visuais;
-- meta cooperativa semanal da família;
-- bônus de dia completo: `+25 ⭐ / +15 XP`;
-- sequência de dias sem linguagem punitiva;
-- onboarding infantil com nome/cor;
-- portal dos pais reorganizado, com pendências primeiro;
-- Node 22+ e versões npm pinadas.
+- níveis de progressão longa;
+- casa/mundo do personagem;
+- meta cooperativa semanal;
+- sequência de dias sem punição;
+- bônus de dia completo `+25 ⭐ / +15 XP`;
+- painel inferior recolhível e modo imersivo;
+- Pipo, Lumi, Nino e Zupi como sugestões, além de nome livre;
+- reações aleatórias do personagem ao toque;
+- botão dos pais dentro do jogo protegido por continha;
+- navegação jogo ↔ portal dentro da PWA;
+- cache offline do shell e assets já visitados/pré-carregados;
+- aviso de nova versão da PWA antes de ativar um service worker novo;
+- safe areas para celulares com recorte/notch.
 
-## Instalação e teste
+## Supabase
 
-Siga **na ordem**:
-
-[`TESTE-PASSO-A-PASSO.md`](TESTE-PASSO-A-PASSO.md)
-
-A migration correta é:
+A migration correta é somente:
 
 `supabase/migrations/20260929000100_desafia_schema.sql`
 
-Depois dela, use a consulta somente leitura:
+A migration antiga foi removida do ZIP final para evitar aplicação acidental.
 
-`supabase/VERIFICACAO-APOS-INSTALAR.sql`
+Se você **já aplicou essa migration no Supabase da minhAi**, a versão 0.4.0 não exige SQL adicional.
 
-## Rodar localmente
+O schema `desafia` deve estar incluído em **Data API → Exposed schemas**. As tabelas continuam protegidas; o frontend acessa apenas as RPCs explicitamente liberadas.
+
+## Variáveis do Vercel
+
+No projeto Vercel **desafia**, configure:
+
+```env
+VITE_SUPABASE_URL=https://SEU_PROJECT_REF.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_CHAVE_REAL_COMPLETA
+```
+
+O frontend rejeita placeholders como `sb_publishable_...` para evitar um falso estado de configuração válida.
+
+Nunca coloque `service_role` no frontend.
+
+## Google OAuth
+
+O portal dos responsáveis usa o provider Google já configurado no Supabase compartilhado da minhAi.
+
+Em **Authentication → URL Configuration → Redirect URLs**, mantenha o endereço utilizado pelo DesafIA, por exemplo:
+
+```text
+https://desafia.vercel.app/pais/
+```
+
+Quando houver domínio definitivo, adicione também:
+
+```text
+https://desafia.app/pais/
+```
+
+Não é necessário trocar o Site URL global da minhAi.
+
+## PWA e atualização
+
+O service worker não força atualização no meio de uma ação. Quando uma versão nova estiver instalada e aguardando, o usuário verá:
+
+**Nova versão pronta → Atualizar**
+
+Ao tocar em **Atualizar**, o novo worker assume e a página recarrega uma única vez.
+
+Para releases futuras que alterem o app, incremente a constante `CACHE` em `public/sw.js` para uma nova versão.
+
+## Instalação e testes
+
+Siga:
+
+[`TESTE-PASSO-A-PASSO.md`](TESTE-PASSO-A-PASSO.md)
+
+Comandos locais:
 
 ```bash
 cp .env.example .env.local
 npm install
 npm run check
+npm run build
 npm run dev
 ```
 
@@ -77,17 +125,7 @@ URLs:
 - jogo: `http://localhost:5173/`
 - pais: `http://localhost:5173/pais/`
 
-Sem `.env.local`, o jogo infantil ainda pode ser testado pelo botão **Experimentar sem conectar**.
-
-## Banco e segurança
-
-O browser não recebe `INSERT`, `UPDATE`, `DELETE` nem `SELECT` direto nas tabelas `desafia.*`.
-
-- `anon`: pode executar apenas as RPCs infantis explicitamente liberadas;
-- `authenticated`: pode executar apenas as RPCs de responsáveis explicitamente liberadas;
-- `service_role`: permanece disponível para operações server-side futuras;
-- RLS fica habilitado em todas as tabelas como defesa adicional;
-- nenhuma função do DesafIA recebe `EXECUTE` por herança de `PUBLIC`.
+Sem `.env.local`, o jogo pode ser testado por **Experimentar sem conectar**.
 
 ## Estrutura
 
@@ -95,10 +133,10 @@ O browser não recebe `INSERT`, `UPDATE`, `DELETE` nem `SELECT` direto nas tabel
 src/
   game/                 jogo infantil
   pais/                 portal dos responsáveis
-  shared/               Pipo, progressão e estilos
+  shared/               personagem, progressão, PWA e estilos
   lib/supabase.js       clientes Supabase + segredo local do aparelho
 supabase/
-  migrations/           instalação do schema desafia
+  migrations/           migration isolada do DesafIA
   VERIFICACAO-...sql    auditoria somente leitura
   ATIVAR-PLUS-TESTE.sql helper opcional de teste
 public/
@@ -106,26 +144,21 @@ public/
   sw.js
   icons/
   .well-known/assetlinks.json
-brand/
-  icone.svg
-  gerar_icones.py
-android/
-  README.md
 ```
 
 ## Regra de produto
 
-> **A criança cuida do Pipo cuidando da própria rotina.**
+> **A criança cuida do personagem cuidando da própria rotina.**
 
-Estrelas dão recompensa rápida. XP dá progressão longa. A Casa do Pipo torna hábitos reais visíveis no mundo do personagem. Ranking e ligas são opcionais; a meta principal é cooperativa dentro da família.
+Estrelas dão recompensa rápida. XP dá progressão longa. O mundo do personagem torna hábitos reais visíveis. Ranking e ligas são opcionais; a meta principal é cooperativa dentro da família.
 
-## Antes do lançamento público
+## Antes da Play Store
 
-- preencher os contatos em `/privacidade/` e `/termos/`;
-- revisar os textos legais para público infantil;
-- configurar SMTP do Supabase para Magic Links em produção;
-- preencher o SHA-256 real em `public/.well-known/assetlinks.json` antes da Play Store;
-- concluir os formulários aplicáveis da Play Console;
-- gerar e commitar `package-lock.json` depois do primeiro `npm install` neste ZIP.
+- preencher/revisar contatos e textos de `/privacidade/` e `/termos/`;
+- preencher o SHA-256 real em `public/.well-known/assetlinks.json`;
+- concluir os formulários de público infantil/dados aplicáveis da Play Console;
+- testar a TWA com o domínio definitivo;
+- testar Google OAuth em aparelho real;
+- validar atualização de uma versão instalada para a seguinte.
 
 Desenvolvido por **BigCorps** · Tecnologia **minhAi**.

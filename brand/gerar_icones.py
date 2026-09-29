@@ -28,7 +28,7 @@ try:
     small=ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',30)
 except: font=small=None
 d.text((70,150),'DesafIA',font=font,fill='white')
-d.text((72,225),'Cuide do Pipo cuidando\nda sua rotina.',font=small,fill=(242,238,255))
+d.text((72,225),'Pequenos desafios,\ngrandes hábitos.',font=small,fill=(242,238,255))
 icon=Image.open(ROOT/'brand/play-icone-512.png').convert('RGBA').resize((360,360))
 im.alpha_composite(icon,(620,70))
 im.convert('RGB').save(ROOT/'brand/play-arte-destaque-1024x500.png',quality=94,optimize=True)

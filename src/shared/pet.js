@@ -1,5 +1,7 @@
 import { stageOf } from './progression.js';
 
+export const PET_NAMES = ['Pipo', 'Lumi', 'Nino', 'Zupi'];
+
 export const COLORS = {
   rosa:    { name: 'Rosa',    g: ['#FFBCC8', '#FF8FA3', '#EE6684'], limb: '#F27A93', foot: '#E35C7A', belly: '#FFE4EA', cheek: '#FF5577' },
   azul:    { name: 'Azul',    g: ['#C4E6FF', '#72B9FF', '#4A8FE6'], limb: '#62A8F2', foot: '#3F7FD6', belly: '#E6F4FF', cheek: '#FF7A9A' },

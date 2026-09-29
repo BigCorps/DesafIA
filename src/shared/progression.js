@@ -29,10 +29,10 @@ export function stageOf(xp = 0) {
 }
 
 export const HOUSE_ITEMS = [
-  { id: 'tapete', level: 1, icon: '🟪', title: 'Tapete do Pipo', text: 'Um cantinho confortável para começar.' },
+  { id: 'tapete', level: 1, icon: '🟪', title: 'Tapete macio', text: 'Um cantinho confortável para começar.' },
   { id: 'luminaria', level: 2, icon: '💡', title: 'Luminária', text: 'Uma luz nova para a casa.' },
   { id: 'planta', level: 3, icon: '🪴', title: 'Plantinha', text: 'A casa começa a ganhar vida.' },
-  { id: 'livros', level: 4, icon: '📚', title: 'Cantinho de leitura', text: 'Histórias para o Pipo explorar.' },
+  { id: 'livros', level: 4, icon: '📚', title: 'Cantinho de leitura', text: 'Histórias para explorar.' },
   { id: 'arvore', level: 5, icon: '🌳', title: 'Árvore do jardim', text: 'Um jardim de verdade começa aqui.' },
   { id: 'almofada', level: 6, icon: '🛋️', title: 'Cantinho de descanso', text: 'Depois de um bom dia, hora de relaxar.' },
   { id: 'telescopio', level: 7, icon: '🔭', title: 'Telescópio', text: 'Novos mundos para descobrir.' },

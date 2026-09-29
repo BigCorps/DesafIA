@@ -32,7 +32,7 @@ function initial() {
     missions:MISSIONS.map(([id,icon,title,stars,xpReward,time])=>({id,icon,title,star_reward:stars,xp_reward:xpReward,time_of_day:time,status:'todo'})),
     rewards:REWARDS.map(([id,icon,title,cost])=>({id,icon,title,cost,pending:false})),
     recentRewards:[],dailyBonusDay:null,completedDays:[],familyGoal:500,
-    nickname:'Você',familyName:'Família do Pipo'
+    nickname:'Você',familyName:'Minha família'
   };
 }
 function load() {

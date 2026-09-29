@@ -2,7 +2,9 @@ import { createClient } from '@supabase/supabase-js';
 
 const url = import.meta.env.VITE_SUPABASE_URL;
 const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY;
-export const supabaseReady = Boolean(url && key);
+const urlLooksReal = /^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/i.test(String(url || '')) && !String(url || '').includes('SEU_PROJECT_REF');
+const keyLooksReal = Boolean(key) && !String(key).includes('...') && !String(key).includes('SUA_');
+export const supabaseReady = urlLooksReal && keyLooksReal;
 export const DESAFIA_SCHEMA = 'desafia';
 
 export function createParentSupabase(storageKey = 'desafia-pais-auth') {

@@ -1,20 +1,43 @@
 import './game.css';
-import { petMarkup, applyLook, COLORS, HATS, ACCS } from '../shared/pet.js';
+import { petMarkup, applyLook, COLORS, HATS, ACCS, PET_NAMES } from '../shared/pet.js';
 import { HOUSE_ITEMS, levelOf, levelProgress } from '../shared/progression.js';
 import { createKidSupabase, supabaseReady, friendlyError } from '../lib/supabase.js';
 import { createCloud } from './cloud.js';
 import { createLocal } from './local.js';
+import { setupPWA } from '../shared/pwa.js';
 
 const $=(id)=>document.getElementById(id);
 const esc=(v)=>String(v??'').replace(/[&<>"']/g,(c)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const seenRewardKey='desafia-seen-rewards-v3';
 const seenDayKey='desafia-seen-day-v3';
+const panelStateKey='desafia-panel-collapsed-v1';
 const TIMES=['dia','tarde','noite'];
 const PERIOD={manha:'de manhã',tarde:'à tarde',noite:'à noite'};
 
-let api=null,snap=null,tab='missoes',parentMode=false,unsubscribe=()=>{},refreshing=false;
+let api=null,snap=null,tab='missoes',parentMode=false,unsubscribe=()=>{},refreshing=false,lastReaction=-1,reactionLockedUntil=0;
 const kidSb=createKidSupabase();
+
+function petName(){return String(snap?.petName||$('onboardName')?.value||'Pipo').trim().slice(0,12)||'Pipo'}
+function readPanelState(){try{return localStorage.getItem(panelStateKey)==='1'}catch{return false}}
+function syncPetLabels(){
+  const name=petName(),collapsed=document.querySelector('.game-shell')?.classList.contains('panel-collapsed');
+  $('panelToggleTitle').textContent=collapsed?'Abrir atividades':`Ver só o ${name}`;
+  $('pet').setAttribute('aria-label',`Brincar com ${name}`);
+  $('scene').setAttribute('aria-label',`Mundo de ${name}`);
+  if($('celebrationPetName'))$('celebrationPetName').textContent=name;
+}
+function setPanelCollapsed(collapsed,{persist=true}={}){
+  const shell=document.querySelector('.game-shell');
+  if(!shell)return;
+  shell.classList.toggle('panel-collapsed',collapsed);
+  $('panelToggle').setAttribute('aria-expanded',String(!collapsed));
+  $('panelToggleHint').textContent=collapsed?'toque para ver missões, casa e prêmios':'toque para esconder missões e menus';
+  syncPetLabels();
+  if(persist){try{localStorage.setItem(panelStateKey,collapsed?'1':'0')}catch{}}
+}
+function expandPanel(){setPanelCollapsed(false)}
+setPanelCollapsed(readPanelState(),{persist:false});
 
 $('petMount').innerHTML=petMarkup('main');
 $('connectPet').innerHTML=petMarkup('connect');
@@ -25,13 +48,53 @@ const mouth=petSvg.querySelector('.mouth');
 let timeIdx=(()=>{const h=new Date().getHours();return h>=6&&h<17?0:h<19?1:2})();
 $('scene').dataset.time=TIMES[timeIdx];
 $('skyBtn').addEventListener('click',()=>{timeIdx=(timeIdx+1)%3;$('scene').dataset.time=TIMES[timeIdx];});
+$('panelToggle').addEventListener('click',()=>setPanelCollapsed(!document.querySelector('.game-shell').classList.contains('panel-collapsed')));
 
 function openModal(id){$(id).classList.add('open');}
 function closeModal(id){$(id).classList.remove('open');}
 function toast(title,text){$('toastTitle').textContent=title;$('toastText').textContent=text;$('toast').classList.add('show');setTimeout(()=>$('toast').classList.remove('show'),2500);}
-function say(text,ms=2200){const b=$('bubble');b.textContent=text;b.classList.add('show');clearTimeout(say.t);say.t=setTimeout(()=>b.classList.remove('show'),ms);}
+function say(text,ms=2200){
+  const b=$('bubble'),scene=$('scene');
+  b.textContent=text;b.classList.add('show');scene.classList.add('speaking');
+  clearTimeout(say.t);
+  say.t=setTimeout(()=>{b.classList.remove('show');scene.classList.remove('speaking')},ms);
+}
 function happy(){mouth?.setAttribute('d','M86 121 Q100 146 114 121 Z');mouth?.setAttribute('fill','#2A2350');clearTimeout(happy.t);happy.t=setTimeout(()=>{mouth?.setAttribute('d','M88 124 Q100 136 112 124');mouth?.setAttribute('fill','none');},1100);}
-function jump(){happy();if(reduce)return;const p=$('pet');p.classList.remove('jump');void p.offsetWidth;p.classList.add('jump');}
+function clearPetMotions(){$('pet').classList.remove('jump','giggle','wiggle','twirl','squish','dance')}
+function motion(name){
+  happy();
+  if(reduce)return;
+  const p=$('pet');clearPetMotions();void p.offsetWidth;p.classList.add(name);
+  clearTimeout(motion.t);motion.t=setTimeout(()=>p.classList.remove(name),1100);
+}
+function jump(){motion('jump')}
+function blink(ms=360){
+  petSvg.classList.add('is-blinking');
+  clearTimeout(blink.t);blink.t=setTimeout(()=>petSvg.classList.remove('is-blinking'),reduce?40:ms);
+}
+function tinyTap(){
+  if(reduce)return;
+  $('pet').animate([{filter:'brightness(1)'},{filter:'brightness(1.08)'},{filter:'brightness(1)'}],{duration:180});
+}
+function haptic(pattern=12){try{if(!reduce&&navigator.vibrate)navigator.vibrate(pattern)}catch{}}
+function petReaction(){
+  const now=Date.now();
+  if(now<reactionLockedUntil){tinyTap();return}
+  reactionLockedUntil=now+(reduce?650:1050);
+  const name=petName();
+  const reactions=[
+    ()=>{jump();burst(['💜','✨'],7);say('Uhuu! Olha o meu pulo! 😄',1350);haptic(18)},
+    ()=>{motion('giggle');burst(['😄','✨'],6);say('Hihi! Isso faz cócegas!',1350);haptic([10,35,10])},
+    ()=>{motion('wiggle');say('Olha eu balançando! ✨',1300);haptic(12)},
+    ()=>{motion('twirl');burst(['⭐','✨'],5);say('Uma voltinha!',1200);haptic([10,30,10])},
+    ()=>{blink(650);motion('squish');say('Pisca-pisca! 👀',1250);haptic(9)},
+    ()=>{motion('dance');burst(['🎵','💜'],6);say('Dancinha do dia! 🎵',1450);haptic([9,30,9,30,9])},
+    ()=>{blink(900);say(`Oi! Eu sou ${name}. Que bom que você veio! 💜`,1600);haptic(8)}
+  ];
+  let idx=Math.floor(Math.random()*reactions.length);
+  if(reactions.length>1&&idx===lastReaction)idx=(idx+1+Math.floor(Math.random()*(reactions.length-1)))%reactions.length;
+  lastReaction=idx;reactions[idx]();
+}
 function burst(chars=['⭐','✨','💜'],n=12){
   if(reduce)n=Math.min(n,3);const rect=$('pet').getBoundingClientRect(),scene=$('scene').getBoundingClientRect();
   const x=rect.left-scene.left+rect.width/2,y=rect.top-scene.top+rect.height/2;
@@ -43,13 +106,13 @@ function markSeen(key,id){const a=[...new Set([...seenList(key),id])].slice(-100
 function renderStats(){
   if(!snap)return;const p=levelProgress(snap.xp);$('starCount').textContent=snap.wallet;$('petNameTitle').textContent=snap.petName;$('lvlText').textContent=`Nível ${p.level} · ${p.remaining} XP para o próximo`;$('xpFill').style.width=`${p.pct}%`;$('xpBar').setAttribute('aria-valuenow',String(p.pct));applyLook(petSvg,snap.look,snap.xp);
   const goal=snap.familyGoal||{current:snap.weekPoints||0,target:500};$('familyGoalText').textContent=`${goal.current} / ${goal.target} ⭐`;$('familyGoalFill').style.width=`${Math.min(100,Math.round(goal.current/Math.max(1,goal.target)*100))}%`;
-  const level=p.level;$('sceneTree').classList.toggle('unlocked',level>=5);$('sceneBooks').classList.toggle('unlocked',level>=4);$('scenePlant').classList.toggle('unlocked',level>=3);$('sceneTelescope').classList.toggle('unlocked',level>=7);
+  const level=p.level;$('sceneTree').classList.toggle('unlocked',level>=5);$('sceneBooks').classList.toggle('unlocked',level>=4);$('scenePlant').classList.toggle('unlocked',level>=3);$('sceneTelescope').classList.toggle('unlocked',level>=7);syncPetLabels();document.title=`DesafIA — ${snap.petName}`;
 }
 function nextMission(){return snap?.missions?.find((m)=>m.status==='todo'||m.status==='rejected')||null;}
 function renderNext(){
   const m=nextMission();const box=$('nextCard');
   if(!snap){box.innerHTML='';return}
-  if(!m){const pending=snap.missions?.some((x)=>x.status==='pending');box.innerHTML=`<div class="next-row"><span class="next-icon">${pending?'⏳':'🌟'}</span><div class="next-body"><small>${pending?'Quase lá':'Tudo feito por aqui'}</small><strong>${pending?'Um adulto ainda vai confirmar':'O Pipo está orgulhoso de você!'}</strong></div></div>`;return;}
+  if(!m){const pending=snap.missions?.some((x)=>x.status==='pending');box.innerHTML=`<div class="next-row"><span class="next-icon">${pending?'⏳':'🌟'}</span><div class="next-body"><small>${pending?'Quase lá':'Tudo feito por aqui'}</small><strong>${pending?'Um adulto ainda vai confirmar':`${esc(snap.petName)} está feliz com você!`}</strong></div></div>`;return;}
   box.innerHTML=`<div class="next-row"><span class="next-icon">${esc(m.icon)}</span><div class="next-body"><small>Próxima missão</small><strong>${esc(m.title)}</strong><span class="next-reward">+${m.star_reward} ⭐ · +${m.xp_reward} XP</span></div><button class="btn btn-main" data-act="done" data-id="${m.id}">Fiz!</button></div>`;
 }
 function missionHTML(m){
@@ -74,7 +137,7 @@ function familyView(){
 function visualView(){
   const level=levelOf(snap.xp);const colors=Object.entries(COLORS).map(([id,c])=>`<button class="color-dot" data-act="color" data-id="${id}" aria-label="${c.name}" aria-pressed="${snap.look?.color===id}" style="background:linear-gradient(135deg,${c.g[0]},${c.g[2]})"></button>`).join('');
   const choices=(list,type)=>list.map((x)=>{const locked=level<x.level;return `<button class="choice ${locked?'locked':''}" data-act="${type}" data-id="${x.id}" ${locked?'aria-disabled="true"':''} aria-pressed="${snap.look?.[type==='hat'?'hat':'acc']===x.id}"><span>${locked?'🔒':x.em}</span>${esc(x.name)}${locked?`<small>Nível ${x.level}</small>`:''}</button>`}).join('');
-  return `<div class="panel-title"><h2>Meu ${esc(snap.petName)}</h2><span class="badge badge-soft">Nível ${level}</span></div><div class="visual-preview" id="visualPreview">${petMarkup('preview')}</div><label class="field">Nome<input class="input" id="petNameInput" maxlength="12" value="${esc(snap.petName)}"></label><strong class="picker-title">Cor</strong><div class="color-picker">${colors}</div><strong class="picker-title">Chapéu</strong><div class="choices">${choices(HATS,'hat')}</div><strong class="picker-title">Acessório</strong><div class="choices">${choices(ACCS,'acc')}</div>`;
+  const names=PET_NAMES.map((name)=>`<button class="name-chip" data-act="name" data-id="${esc(name)}" aria-pressed="${snap.petName===name}">${esc(name)}</button>`).join('');return `<div class="panel-title"><h2>Meu ${esc(snap.petName)}</h2><span class="badge badge-soft">Nível ${level}</span></div><div class="visual-preview" id="visualPreview">${petMarkup('preview')}</div><label class="field">Nome<input class="input" id="petNameInput" maxlength="12" value="${esc(snap.petName)}"></label><div class="name-suggestions compact">${names}</div><strong class="picker-title">Cor</strong><div class="color-picker">${colors}</div><strong class="picker-title">Chapéu</strong><div class="choices">${choices(HATS,'hat')}</div><strong class="picker-title">Acessório</strong><div class="choices">${choices(ACCS,'acc')}</div>`;
 }
 function renderPanel(){
   if(!snap)return;document.querySelectorAll('.nav-item').forEach((b)=>b.classList.toggle('active',b.dataset.tab===tab));
@@ -98,17 +161,33 @@ $('codeBtn').addEventListener('click',async()=>{const code=$('codeInput').value;
 $('localBtn').addEventListener('click',startLocal);
 
 let onboardLook={color:'rosa',hat:'none',acc:'none'};
+function syncOnboardNames(){const value=$('onboardName').value.trim();$('onboardNames').querySelectorAll('[data-name-choice]').forEach((b)=>b.setAttribute('aria-pressed',String(b.dataset.nameChoice===value)))}
+$('onboardNames').innerHTML=PET_NAMES.map((name)=>`<button type="button" class="name-chip" data-name-choice="${esc(name)}">${esc(name)}</button>`).join('');
+$('onboardNames').addEventListener('click',(e)=>{const b=e.target.closest('[data-name-choice]');if(!b)return;$('onboardName').value=b.dataset.nameChoice;syncOnboardNames();syncPetLabels()});
+$('onboardName').addEventListener('input',()=>{syncOnboardNames();syncPetLabels()});
+syncOnboardNames();
 $('onboardColors').innerHTML=Object.entries(COLORS).map(([id,c])=>`<button class="color-dot" data-color="${id}" aria-label="${c.name}" style="background:linear-gradient(135deg,${c.g[0]},${c.g[2]})"></button>`).join('');
 $('onboardColors').addEventListener('click',(e)=>{const b=e.target.closest('[data-color]');if(!b)return;onboardLook.color=b.dataset.color;applyLook($('onboardPet').querySelector('svg'),onboardLook,0);$('onboardColors').querySelectorAll('button').forEach((x)=>x.setAttribute('aria-pressed',String(x===b)));});
 $('onboardDone').addEventListener('click',async()=>{const name=$('onboardName').value.trim()||'Pipo';try{await savePet(name,onboardLook);localStorage.setItem(api.kind==='local'?'desafia-local-onboarded':'desafia-cloud-onboarded','1');closeModal('onboardingModal');say(`Oi! Eu sou o ${name}. Vamos crescer juntos?`,3000)}catch(e){$('onboardError').textContent=friendlyError(e)}});
 applyLook($('connectPet').querySelector('svg'),{color:'lilas'},0);applyLook($('onboardPet').querySelector('svg'),onboardLook,0);
 
 function gate(){return new Promise((resolve)=>{const a=2+Math.floor(Math.random()*8),b=2+Math.floor(Math.random()*8);$('gateQ').textContent=`${a} × ${b} = ?`;$('gateInput').value='';$('gateError').textContent='';openModal('gateModal');const ok=()=>{if(Number($('gateInput').value)===a*b){cleanup();closeModal('gateModal');resolve(true)}else $('gateError').textContent='Tente de novo.'};const cancel=()=>{cleanup();closeModal('gateModal');resolve(false)};const cleanup=()=>{$('gateOk').removeEventListener('click',ok);$('gateCancel').removeEventListener('click',cancel)};$('gateOk').addEventListener('click',ok);$('gateCancel').addEventListener('click',cancel);});}
-$('adultsBtn').addEventListener('click',async()=>{if(!(await gate()))return;if(api?.kind==='local'){parentMode=true;tab='missoes';renderAll();$('adultsBody').innerHTML='<p>Modo adulto local ativado. Você pode confirmar missões e prêmios diretamente nas abas do jogo.</p>';openModal('adultsModal');}else{$('adultsBody').innerHTML='<p>Use o portal dos pais para aprovar missões, criar desafios e administrar a família.</p><a class="btn btn-main btn-block" href="/pais/" target="_blank" rel="noopener">Abrir portal dos pais</a>';openModal('adultsModal')}});
+async function openAdults(){
+  if(!(await gate()))return;
+  if(api?.kind==='local'){
+    parentMode=true;tab='missoes';renderAll();
+    $('adultsBody').innerHTML='<p>Modo adulto local ativado. Você pode confirmar missões e prêmios diretamente nas abas do jogo.</p>';
+    openModal('adultsModal');
+    return;
+  }
+  window.location.assign('/pais/');
+}
+$('adultsBtn').addEventListener('click',openAdults);
+$('adultsQuickBtn').addEventListener('click',openAdults);
 $('adultsClose').addEventListener('click',()=>closeModal('adultsModal'));
 $('celebrationClose').addEventListener('click',()=>closeModal('celebrationModal'));
-$('familyGoalBtn').addEventListener('click',()=>{tab='familia';renderPanel();});
-$('pet').addEventListener('click',()=>{jump();burst(['💜','✨'],7);say(['Oi! 💜','Você está indo muito bem!','Qual é nossa próxima missão?','Seu esforço deixa meu mundo mais bonito!'][Math.floor(Math.random()*4)])});
+$('familyGoalBtn').addEventListener('click',()=>{tab='familia';expandPanel();renderPanel();});
+$('pet').addEventListener('click',petReaction);
 document.querySelector('.game-nav').addEventListener('click',(e)=>{const b=e.target.closest('[data-tab]');if(!b)return;tab=b.dataset.tab;renderPanel();});
 
 async function action(act,id,el){if(!api)return;el?.setAttribute('disabled','');try{
@@ -118,6 +197,7 @@ async function action(act,id,el){if(!api)return;el?.setAttribute('disabled','');
   if(api.kind==='local'&&act==='reject')await api.decideMission(id,false);
   if(api.kind==='local'&&act==='deliver')await api.decideReward(id,true);
   if(api.kind==='local'&&act==='deny')await api.decideReward(id,false);
+  if(act==='name'){await savePet(id,snap.look);say(`Agora eu sou ${id}! 💜`,1500);return}
   if(['color','hat','acc'].includes(act)){
     const level=levelOf(snap.xp),source=act==='hat'?HATS:act==='acc'?ACCS:null,item=source?.find((x)=>x.id===id);if(item&&level<item.level)return;
     const look={...snap.look};if(act==='color')look.color=id;else look[act]=id;await savePet(snap.petName,look);return;
@@ -127,7 +207,7 @@ async function action(act,id,el){if(!api)return;el?.setAttribute('disabled','');
 document.addEventListener('click',(e)=>{const b=e.target.closest('[data-act]');if(b)action(b.dataset.act,b.dataset.id,b);});
 
 (async function boot(){
-  if('serviceWorker'in navigator&&location.protocol==='https:')navigator.serviceWorker.register('/sw.js').catch(()=>{});
+  setupPWA();
   if(supabaseReady){try{if(await startCloud())return}catch(e){console.warn('cloud boot',e)}}
   openModal('connectModal');
 })();

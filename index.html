@@ -3,16 +3,19 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <title>DesafIA — cuide do Pipo cuidando da sua rotina</title>
-  <meta name="description" content="Pequenos desafios, grandes hábitos. Cuide do Pipo cumprindo missões reais em família.">
+  <title>DesafIA — pequenos desafios, grandes hábitos</title>
+  <meta name="description" content="Pequenos desafios, grandes hábitos. Cuide do seu companheiro cumprindo missões reais em família.">
   <meta name="theme-color" content="#7658F5">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 </head>
 <body class="game-body">
   <div class="game-shell">
-    <main class="scene" id="scene" data-time="dia" aria-label="Mundo do Pipo">
+    <main class="scene" id="scene" data-time="dia" aria-label="Mundo do personagem">
       <div class="sky-stars" aria-hidden="true"></div>
       <button class="sunmoon" id="skyBtn" aria-label="Mudar período do dia"></button>
       <div class="cloud c1" aria-hidden="true"></div><div class="cloud c2" aria-hidden="true"></div>
@@ -35,22 +38,33 @@
         <span>🏡 Meta da família</span><strong id="familyGoalText">0 / 500 ⭐</strong><i><b id="familyGoalFill"></b></i>
       </button>
 
+      <button class="adult-quick" id="adultsQuickBtn" aria-label="Abrir área dos pais">🔒 <span>Pais</span></button>
       <div class="speech" id="bubble" aria-live="polite"></div>
-      <button class="pet" id="pet" aria-label="Fazer carinho no Pipo"><span id="petMount"></span></button>
+      <button class="pet" id="pet" aria-label="Brincar com o personagem"><span id="petMount"></span></button>
       <div class="fx" id="fx" aria-hidden="true"></div>
     </main>
 
-    <section class="play-panel">
-      <div class="next-card" id="nextCard"></div>
-      <nav class="game-nav" aria-label="Áreas do jogo">
-        <button data-tab="missoes" class="nav-item active"><span>🗺️</span><small>Missões</small></button>
-        <button data-tab="casa" class="nav-item"><span>🏡</span><small>Casa</small></button>
-        <button data-tab="premios" class="nav-item"><span>🎁</span><small>Prêmios</small></button>
-        <button data-tab="familia" class="nav-item"><span>👨‍👩‍👧</span><small>Família</small></button>
-        <button data-tab="visual" class="nav-item"><span>🎨</span><small>Visual</small></button>
-      </nav>
-      <div class="panel-content" id="panel" role="region" aria-live="polite"></div>
-      <footer class="game-footer"><button class="adult-link" id="adultsBtn">🔒 Área dos adultos</button></footer>
+    <section class="play-panel" id="playPanel">
+      <button class="panel-toggle" id="panelToggle" type="button" aria-expanded="true" aria-controls="panelBody">
+        <span class="panel-grip" aria-hidden="true"></span>
+        <span class="panel-toggle-copy">
+          <strong id="panelToggleTitle">Ver só o personagem</strong>
+          <small id="panelToggleHint">toque para esconder missões e menus</small>
+        </span>
+        <span class="panel-chevron" aria-hidden="true">⌄</span>
+      </button>
+      <div class="panel-body" id="panelBody">
+        <div class="next-card" id="nextCard"></div>
+        <nav class="game-nav" aria-label="Áreas do jogo">
+          <button data-tab="missoes" class="nav-item active"><span>🗺️</span><small>Missões</small></button>
+          <button data-tab="casa" class="nav-item"><span>🏡</span><small>Casa</small></button>
+          <button data-tab="premios" class="nav-item"><span>🎁</span><small>Prêmios</small></button>
+          <button data-tab="familia" class="nav-item"><span>👨‍👩‍👧</span><small>Família</small></button>
+          <button data-tab="visual" class="nav-item"><span>🎨</span><small>Visual</small></button>
+        </nav>
+        <div class="panel-content" id="panel" role="region" aria-live="polite"></div>
+        <footer class="game-footer"><button class="adult-link" id="adultsBtn">🔒 Área dos adultos</button></footer>
+      </div>
     </section>
   </div>
 
@@ -77,6 +91,7 @@
       <p>Escolha meu nome e minha cor. Depois já fazemos nossa primeira missão.</p>
       <div class="stack">
         <label class="field">Meu nome<input class="input" id="onboardName" maxlength="12" value="Pipo" autocomplete="off"></label>
+        <div><strong class="picker-title">Sugestões de nome</strong><div class="name-suggestions" id="onboardNames" aria-label="Sugestões de nome"></div><small class="picker-help">Ou digite qualquer outro nome acima.</small></div>
         <div><strong class="picker-title">Minha cor</strong><div class="color-picker" id="onboardColors"></div></div>
         <div class="error" id="onboardError"></div>
         <button class="btn btn-main btn-block" id="onboardDone">Pronto! Vamos jogar</button>
@@ -93,7 +108,7 @@
   </div>
 
   <div class="modal celebration" id="celebrationModal" role="dialog" aria-modal="true">
-    <div class="modal-card celebration-card"><div class="big-celebration">🎉</div><h2>Dia completo!</h2><p>O Pipo teve um dia incrível graças a você.</p><div class="bonus">+25 ⭐ &nbsp; +15 XP</div><button class="btn btn-gold btn-block" id="celebrationClose">Obaaa!</button></div>
+    <div class="modal-card celebration-card"><div class="big-celebration">🎉</div><h2>Dia completo!</h2><p><strong id="celebrationPetName">Seu companheiro</strong> teve um dia incrível graças a você.</p><div class="bonus">+25 ⭐ &nbsp; +15 XP</div><button class="btn btn-gold btn-block" id="celebrationClose">Obaaa!</button></div>
   </div>
 
   <script type="module" src="/src/game/main.js"></script>

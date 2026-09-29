@@ -1,38 +1,30 @@
-# DesafIA Android (TWA)
+# Android / TWA — DesafIA
 
-O app Android deve ser uma **Trusted Web Activity** apontando para `https://desafia.app/`.
+O app Android deve ser uma **Trusted Web Activity (TWA)** apontando para o domínio de produção do DesafIA.
 
-## Antes de gerar o AAB
+Durante os testes web você pode usar `https://desafia.vercel.app/`. Para a Play Store, prefira definir primeiro o domínio definitivo e gerar o pacote Android já com ele, evitando uma atualização só para trocar de host.
 
-1. publique a versão web na Vercel;
-2. confirme `https://desafia.app/manifest.webmanifest`;
-3. confirme os ícones em `/icons/`;
-4. obtenha o SHA-256 da chave **Play App Signing** na Play Console;
-5. substitua o placeholder em `public/.well-known/assetlinks.json`;
-6. faça novo deploy e confirme `https://desafia.app/.well-known/assetlinks.json`.
+## Antes de gerar
 
-## Configuração sugerida
+1. publique a versão final na Vercel;
+2. confirme o `manifest.webmanifest` no domínio escolhido;
+3. gere/obtenha o certificado de assinatura Android;
+4. coloque o SHA-256 correto em `public/.well-known/assetlinks.json`;
+5. faça deploy novamente;
+6. confirme `/.well-known/assetlinks.json` publicamente;
+7. teste Jogo → Pais → Google → retorno ao `/pais/` em aparelho real.
 
-- Application ID / package: `app.desafia`
-- Start URL: `https://desafia.app/`
-- Display mode: standalone/TWA
-- Orientation: portrait
-- Theme color: `#7658F5`
-- Background: `#7658F5`
+## Configuração conceitual
 
-## Gerar
+- Start URL: `/`
+- Scope: `/`
+- Display: `standalone`
+- Orientação: `portrait`
+- Cor principal: `#7658F5`
+- Área dos pais: `/pais/`
 
-A forma mais simples é importar `https://desafia.app` no PWABuilder e gerar o pacote Android. Também é possível usar Bubblewrap.
+Você pode usar PWABuilder ou Bubblewrap para gerar a TWA. O `assetlinks.json` precisa corresponder exatamente ao package name e ao certificado usados na versão assinada.
 
-O jogo infantil não contém checkout, preço ou link comercial. O portal dos pais fica no navegador e pode ser acessado separadamente pelo responsável.
+## Observação sobre Google OAuth
 
-## Quando uma nova versão Android é necessária
-
-Mudanças normais do jogo chegam pela web. Gere novo AAB quando mudar algo nativo, por exemplo:
-
-- package name;
-- ícone/splash do pacote;
-- permissões Android;
-- configurações TWA;
-- assinatura/asset links;
-- requisitos da Play Store que exijam novo bundle.
+Ao sair da origem do DesafIA para a tela do Google, o Android pode mostrar UI do navegador/Custom Tab temporariamente. O importante é que, após autenticar, o redirect permitido do Supabase retorne para `<domínio>/pais/` e a sessão seja recuperada pelo `supabase-js`.
