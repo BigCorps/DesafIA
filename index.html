@@ -2,99 +2,100 @@
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Desafia</title>
-  <meta name="description" content="Pequenos desafios, grandes hábitos. O bichinho cresce quando a criança cumpre a rotina.">
-  <meta name="theme-color" content="#7B61FF">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>DesafIA — cuide do Pipo cuidando da sua rotina</title>
+  <meta name="description" content="Pequenos desafios, grandes hábitos. Cuide do Pipo cumprindo missões reais em família.">
+  <meta name="theme-color" content="#7658F5">
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="icon" href="/icons/icon-192.png" type="image/png" sizes="192x192">
   <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
-  <link rel="preload" href="/fonts/Grandstander.ttf" as="font" type="font/ttf" crossorigin>
 </head>
-<body class="game">
-<div class="app">
-  <main class="scene" id="scene" data-time="dia">
-    <div class="twinkles" aria-hidden="true">
-      <i style="left:12%;top:18%"></i><i style="left:28%;top:34%"></i><i style="left:46%;top:12%"></i>
-      <i style="left:62%;top:28%"></i><i style="left:20%;top:52%"></i><i style="left:54%;top:46%"></i>
-      <i style="left:38%;top:24%;width:3px;height:3px"></i><i style="left:8%;top:40%;width:3px;height:3px"></i>
-    </div>
-    <div class="cloud" style="width:78px;left:12%;top:150px" aria-hidden="true"></div>
-    <div class="cloud" style="width:64px;left:64%;top:196px;transform:scale(.8)" aria-hidden="true"></div>
-    <button class="sky-body" id="skyBtn" aria-label="Mudar a hora do dia"></button>
-    <div class="hill hill-back" aria-hidden="true"></div>
-    <div class="hill hill-front" aria-hidden="true"></div>
+<body class="game-body">
+  <div class="game-shell">
+    <main class="scene" id="scene" data-time="dia" aria-label="Mundo do Pipo">
+      <div class="sky-stars" aria-hidden="true"></div>
+      <button class="sunmoon" id="skyBtn" aria-label="Mudar período do dia"></button>
+      <div class="cloud c1" aria-hidden="true"></div><div class="cloud c2" aria-hidden="true"></div>
+      <div class="hill back" aria-hidden="true"></div><div class="hill front" aria-hidden="true"></div>
+      <div class="scene-object tree" id="sceneTree" aria-hidden="true">🌳</div>
+      <div class="scene-object books" id="sceneBooks" aria-hidden="true">📚</div>
+      <div class="scene-object plant" id="scenePlant" aria-hidden="true">🪴</div>
+      <div class="scene-object telescope" id="sceneTelescope" aria-hidden="true">🔭</div>
 
-    <div class="hud">
-      <div class="who">
-        <h1 id="petNameTitle">Pipo</h1>
-        <span class="lvl" id="lvlText">Nível 1</span>
-        <div class="bar" role="progressbar" aria-label="Progresso até o próximo nível" aria-valuemin="0" aria-valuemax="100" id="bar"><span id="barFill"></span></div>
+      <header class="hud">
+        <div class="identity">
+          <strong id="petNameTitle">Pipo</strong>
+          <span id="lvlText">Nível 1</span>
+          <div class="xpbar" role="progressbar" aria-label="Progresso do nível" aria-valuemin="0" aria-valuemax="100" id="xpBar"><i id="xpFill"></i></div>
+        </div>
+        <div class="wallet" aria-label="Estrelas disponíveis">⭐ <strong id="starCount">0</strong></div>
+      </header>
+
+      <button class="family-goal" id="familyGoalBtn" aria-label="Meta da família">
+        <span>🏡 Meta da família</span><strong id="familyGoalText">0 / 500 ⭐</strong><i><b id="familyGoalFill"></b></i>
+      </button>
+
+      <div class="speech" id="bubble" aria-live="polite"></div>
+      <button class="pet" id="pet" aria-label="Fazer carinho no Pipo"><span id="petMount"></span></button>
+      <div class="fx" id="fx" aria-hidden="true"></div>
+    </main>
+
+    <section class="play-panel">
+      <div class="next-card" id="nextCard"></div>
+      <nav class="game-nav" aria-label="Áreas do jogo">
+        <button data-tab="missoes" class="nav-item active"><span>🗺️</span><small>Missões</small></button>
+        <button data-tab="casa" class="nav-item"><span>🏡</span><small>Casa</small></button>
+        <button data-tab="premios" class="nav-item"><span>🎁</span><small>Prêmios</small></button>
+        <button data-tab="familia" class="nav-item"><span>👨‍👩‍👧</span><small>Família</small></button>
+        <button data-tab="visual" class="nav-item"><span>🎨</span><small>Visual</small></button>
+      </nav>
+      <div class="panel-content" id="panel" role="region" aria-live="polite"></div>
+      <footer class="game-footer"><button class="adult-link" id="adultsBtn">🔒 Área dos adultos</button></footer>
+    </section>
+  </div>
+
+  <div class="toast" id="toast" role="status"><strong id="toastTitle"></strong><span id="toastText"></span></div>
+
+  <div class="modal" id="connectModal" role="dialog" aria-modal="true" aria-labelledby="connectTitle">
+    <div class="modal-card connect-card">
+      <div class="connect-pipo" id="connectPet"></div>
+      <h2 id="connectTitle">Vamos encontrar sua família</h2>
+      <p>Peça a um adulto para abrir o portal dos pais e gerar o código desta criança.</p>
+      <div class="stack">
+        <input class="input code-input" id="codeInput" maxlength="9" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="ABCD-2345" aria-label="Código da família">
+        <div class="error" id="codeError"></div>
+        <button class="btn btn-main btn-block" id="codeBtn">Conectar com minha família</button>
+        <button class="btn btn-ghost btn-block" id="localBtn">Experimentar sem conectar</button>
       </div>
-      <div class="stars" id="starPill" aria-label="Estrelas para trocar"><span aria-hidden="true">⭐</span><span id="starCount">0</span></div>
-    </div>
-
-    <div class="bubble" id="bubble" aria-live="polite"></div>
-    <div class="zzz" aria-hidden="true">z z</div>
-
-    <button class="pet" id="pet" aria-label="Fazer carinho no bichinho">
-      <div class="pet-grow" id="petGrow"></div>
-    </button>
-    <div class="fx" id="fx"></div>
-    <div class="toast" id="toast" role="status"><strong id="toastTitle"></strong><span id="toastText"></span></div>
-  </main>
-
-  <section class="sheet" aria-label="Painel">
-    <div class="tabs" role="tablist">
-      <button class="tab" role="tab" data-tab="missoes" id="t-missoes">Missões</button>
-      <button class="tab" role="tab" data-tab="premios" id="t-premios">Prêmios</button>
-      <button class="tab" role="tab" data-tab="placar" id="t-placar">Placar</button>
-      <button class="tab" role="tab" data-tab="visual" id="t-visual">Visual</button>
-    </div>
-    <div id="panel" role="tabpanel"></div>
-    <div class="foot"><button class="link" id="adultsBtn">Área dos adultos</button></div>
-  </section>
-</div>
-
-<!-- Conectar com a família -->
-<div class="modal" id="connectModal" role="dialog" aria-modal="true" aria-labelledby="connectTitle">
-  <div class="modal-card">
-    <h2 id="connectTitle">Vamos conectar com a família</h2>
-    <p>Um adulto abre o portal dos pais, escolhe a criança e toca em “Conectar aparelho”. Aparece um código de 8 letras.</p>
-    <div class="stack">
-      <input class="input code-input" id="codeInput" maxlength="9" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="ABCD-2345" aria-label="Código da família">
-      <p class="error" id="codeError"></p>
-      <button class="btn btn-main" id="codeBtn">Conectar</button>
-      <button class="btn btn-ghost" id="localBtn">Jogar neste aparelho sem conectar</button>
     </div>
   </div>
-</div>
 
-<!-- Pergunta para adultos -->
-<div class="modal" id="gateModal" role="dialog" aria-modal="true" aria-labelledby="gateTitle">
-  <div class="modal-card">
-    <h2 id="gateTitle">Só para adultos</h2>
-    <p>Para continuar, responda:</p>
-    <div class="stack">
-      <p class="gate-q" id="gateQ"></p>
-      <input class="input code-input" id="gateInput" inputmode="numeric" maxlength="3" autocomplete="off" aria-label="Resposta">
-      <p class="error" id="gateError"></p>
-      <button class="btn btn-main" id="gateOk">Continuar</button>
-      <button class="btn btn-ghost" id="gateCancel">Cancelar</button>
+  <div class="modal" id="onboardingModal" role="dialog" aria-modal="true" aria-labelledby="onboardingTitle">
+    <div class="modal-card onboarding-card">
+      <div class="onboard-pet" id="onboardPet"></div>
+      <h2 id="onboardingTitle">Oi! Eu vou crescer com você 💜</h2>
+      <p>Escolha meu nome e minha cor. Depois já fazemos nossa primeira missão.</p>
+      <div class="stack">
+        <label class="field">Meu nome<input class="input" id="onboardName" maxlength="12" value="Pipo" autocomplete="off"></label>
+        <div><strong class="picker-title">Minha cor</strong><div class="color-picker" id="onboardColors"></div></div>
+        <div class="error" id="onboardError"></div>
+        <button class="btn btn-main btn-block" id="onboardDone">Pronto! Vamos jogar</button>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- Área dos adultos -->
-<div class="modal" id="adultsModal" role="dialog" aria-modal="true" aria-labelledby="adultsTitle">
-  <div class="modal-card">
-    <h2 id="adultsTitle">Área dos adultos</h2>
-    <div id="adultsBody" class="stack"></div>
-    <button class="btn btn-ghost" id="adultsClose">Fechar</button>
+  <div class="modal" id="gateModal" role="dialog" aria-modal="true" aria-labelledby="gateTitle">
+    <div class="modal-card"><h2 id="gateTitle">Só para adultos</h2><p>Resolva a continha para continuar.</p><div class="stack"><strong class="gate-question" id="gateQ"></strong><input class="input code-input" id="gateInput" inputmode="numeric" maxlength="3"><div class="error" id="gateError"></div><button class="btn btn-main" id="gateOk">Continuar</button><button class="btn btn-ghost" id="gateCancel">Cancelar</button></div></div>
   </div>
-</div>
 
-<script type="module" src="/src/game/main.js"></script>
+  <div class="modal" id="adultsModal" role="dialog" aria-modal="true" aria-labelledby="adultsTitle">
+    <div class="modal-card"><h2 id="adultsTitle">Área dos adultos</h2><div id="adultsBody" class="stack"></div><button class="btn btn-ghost btn-block" id="adultsClose">Fechar</button></div>
+  </div>
+
+  <div class="modal celebration" id="celebrationModal" role="dialog" aria-modal="true">
+    <div class="modal-card celebration-card"><div class="big-celebration">🎉</div><h2>Dia completo!</h2><p>O Pipo teve um dia incrível graças a você.</p><div class="bonus">+25 ⭐ &nbsp; +15 XP</div><button class="btn btn-gold btn-block" id="celebrationClose">Obaaa!</button></div>
+  </div>
+
+  <script type="module" src="/src/game/main.js"></script>
 </body>
 </html>

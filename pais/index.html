@@ -2,18 +2,48 @@
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Portal dos pais · Desafia</title>
-  <meta name="description" content="Aprove missões, combine prêmios e crie desafios para a família.">
-  <meta name="theme-color" content="#7B61FF">
-  <meta name="robots" content="noindex">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>DesafIA — Portal dos pais</title>
+  <meta name="description" content="Portal dos responsáveis do DesafIA.">
+  <meta name="theme-color" content="#7658F5">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 </head>
-<body class="pais">
-  <div id="app" aria-live="polite"></div>
-  <div class="modal" id="modal" role="dialog" aria-modal="true"><div class="modal-card" id="modalCard"></div></div>
-  <div class="snack" id="snack" role="status"></div>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/"><span class="brand-mark">✦</span><span><strong>DesafIA</strong><small>Portal dos pais</small></span></a>
+    <div class="top-actions"><select id="familySelect" class="family-select" hidden></select><button id="logoutBtn" class="link-btn" hidden>Sair</button></div>
+  </header>
+  <main class="page">
+    <section id="authView" class="auth-wrap">
+      <div class="auth-card">
+        <div class="auth-hero">👨‍👩‍👧‍👦</div>
+        <h1>Rotina leve. Progresso visível.</h1>
+        <p>Entre com seu e-mail para acompanhar missões, aprovar conquistas e cuidar do mundo do Pipo junto com a criança.</p>
+        <form id="loginForm" class="stack">
+          <label class="field">Seu e-mail<input id="emailInput" class="input" type="email" required autocomplete="email" placeholder="voce@exemplo.com"></label>
+          <div id="loginError" class="error"></div>
+          <button class="btn btn-main btn-block">Receber link para entrar</button>
+        </form>
+        <p class="fine">Sem senha. Enviaremos um link seguro para este e-mail.</p>
+      </div>
+    </section>
+    <section id="setupView" class="setup-wrap" hidden></section>
+    <section id="appView" hidden>
+      <div id="welcome" class="welcome"></div>
+      <nav class="parent-nav" aria-label="Seções do portal">
+        <button data-tab="hoje" class="active">Hoje <span id="pendingBadge"></span></button>
+        <button data-tab="familia">Família</button>
+        <button data-tab="rotina">Rotina</button>
+        <button data-tab="premios">Prêmios</button>
+        <button data-tab="desafios">Desafios</button>
+        <button data-tab="liga">Liga</button>
+        <button data-tab="config">Config.</button>
+      </nav>
+      <div id="view"></div>
+    </section>
+  </main>
+  <div class="modal" id="infoModal" role="dialog" aria-modal="true"><div class="modal-card"><div id="modalBody"></div><button class="btn btn-soft btn-block" id="modalClose">Fechar</button></div></div>
+  <div class="toast" id="toast"><strong id="toastTitle"></strong><span id="toastText"></span></div>
   <script type="module" src="/src/pais/main.js"></script>
 </body>
 </html>

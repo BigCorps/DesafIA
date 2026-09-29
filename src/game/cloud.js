@@ -1,75 +1,66 @@
-// Modo nuvem: o aparelho da criança entra com login anônimo e é ligado
-// a uma criança da família por um código gerado no portal dos pais.
+import { getDeviceToken, rotateDeviceToken } from '../lib/supabase.js';
 
 export function createCloud(sb) {
-  let playerId = null;
-  let channel = null;
+  let token = getDeviceToken();
   let timer = null;
+  let visibilityHandler = null;
 
-  async function ensureSession() {
-    const { data } = await sb.auth.getSession();
-    if (data.session) return;
-    const { error } = await sb.auth.signInAnonymously();
-    if (error) throw error;
-  }
-  async function call(fn, args) {
-    const { data, error } = await sb.rpc(fn, args);
+  async function call(fn, args = {}) {
+    const { data, error } = await sb.rpc(fn, { p_device_token: token, ...args });
     if (error) throw error;
     return data;
   }
-  function map(d) {
-    playerId = d.player.id;
+  function map(data) {
+    if (!data?.player) return null;
     return {
-      connected: true,
-      familyName: d.family?.name || '',
-      nickname: d.player.nickname,
-      petName: d.player.pet_name,
-      look: d.player.look,
-      xp: d.player.xp,
-      wallet: d.player.wallet,
-      weekPoints: d.player.week_points,
-      missions: d.missions || [],
-      rewards: d.rewards || [],
-      recentRewards: d.recent_rewards || [],
-      ranking: d.ranking || [],
-      challenges: d.challenges || [],
-      leagues: d.leagues || []
+      connected:true,
+      familyName:data.family?.name || '',
+      nickname:data.player.nickname,
+      petName:data.player.pet_name,
+      look:data.player.look || {},
+      xp:Number(data.player.xp || 0),
+      wallet:Number(data.player.wallet || 0),
+      weekPoints:Number(data.player.week_points || 0),
+      streak:Number(data.player.streak || 0),
+      missions:data.missions || [],
+      rewards:data.rewards || [],
+      recentRewards:data.recent_rewards || [],
+      ranking:data.ranking || [],
+      challenges:data.challenges || [],
+      leagues:data.leagues || [],
+      familyGoal:data.family_goal || {current:0,target:500},
+      dailyBonusDay:data.player.daily_bonus_day || null
     };
   }
-
   return {
-    kind: 'cloud',
-    async snapshot() {
-      await ensureSession();
-      const d = await call('kid_snapshot');
-      return d ? map(d) : null;
+    kind:'cloud',
+    async snapshot(){ return map(await call('kid_snapshot')); },
+    async pair(code){
+      const { data, error } = await sb.rpc('pair_device', {
+        p_code: code,
+        p_device_token: token,
+        p_label: /Android/i.test(navigator.userAgent) ? 'Android' : /iPhone|iPad/i.test(navigator.userAgent) ? 'iPhone/iPad' : 'Navegador'
+      });
+      if(error) throw error;
+      return data;
     },
-    async pair(code) {
-      await ensureSession();
-      await call('pair_device', { p_code: code });
+    markDone:(id)=>call('mark_mission_done',{p_mission:id}),
+    requestReward:(id)=>call('request_reward',{p_reward:id}),
+    savePet:(name,look)=>call('update_my_pet',{p_pet_name:name,p_look:look}),
+    async unpair(){
+      try { await call('unpair_device'); } finally { token = rotateDeviceToken(); }
     },
-    async unpair() {
-      try { await call('unpair_device'); } finally {
-        if (channel) sb.removeChannel(channel);
-        clearInterval(timer);
-        await sb.auth.signOut();
-      }
-    },
-    markDone: (id) => call('mark_mission_done', { p_mission: id }),
-    requestReward: (id) => call('request_reward', { p_reward: id }),
-    savePet: (name, look) => call('update_my_pet', { p_pet_name: name, p_look: look }),
-    subscribe(onChange) {
-      if (!playerId) return () => {};
-      if (channel) sb.removeChannel(channel);
-      channel = sb.channel('kid-' + playerId)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'mission_logs', filter: 'player_id=eq.' + playerId }, onChange)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'reward_requests', filter: 'player_id=eq.' + playerId }, onChange)
-        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'players', filter: 'id=eq.' + playerId }, onChange)
-        .subscribe();
-      // Segurança extra caso o tempo real caia: atualiza a cada 45 s.
+    subscribe(onChange){
       clearInterval(timer);
-      timer = setInterval(onChange, 45000);
-      return () => { sb.removeChannel(channel); clearInterval(timer); };
+      timer=setInterval(onChange,8000);
+      visibilityHandler=()=>{ if(document.visibilityState==='visible') onChange(); };
+      document.addEventListener('visibilitychange',visibilityHandler);
+      window.addEventListener('focus',onChange);
+      return ()=>{
+        clearInterval(timer);
+        document.removeEventListener('visibilitychange',visibilityHandler);
+        window.removeEventListener('focus',onChange);
+      };
     }
   };
 }
