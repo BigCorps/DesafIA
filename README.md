@@ -1,7 +1,6 @@
 # DesafIA 0.3
 
 **Cuide do Pipo cuidando da sua rotina.**
-
 O DesafIA é um jogo familiar de hábitos: a criança cumpre missões reais, um responsável confirma, ela recebe estrelas para recompensas e XP para fazer o Pipo crescer e transformar a casa dele.
 
 ## Arquitetura
