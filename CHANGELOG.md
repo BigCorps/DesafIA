@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.5.2 — ícone oficial ampliado
+
+- personagem ampliado no ícone para ficar legível em tamanhos pequenos no celular;
+- novo ícone aprovado aplicado a PWA, Android/maskable, Apple Touch, favicon e arte da Play Store;
+- `brand/icone-1024.png` passa a ser a fonte oficial do ícone;
+- gerador de ícones atualizado para preservar a nova versão em regenerações futuras;
+- cache PWA incrementado para distribuir os novos assets.
+
+## 0.5.1 — ajuste final do painel imersivo/mobile
+
+- painel inferior reidrata tamanho e estado ao voltar de `/pais/`, inclusive em retorno por histórico/BFCache;
+- altura útil passa a acompanhar `visualViewport` no mobile, evitando a alça ficar escondida atrás da barra inferior do navegador;
+- modo imersivo não deixa mais uma faixa de céu sob as montanhas;
+- terreno do modo imersivo ganhou cobertura extra para diferentes proporções de tela;
+- botão expandir/recolher trocado por chevron SVG, maior, centralizado e com feedback de toque;
+- cache PWA incrementado para distribuir a correção imediatamente.
+
 ## 0.5.0 — Plus + Banco Inter + arquitetura Google Play
 
 - checkout real do DesafIA Plus via PIX Banco Inter no Web/PWA;

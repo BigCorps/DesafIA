@@ -75,8 +75,13 @@ if(!sw.includes('async function precache()'))fail('service worker sem pré-cache
 const manifest=JSON.parse(readFileSync(join(root,'public/manifest.webmanifest'),'utf8'));
 if(!Array.isArray(manifest.shortcuts)||manifest.shortcuts.length<2)fail('manifest sem atalhos Jogo/Pais');else ok('manifest com atalhos Jogo/Pais');
 
+
+if(!game.includes('function restoreGameLayout()')||!game.includes("window.addEventListener('pageshow',restoreGameLayout)"))fail('rehidratação do painel após Pais/BFCache ausente');else ok('retorno Pais → jogo reidrata viewport/painel');
+if(!gameCss.includes('--app-height')||!gameCss.includes('.panel-chevron svg'))fail('ajustes mobile/chevron 0.5.2 ausentes');else ok('viewport móvel e chevron SVG presentes');
+if(!gameCss.includes('bottom:-13%'))fail('cobertura inferior do terreno imersivo ausente');else ok('terreno imersivo cobre a base da cena');
+
 const pkg=JSON.parse(readFileSync(join(root,'package.json'),'utf8'));
-if(pkg.version!=='0.5.0')fail(`versão inesperada: ${pkg.version}`);else ok('versão final 0.5.0');
+if(pkg.version!=='0.5.2')fail(`versão inesperada: ${pkg.version}`);else ok('versão final 0.5.2');
 
 if(failed)process.exit(1);
 console.log('\nDesafIA: checagem estática concluída.');

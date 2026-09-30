@@ -22,6 +22,25 @@ initDistribution();
 
 function petName(){return String(snap?.petName||$('onboardName')?.value||'Pipo').trim().slice(0,12)||'Pipo'}
 function readPanelState(){try{return localStorage.getItem(panelStateKey)==='1'}catch{return false}}
+function viewportHeight(){return Math.round(window.visualViewport?.height||window.innerHeight||document.documentElement.clientHeight||0)}
+let viewportRaf=0;
+function syncViewport(){
+  cancelAnimationFrame(viewportRaf);
+  viewportRaf=requestAnimationFrame(()=>{
+    const h=viewportHeight();
+    if(h>0)document.documentElement.style.setProperty('--app-height',`${h}px`);
+  });
+}
+function restoreGameLayout(){
+  syncViewport();
+  const collapsed=readPanelState();
+  requestAnimationFrame(()=>{
+    setPanelCollapsed(collapsed,{persist:false});
+    const panel=$('panel');if(panel&&panel.scrollTop<0)panel.scrollTop=0;
+    document.documentElement.scrollTop=0;document.body.scrollTop=0;
+    requestAnimationFrame(syncViewport);
+  });
+}
 function syncPetLabels(){
   const name=petName(),collapsed=document.querySelector('.game-shell')?.classList.contains('panel-collapsed');
   $('panelToggleTitle').textContent=collapsed?'Abrir atividades':`Ver só o ${name}`;
@@ -42,6 +61,11 @@ function setPanelCollapsed(collapsed,{persist=true}={}){
 }
 function expandPanel(){setPanelCollapsed(false)}
 setPanelCollapsed(readPanelState(),{persist:false});
+syncViewport();
+window.addEventListener('pageshow',restoreGameLayout);
+window.addEventListener('resize',syncViewport,{passive:true});
+window.visualViewport?.addEventListener('resize',syncViewport,{passive:true});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')restoreGameLayout()});
 
 $('petMount').innerHTML=petMarkup('main');
 $('connectPet').innerHTML=petMarkup('connect');
@@ -178,6 +202,7 @@ applyLook($('connectPet').querySelector('svg'),{color:'lilas'},0);applyLook($('o
 function gate(){return new Promise((resolve)=>{const a=2+Math.floor(Math.random()*8),b=2+Math.floor(Math.random()*8);$('gateQ').textContent=`${a} × ${b} = ?`;$('gateInput').value='';$('gateError').textContent='';openModal('gateModal');const ok=()=>{if(Number($('gateInput').value)===a*b){cleanup();closeModal('gateModal');resolve(true)}else $('gateError').textContent='Tente de novo.'};const cancel=()=>{cleanup();closeModal('gateModal');resolve(false)};const cleanup=()=>{$('gateOk').removeEventListener('click',ok);$('gateCancel').removeEventListener('click',cancel)};$('gateOk').addEventListener('click',ok);$('gateCancel').addEventListener('click',cancel);});}
 async function openAdults(){
   if(!(await gate()))return;
+  try{localStorage.setItem(panelStateKey,document.querySelector('.game-shell')?.classList.contains('panel-collapsed')?'1':'0')}catch{}
   window.location.assign('/pais/');
 }
 $('adultsBtn').addEventListener('click',openAdults);

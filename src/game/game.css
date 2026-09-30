@@ -29,19 +29,19 @@
 .speech{position:absolute;z-index:8;left:50%;bottom:212px;transform:translate(-50%,8px);opacity:0;pointer-events:none;max-width:250px;padding:10px 13px;border-radius:16px 16px 16px 4px;background:#fff;color:#3d345e;font-weight:800;font-size:13px;box-shadow:0 8px 25px rgba(48,38,100,.15);transition:.2s}.speech.show{opacity:1;transform:translate(-50%,0)}
 .scene-object{position:absolute;z-index:5;font-size:35px;filter:drop-shadow(0 5px 4px rgba(0,0,0,.12));opacity:0;transform:scale(.6);transition:.4s cubic-bezier(.2,.9,.3,1.4)}.scene-object.unlocked{opacity:1;transform:scale(1)}.tree{left:24px;bottom:48px;font-size:64px}.books{right:27px;bottom:47px}.plant{right:78px;bottom:43px}.telescope{right:25px;bottom:86px;font-size:42px}.fx{position:absolute;inset:0;z-index:20;pointer-events:none}.particle{position:absolute;font-size:22px;will-change:transform,opacity}
 .play-panel{flex:1 1 auto;background:#fff;border-radius:28px 28px 0 0;margin-top:-7px;position:relative;z-index:22;display:flex;flex-direction:column;min-height:360px;overflow:hidden;box-shadow:0 -10px 35px rgba(38,31,85,.12);transition:flex-basis .38s cubic-bezier(.2,.8,.2,1),min-height .38s cubic-bezier(.2,.8,.2,1),border-radius .25s,box-shadow .25s}
-.panel-toggle{width:100%;min-height:54px;border:0;background:linear-gradient(#fff,#fbfaff);display:grid;grid-template-columns:38px 1fr 34px;align-items:center;gap:6px;padding:7px 12px 6px;text-align:left;color:#514775;position:relative;z-index:2;box-shadow:0 1px 0 #efebfb;touch-action:manipulation}
-.panel-grip{width:31px;height:5px;border-radius:99px;background:#d7d0f2;justify-self:center;position:relative}.panel-grip:after{content:"";position:absolute;inset:-10px -4px}
-.panel-toggle-copy{min-width:0;display:grid;gap:1px}.panel-toggle-copy strong{font:850 12px var(--display);white-space:nowrap}.panel-toggle-copy small{font-size:9px;color:#8a82a4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.panel-chevron{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:#eee9ff;color:#6048cc;font-size:18px;font-weight:900;transition:transform .3s ease,background .2s}
+.panel-toggle{width:100%;min-height:58px;border:0;background:linear-gradient(#fff,#fbfaff);display:grid;grid-template-columns:44px minmax(0,1fr) 46px;align-items:center;gap:8px;padding:7px 12px 7px 10px;text-align:left;color:#514775;position:relative;z-index:2;box-shadow:0 1px 0 #efebfb;touch-action:manipulation}
+.panel-grip{width:34px;height:5px;border-radius:99px;background:#d7d0f2;justify-self:center;position:relative}.panel-grip:after{content:"";position:absolute;inset:-13px -5px}
+.panel-toggle-copy{min-width:0;display:grid;gap:2px;align-content:center}.panel-toggle-copy strong{font:850 12px var(--display);white-space:nowrap;line-height:1.15}.panel-toggle-copy small{font-size:9px;color:#8a82a4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.25}.panel-chevron{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;justify-self:end;background:#eee9ff;color:#6048cc;box-shadow:inset 0 0 0 1px rgba(95,72,204,.05);transition:transform .3s ease,background .2s,color .2s,box-shadow .2s}.panel-chevron svg{width:20px;height:20px;display:block;fill:none;stroke:currentColor;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
 .panel-body{display:flex;flex:1 1 auto;min-height:0;flex-direction:column;overflow:hidden;opacity:1;transition:opacity .2s ease}
 .game-shell.panel-collapsed .scene{flex:1 1 auto;height:auto;min-height:0;max-height:none}
-.game-shell.panel-collapsed .play-panel{flex:0 0 calc(61px + env(safe-area-inset-bottom));min-height:calc(61px + env(safe-area-inset-bottom));border-radius:24px 24px 0 0;box-shadow:0 -8px 25px rgba(38,31,85,.1)}
-.game-shell.panel-collapsed .panel-toggle{min-height:61px;padding-bottom:max(7px,env(safe-area-inset-bottom));background:rgba(255,255,255,.96)}
+.game-shell.panel-collapsed .play-panel{flex:0 0 calc(66px + var(--safe-bottom));min-height:calc(66px + var(--safe-bottom));border-radius:24px 24px 0 0;box-shadow:0 -8px 25px rgba(38,31,85,.1)}
+.game-shell.panel-collapsed .panel-toggle{min-height:66px;padding-bottom:max(7px,var(--safe-bottom));background:rgba(255,255,255,.97)}
 .game-shell.panel-collapsed .panel-body{display:none}
-.game-shell.panel-collapsed .panel-chevron{transform:rotate(180deg);background:#7658f5;color:#fff}
+.game-shell.panel-collapsed .panel-chevron{transform:rotate(180deg);background:#7658f5;color:#fff;box-shadow:0 5px 14px rgba(85,61,207,.22)}
 .game-shell.panel-collapsed .identity,.game-shell.panel-collapsed .family-goal,.game-shell.panel-collapsed .wallet,.game-shell.panel-collapsed .adult-quick{opacity:0;transform:translateY(-10px);pointer-events:none}
 .game-shell.panel-collapsed .pet{top:57%;bottom:auto;--pet-y:-50%;width:min(58vw,255px);height:min(58vw,255px)}
 .game-shell.panel-collapsed .speech{bottom:min(290px,42vh)}
-.game-shell.panel-collapsed .hill.back{height:300px;bottom:18px}.game-shell.panel-collapsed .hill.front{height:235px;bottom:35px}
+.game-shell.panel-collapsed .hill.back{height:330px;bottom:-92px}.game-shell.panel-collapsed .hill.front{height:285px;bottom:-100px}
 .game-shell.panel-collapsed .scene-object.tree{bottom:70px}.game-shell.panel-collapsed .scene-object.books,.game-shell.panel-collapsed .scene-object.plant{bottom:62px}.game-shell.panel-collapsed .scene-object.telescope{bottom:105px}
 .next-card{margin:14px 14px 7px;border-radius:20px;background:linear-gradient(135deg,#f5f1ff,#fff8e8);border:1px solid #e7e0ff;padding:13px 14px}.next-card:empty{display:none}.next-row{display:flex;align-items:center;gap:11px}.next-icon{width:44px;height:44px;display:grid;place-items:center;border-radius:14px;background:#fff;font-size:24px;box-shadow:0 5px 15px rgba(70,50,130,.08)}.next-body{flex:1;min-width:0}.next-body small{display:block;color:#766d96;font-weight:800;font-size:11px}.next-body strong{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}.next-reward{font-size:12px;font-weight:900;color:#7658f5}.next-card .btn{min-height:38px;padding:7px 11px;font-size:13px;border-radius:13px}
 .game-nav{display:grid;grid-template-columns:repeat(5,1fr);gap:3px;padding:4px 8px 6px;border-bottom:1px solid #eeeaf8}.nav-item{border:0;background:transparent;padding:7px 2px;border-radius:13px;color:#7a7296;font-weight:800}.nav-item span{font-size:21px;display:block}.nav-item small{font-size:10px}.nav-item.active{background:#eee9ff;color:#5942c6}
@@ -53,9 +53,9 @@
 .empty{padding:22px 15px;text-align:center;border-radius:18px;background:#f8f6ff;color:var(--muted);font-size:13px}.game-footer{text-align:center;padding:4px 10px max(8px,env(safe-area-inset-bottom))}.adult-link{border:0;background:transparent;color:#8a82a4;font-size:11px;padding:8px}
 .toast{position:fixed;z-index:150;left:50%;bottom:24px;transform:translate(-50%,20px);opacity:0;pointer-events:none;width:min(90%,390px);background:#282144;color:#fff;border-radius:17px;padding:12px 14px;box-shadow:0 14px 35px rgba(25,17,70,.25);transition:.22s}.toast.show{opacity:1;transform:translate(-50%,0)}.toast strong,.toast span{display:block}.toast span{font-size:12px;color:#dbd5f5;margin-top:2px}.code-input{text-transform:uppercase;text-align:center;letter-spacing:.11em;font:900 25px var(--display)}.connect-pipo,.onboard-pet{width:120px;height:120px;margin:-5px auto 4px}.onboarding-card{text-align:center}.onboarding-card .field{text-align:left}.picker-title{text-align:left}.gate-question{font:900 32px var(--display);text-align:center;padding:8px}.celebration{text-align:center}.celebration-card{text-align:center}.big-celebration{font-size:65px}.bonus{font:900 23px var(--display);color:#6548dd;margin:15px 0 18px}
 
-@media(min-width:520px){.game-body{padding:22px}.game-shell{min-height:790px;height:min(900px,calc(100dvh - 44px));border-radius:32px;box-shadow:0 30px 80px rgba(55,40,120,.22)}.scene{flex-basis:390px;height:390px;min-height:390px}.play-panel{min-height:400px}.game-shell.panel-collapsed .play-panel{flex-basis:61px;min-height:61px}.game-shell.panel-collapsed .scene{min-height:0}.game-shell.panel-collapsed .pet{width:255px;height:255px}}
+@media(min-width:520px){.game-body{padding:22px}.game-shell{min-height:790px;height:min(900px,calc(100dvh - 44px));border-radius:32px;box-shadow:0 30px 80px rgba(55,40,120,.22)}.scene{flex-basis:390px;height:390px;min-height:390px}.play-panel{min-height:400px}.game-shell.panel-collapsed .play-panel{flex-basis:66px;min-height:66px}.game-shell.panel-collapsed .scene{min-height:0}.game-shell.panel-collapsed .pet{width:255px;height:255px}}
 @media(max-height:720px){.scene{flex-basis:39dvh;min-height:300px;height:39dvh}.pet{width:170px;height:170px}.speech{bottom:178px}.family-goal{top:78px}.play-panel{min-height:340px}.game-shell.panel-collapsed .scene{min-height:0;height:auto}.game-shell.panel-collapsed .pet{width:200px;height:200px;top:57%;bottom:auto}.game-shell.panel-collapsed .speech{bottom:225px}}
-@media(max-width:360px){.panel-toggle{grid-template-columns:34px 1fr 32px}.panel-toggle-copy small{display:none}.game-shell.panel-collapsed .pet{width:220px;height:220px}}
+@media(max-width:360px){.panel-toggle{grid-template-columns:40px minmax(0,1fr) 42px;padding-left:8px;padding-right:8px}.panel-toggle-copy small{display:none}.panel-chevron{width:38px;height:38px}.game-shell.panel-collapsed .pet{width:220px;height:220px}}
 
 /* Etapa 4: acabamento mobile/PWA */
 .game-body{min-height:100vh;min-height:100dvh;overscroll-behavior-y:none}
@@ -81,3 +81,17 @@
 .panel-content{flex:1 1 0;min-height:0;overflow-y:auto;overflow-x:hidden;touch-action:pan-y;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch}
 @media(max-width:519px){.play-panel{min-height:0}.game-shell{height:100dvh}.scene{min-height:0}}
 @media(display-mode:standalone){.game-body,.game-shell{height:100dvh;min-height:0}}
+
+
+/* 0.5.1: retorno do portal, viewport móvel e terreno sem vazamento */
+:root{--app-height:100dvh}
+.game-body{height:var(--app-height);min-height:var(--app-height)}
+.game-shell{height:var(--app-height);min-height:0;max-height:var(--app-height)}
+.game-shell.panel-collapsed .scene{min-height:0}
+.game-shell.panel-collapsed .hill{left:-18%;right:-18%;border-radius:50% 50% 0 0/62% 62% 0 0}
+.game-shell.panel-collapsed .hill.back{height:34%;min-height:260px;bottom:-12%}
+.game-shell.panel-collapsed .hill.front{height:29%;min-height:220px;bottom:-13%}
+.panel-toggle{min-width:0}
+.panel-toggle:active .panel-chevron{transform:scale(.94)}
+.game-shell.panel-collapsed .panel-toggle:active .panel-chevron{transform:rotate(180deg) scale(.94)}
+@media(display-mode:standalone){.game-body,.game-shell{height:var(--app-height);min-height:0}}

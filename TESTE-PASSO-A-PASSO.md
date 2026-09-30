@@ -1,3 +1,12 @@
+# DesafIA 0.5.2 — checklist de teste
+
+Antes dos testes de cobrança, valide também:
+
+- recolher o painel, entrar em **Pais**, voltar ao jogo e confirmar que a alça continua visível sem reiniciar;
+- repetir com o painel aberto;
+- conferir que não existe faixa azul/sky abaixo das montanhas no modo imersivo;
+- conferir alinhamento e toque do novo chevron em expandir/recolher.
+
 # DesafIA 0.5.0 — passo a passo de publicação e teste
 
 Este guia usa a arquitetura definida para a BigCorps: **projeto Vercel separado para o DesafIA e o mesmo Supabase da minhAi, isolado no schema `desafia`.**

@@ -4,6 +4,17 @@ O app Android deve ser uma **Trusted Web Activity (TWA)** apontando para o domí
 
 Durante os testes web use `https://desafia.vercel.app/`. Para a Play Store, defina primeiro o domínio definitivo e só então gere o projeto Bubblewrap.
 
+
+## Play Console x domínio definitivo
+
+Você pode **criar o app no Play Console agora**, reservar/confirmar o package name, preencher ficha da loja, público-alvo, Segurança dos dados, acesso ao app e política de privacidade mesmo enquanto `desafia.vercel.app` continua sendo o ambiente de teste.
+
+Para o **AAB que irá para produção**, prefira esperar o domínio definitivo. A TWA associa o app ao host através de Digital Asset Links; mudar de `desafia.vercel.app` para outro domínio depois exige atualizar o host do projeto Android, publicar `assetlinks.json` no novo domínio e enviar uma nova versão do AAB.
+
+Como a data atual já é posterior a 31/08/2026, novos apps enviados ao Google Play para celular devem usar **targetSdkVersion 36 (Android 16) ou superior**. Configure o projeto Bubblewrap/Gradle dessa forma desde o primeiro AAB.
+
+Portanto, a ordem recomendada é: criar a entrada do app no Play Console agora → terminar ficha/políticas → registrar o domínio definitivo → gerar Bubblewrap definitivo → configurar Digital Asset Links → enviar AAB para teste interno/produção.
+
 ## Estratégia de pagamento na primeira publicação
 
 O app da Google Play será **consumption-only**: ele reconhece o Plus comprado no Web/PWA, mas não mostra checkout PIX nem link externo de compra dentro da versão distribuída pela Play.
