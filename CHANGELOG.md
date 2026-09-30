@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.4.1 — correções de teste mobile/pais
+
+- Área dos pais passa a abrir o portal real mesmo quando o jogo está em modo local/demo;
+- modo imersivo reposiciona o personagem para o centro visual e eleva o terreno junto com ele;
+- transformações das animações foram adaptadas para manter a centralização também durante pulo, dança e outras reações;
+- jogo mobile passa a manter a viewport fixa: somente o conteúdo do painel rola, deixando a alça sempre acessível;
+- painel inferior reseta a rolagem ao abrir/fechar para evitar estados presos após rolagens longas;
+- corrigido o bug em que login, criação de família e dashboard apareciam empilhados: `hidden` agora sempre prevalece;
+- retorno do Google OAuth limpa a URL e abre a visão correta no topo;
+- primeiro acesso pede somente o nome da família e usa o primeiro nome da conta Google para o responsável;
+- depois de criar a família, o dashboard abre imediatamente; acessos seguintes entram direto nele;
+- portal dos pais agora usa o ícone oficial do DesafIA.app no header e nas telas iniciais;
+- assinatura do login padronizada para `DesafIA.app | Desenvolvido por BigCorps | Tecnologia minhAi`;
+- cache PWA incrementado para garantir atualização desta correção.
+
 ## 0.4.0 — Etapa 4/4 · candidata final
 
 - service worker refeito para eliminar a corrida que podia causar `Response body is already used`;

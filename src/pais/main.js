@@ -6,7 +6,7 @@ import { setupPWA } from '../shared/pwa.js';
 const $=(id)=>document.getElementById(id);
 const esc=(v)=>String(v??'').replace(/[&<>"']/g,(c)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const sb=createParentSupabase();
-let session=null,families=[],familyId=null,dash=null,tab='hoje',poll=null;
+let session=null,families=[],familyId=null,dash=null,tab='hoje',poll=null,entering=false;
 
 function toast(title,text){$('toastTitle').textContent=title;$('toastText').textContent=text;$('toast').classList.add('show');setTimeout(()=>$('toast').classList.remove('show'),2600)}
 function openInfo(html){$('modalBody').innerHTML=html;$('infoModal').classList.add('open')}
@@ -15,9 +15,23 @@ async function rpc(fn,args={}){const {data,error}=await sb.rpc(fn,args);if(error
 function isPlus(){return Boolean(dash?.family?.plus)}
 function fmtDate(v){if(!v)return '—';try{return new Intl.DateTimeFormat('pt-BR',{dateStyle:'short',timeStyle:'short'}).format(new Date(v))}catch{return v}}
 
-function showAuth(){clearInterval(poll);$('authView').hidden=false;$('setupView').hidden=true;$('appView').hidden=true;$('logoutBtn').hidden=true;$('familySelect').hidden=true}
-function showApp(){ $('authView').hidden=true;$('setupView').hidden=true;$('appView').hidden=false;$('logoutBtn').hidden=false;$('familySelect').hidden=families.length<2; }
-function showSetup(){ $('authView').hidden=true;$('setupView').hidden=false;$('appView').hidden=true;$('logoutBtn').hidden=false;$('familySelect').hidden=true; }
+function topNow(){requestAnimationFrame(()=>window.scrollTo({top:0,left:0,behavior:'auto'}))}
+function showAuth(){clearInterval(poll);$('authView').hidden=false;$('setupView').hidden=true;$('appView').hidden=true;$('logoutBtn').hidden=true;$('familySelect').hidden=true;topNow()}
+function showApp({scroll=true}={}){$('authView').hidden=true;$('setupView').hidden=true;$('appView').hidden=false;$('logoutBtn').hidden=false;$('familySelect').hidden=families.length<2;if(scroll)topNow()}
+function showSetup(){$('authView').hidden=true;$('setupView').hidden=false;$('appView').hidden=true;$('logoutBtn').hidden=false;$('familySelect').hidden=true;topNow()}
+function googleName(){
+  const u=session?.user,meta=u?.user_metadata||{};
+  return String(meta.given_name||meta.name||meta.full_name||u?.email?.split('@')[0]||'Responsável').trim().split(/\s+/)[0].slice(0,30)||'Responsável';
+}
+function suggestedFamily(){
+  const meta=session?.user?.user_metadata||{};
+  const full=String(meta.full_name||meta.name||'').trim();
+  const parts=full.split(/\s+/).filter(Boolean);
+  return parts.length>1?`Família ${parts.at(-1)}`:'';
+}
+function cleanAuthUrl(){
+  if(location.hash||location.search){try{history.replaceState(null,'',new URL('/pais/',location.origin).pathname)}catch{}}
+}
 
 $('googleLoginBtn').addEventListener('click',async()=>{
   if(!supabaseReady){$('loginError').textContent='Configure VITE_SUPABASE_URL e a publishable key no Vercel.';return}
@@ -36,11 +50,12 @@ async function loadFamilies(){families=await rpc('my_families')||[];const sel=$(
 $('familySelect').addEventListener('change',async(e)=>{familyId=e.target.value;await loadDashboard()});
 
 function setupView(){
-  $('setupView').innerHTML=`<div class="setup-card"><div class="auth-hero">🏡</div><h1>Crie sua família</h1><p>Essa será a base do jogo. Depois você adiciona a criança e conecta o aparelho dela por um código.</p><form class="form" id="createFamilyForm"><label class="field">Nome da família<input class="input" name="name" maxlength="60" required placeholder="Família Almeida"></label><label class="field">Como a criança chama você?<input class="input" name="display" maxlength="30" required placeholder="Papai, Mamãe, Vó..."></label><label class="field">Seu avatar<select class="input" name="avatar"><option>🦊</option><option>🐻</option><option>🐼</option><option>🦁</option><option>🐨</option></select></label><button class="btn btn-main btn-block">Criar família</button><div class="error" id="setupError"></div></form></div>`;
-  $('createFamilyForm').addEventListener('submit',async(e)=>{e.preventDefault();const fd=new FormData(e.currentTarget),btn=e.submitter;if(btn)btn.disabled=true;try{familyId=await rpc('create_family',{p_name:fd.get('name'),p_display_name:fd.get('display'),p_avatar:fd.get('avatar')});await loadFamilies();await loadDashboard()}catch(err){$('setupError').textContent=friendlyError(err)}finally{if(btn)btn.disabled=false}});
+  const suggested=suggestedFamily();
+  $('setupView').innerHTML=`<div class="setup-card setup-first"><div class="auth-hero"><img class="auth-logo" src="/icons/icon-192.png" alt="Logo DesafIA.app"></div><h1>Como vamos chamar sua família?</h1><p>É só isso para começar. Depois, no painel, você adiciona a criança e conecta o aparelho dela.</p><form class="form" id="createFamilyForm"><label class="field">Nome da família<input class="input" name="name" maxlength="60" required value="${esc(suggested)}" placeholder="Família Almeida" autocomplete="organization"></label><button class="btn btn-main btn-block">Criar família e continuar</button><div class="error" id="setupError"></div></form><p class="fine brand-credit">DesafIA.app <span>|</span> Desenvolvido por BigCorps <span>|</span> Tecnologia minhAi</p></div>`;
+  $('createFamilyForm').addEventListener('submit',async(e)=>{e.preventDefault();const fd=new FormData(e.currentTarget),btn=e.submitter;if(btn)btn.disabled=true;$('setupError').textContent='';try{familyId=await rpc('create_family',{p_name:fd.get('name'),p_display_name:googleName(),p_avatar:'👤'});await loadFamilies();await loadDashboard()}catch(err){$('setupError').textContent=friendlyError(err)}finally{if(btn)btn.disabled=false}});
 }
 
-async function loadDashboard(silent=false){if(!familyId)return;try{dash=await rpc('parent_dashboard',{p_family:familyId});showApp();renderHeader();render();if(!silent){clearInterval(poll);poll=setInterval(()=>loadDashboard(true),12000)}}catch(err){if(!silent)toast('Não foi possível carregar',friendlyError(err))}}
+async function loadDashboard(silent=false){if(!familyId)return;try{dash=await rpc('parent_dashboard',{p_family:familyId});showApp({scroll:!silent});renderHeader();render();if(!silent){clearInterval(poll);poll=setInterval(()=>loadDashboard(true),12000)}}catch(err){if(!silent)toast('Não foi possível carregar',friendlyError(err))}}
 function renderHeader(){const f=dash.family;const pending=(dash.pending_missions?.length||0)+(dash.pending_rewards?.length||0);$('pendingBadge').textContent=pending?String(pending):'';$('welcome').innerHTML=`<div><h1>Olá, ${esc(dash.me?.nickname||'responsável')} 👋</h1><p>${esc(f.name)} · ${dash.today}</p></div><span class="plan-pill ${f.plus?'plus':''}">${f.plus?'Plus ✦':'Plano grátis'}</span>`;document.querySelectorAll('.parent-nav button').forEach((b)=>b.classList.toggle('active',b.dataset.tab===tab));}
 function empty(text){return `<div class="empty">${esc(text)}</div>`}
 function stat(label,value){return `<div class="summary"><span>${esc(label)}</span><strong>${esc(value)}</strong></div>`}
@@ -98,14 +113,18 @@ document.addEventListener('submit',async(e)=>{const form=e.target.closest('[data
 }catch(err){toast('Ops',friendlyError(err))}finally{if(btn)btn.disabled=false}});
 
 async function enterAuthenticated(){
-  await loadFamilies();
-  if(!families.length){showSetup();setupView();return}
-  await loadDashboard();
+  if(entering)return;entering=true;
+  try{
+    cleanAuthUrl();
+    await loadFamilies();
+    if(!families.length){showSetup();setupView();return}
+    await loadDashboard();
+  }finally{entering=false}
 }
 async function bootstrap(){
   if(!supabaseReady){showAuth();$('loginError').textContent='Configure VITE_SUPABASE_URL e a publishable key antes de testar.';return}
   const urlError=new URLSearchParams(location.search).get('error_description')||new URLSearchParams(location.hash.slice(1)).get('error_description');
-  if(urlError){showAuth();$('loginError').textContent='Não foi possível entrar com o Google. Tente novamente.';}
+  if(urlError){showAuth();$('loginError').textContent='Não foi possível entrar com o Google. Tente novamente.';return}
   const {data}=await sb.auth.getSession();session=data.session;
   if(!session){showAuth();return}
   await enterAuthenticated();

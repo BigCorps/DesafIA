@@ -49,6 +49,14 @@ if(!game.includes('reactionLockedUntil'))fail('cooldown de reação ausente');el
 if(!game.includes('setupPWA()')||!parent.includes('setupPWA()'))fail('PWA não inicializada em jogo e portal');else ok('PWA inicializada em jogo e portal');
 if(!parent.includes("window.location.assign('/')"))fail('portal ainda abre jogo fora da mesma janela');else ok('navegação pai → jogo permanece na PWA');
 
+
+if(!parent.includes("function cleanAuthUrl()")||!parent.includes("function suggestedFamily()"))fail('fluxo inicial dos pais incompleto');else ok('login/setup/dashboard dos pais corrigidos');
+if(!readFileSync(join(root,'src/shared/base.css'),'utf8').includes('[hidden]{display:none!important}'))fail('hidden global não protegido');else ok('hidden sempre prevalece');
+if(!game.includes("window.location.assign('/pais/')"))fail('área dos pais não navega ao portal');else ok('área dos pais abre portal real');
+const gameCss=readFileSync(join(root,'src/game/game.css'),'utf8');
+if(!gameCss.includes('top:57%;bottom:auto;--pet-y:-50%'))fail('personagem não centralizado no modo imersivo');else ok('personagem centralizado no modo imersivo');
+if(!gameCss.includes('height:100dvh;overflow:hidden'))fail('viewport mobile ainda pode rolar externamente');else ok('viewport mobile fixa e painel rolável');
+
 const sw=readFileSync(join(root,'public/sw.js'),'utf8');
 if(!sw.includes("event.data?.type === 'SKIP_WAITING'"))fail('service worker sem atualização controlada');else ok('service worker aceita atualização controlada');
 if(sw.includes('cache.put(req, res.clone())')||sw.includes('cache.put(request, response.clone())'))fail('service worker contém clone tardio conhecido');else ok('service worker sem padrão de clone tardio');
@@ -59,7 +67,7 @@ const manifest=JSON.parse(readFileSync(join(root,'public/manifest.webmanifest'),
 if(!Array.isArray(manifest.shortcuts)||manifest.shortcuts.length<2)fail('manifest sem atalhos Jogo/Pais');else ok('manifest com atalhos Jogo/Pais');
 
 const pkg=JSON.parse(readFileSync(join(root,'package.json'),'utf8'));
-if(pkg.version!=='0.4.0')fail(`versão inesperada: ${pkg.version}`);else ok('versão final 0.4.0');
+if(pkg.version!=='0.4.1')fail(`versão inesperada: ${pkg.version}`);else ok('versão final 0.4.1');
 
 if(failed)process.exit(1);
 console.log('\nDesafIA: checagem estática concluída.');

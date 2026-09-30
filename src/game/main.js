@@ -30,6 +30,8 @@ function syncPetLabels(){
 function setPanelCollapsed(collapsed,{persist=true}={}){
   const shell=document.querySelector('.game-shell');
   if(!shell)return;
+  const scroller=$('panel');
+  if(scroller)scroller.scrollTop=0;
   shell.classList.toggle('panel-collapsed',collapsed);
   $('panelToggle').setAttribute('aria-expanded',String(!collapsed));
   $('panelToggleHint').textContent=collapsed?'toque para ver missões, casa e prêmios':'toque para esconder missões e menus';
@@ -174,12 +176,6 @@ applyLook($('connectPet').querySelector('svg'),{color:'lilas'},0);applyLook($('o
 function gate(){return new Promise((resolve)=>{const a=2+Math.floor(Math.random()*8),b=2+Math.floor(Math.random()*8);$('gateQ').textContent=`${a} × ${b} = ?`;$('gateInput').value='';$('gateError').textContent='';openModal('gateModal');const ok=()=>{if(Number($('gateInput').value)===a*b){cleanup();closeModal('gateModal');resolve(true)}else $('gateError').textContent='Tente de novo.'};const cancel=()=>{cleanup();closeModal('gateModal');resolve(false)};const cleanup=()=>{$('gateOk').removeEventListener('click',ok);$('gateCancel').removeEventListener('click',cancel)};$('gateOk').addEventListener('click',ok);$('gateCancel').addEventListener('click',cancel);});}
 async function openAdults(){
   if(!(await gate()))return;
-  if(api?.kind==='local'){
-    parentMode=true;tab='missoes';renderAll();
-    $('adultsBody').innerHTML='<p>Modo adulto local ativado. Você pode confirmar missões e prêmios diretamente nas abas do jogo.</p>';
-    openModal('adultsModal');
-    return;
-  }
   window.location.assign('/pais/');
 }
 $('adultsBtn').addEventListener('click',openAdults);

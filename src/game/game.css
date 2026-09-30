@@ -17,13 +17,13 @@
 
 .adult-quick{position:absolute;z-index:12;right:0;top:150px;border:0;border-radius:16px 0 0 16px;padding:8px 10px;background:rgba(255,255,255,.88);color:#655d80;font-size:11px;font-weight:900;box-shadow:0 6px 16px rgba(43,45,100,.1);backdrop-filter:blur(7px);transition:opacity .22s ease,transform .28s cubic-bezier(.2,.8,.2,1),background .18s}.adult-quick:active{transform:translateX(2px)}.adult-quick span{margin-left:2px}
 .scene.speaking .identity,.scene.speaking .family-goal{opacity:0;transform:translateX(-118%);pointer-events:none}
-.pet{position:absolute;z-index:6;left:50%;bottom:12px;transform:translateX(-50%);border:0;background:transparent;width:205px;height:205px;padding:0;filter:drop-shadow(0 12px 12px rgba(30,72,70,.12));transition:transform .3s}.pet:hover{transform:translateX(-50%) scale(1.025)}.pet.jump{animation:petJump .75s cubic-bezier(.24,.78,.25,1)}@keyframes petJump{0%,100%{transform:translateX(-50%) translateY(0)}45%{transform:translateX(-50%) translateY(-35px) scale(1.05)}70%{transform:translateX(-50%) translateY(4px)}}
+.pet{--pet-y:0%;position:absolute;z-index:6;left:50%;bottom:12px;transform:translate(-50%,var(--pet-y));border:0;background:transparent;width:205px;height:205px;padding:0;filter:drop-shadow(0 12px 12px rgba(30,72,70,.12));transition:transform .3s}.pet:hover{transform:translate(-50%,var(--pet-y)) scale(1.025)}.pet.jump{animation:petJump .75s cubic-bezier(.24,.78,.25,1)}@keyframes petJump{0%,100%{transform:translate(-50%,var(--pet-y))}45%{transform:translate(-50%,calc(var(--pet-y) - 35px)) scale(1.05)}70%{transform:translate(-50%,calc(var(--pet-y) + 4px))}}
 .pet.giggle{animation:petGiggle .75s ease-in-out}.pet.wiggle{animation:petWiggle .78s ease-in-out}.pet.twirl{animation:petTwirl .82s cubic-bezier(.2,.8,.3,1)}.pet.squish{animation:petSquish .68s ease-in-out}.pet.dance{animation:petDance .9s ease-in-out}
-@keyframes petGiggle{0%,100%{transform:translateX(-50%) rotate(0)}20%{transform:translateX(-50%) rotate(-7deg) translateY(-3px)}40%{transform:translateX(-50%) rotate(7deg)}60%{transform:translateX(-50%) rotate(-6deg) translateY(-4px)}80%{transform:translateX(-50%) rotate(5deg)}}
-@keyframes petWiggle{0%,100%{transform:translateX(-50%)}20%{transform:translateX(-58%) rotate(-4deg)}40%{transform:translateX(-42%) rotate(4deg)}60%{transform:translateX(-56%) rotate(-3deg)}80%{transform:translateX(-44%) rotate(3deg)}}
-@keyframes petTwirl{0%{transform:translateX(-50%) rotate(0) scale(1)}50%{transform:translateX(-50%) rotate(190deg) scale(.92)}100%{transform:translateX(-50%) rotate(360deg) scale(1)}}
-@keyframes petSquish{0%,100%{transform:translateX(-50%) scale(1)}35%{transform:translateX(-50%) scale(1.12,.82) translateY(7px)}65%{transform:translateX(-50%) scale(.92,1.1) translateY(-5px)}}
-@keyframes petDance{0%,100%{transform:translateX(-50%) translateY(0) rotate(0)}20%{transform:translateX(-50%) translateY(-10px) rotate(-8deg)}40%{transform:translateX(-50%) translateY(0) rotate(7deg)}60%{transform:translateX(-50%) translateY(-12px) rotate(-6deg)}80%{transform:translateX(-50%) translateY(0) rotate(7deg)}}
+@keyframes petGiggle{0%,100%{transform:translate(-50%,var(--pet-y)) rotate(0)}20%{transform:translate(-50%,calc(var(--pet-y) - 3px)) rotate(-7deg)}40%{transform:translate(-50%,var(--pet-y)) rotate(7deg)}60%{transform:translate(-50%,calc(var(--pet-y) - 4px)) rotate(-6deg)}80%{transform:translate(-50%,var(--pet-y)) rotate(5deg)}}
+@keyframes petWiggle{0%,100%{transform:translate(-50%,var(--pet-y))}20%{transform:translate(-58%,var(--pet-y)) rotate(-4deg)}40%{transform:translate(-42%,var(--pet-y)) rotate(4deg)}60%{transform:translate(-56%,var(--pet-y)) rotate(-3deg)}80%{transform:translate(-44%,var(--pet-y)) rotate(3deg)}}
+@keyframes petTwirl{0%{transform:translate(-50%,var(--pet-y)) rotate(0) scale(1)}50%{transform:translate(-50%,var(--pet-y)) rotate(190deg) scale(.92)}100%{transform:translate(-50%,var(--pet-y)) rotate(360deg) scale(1)}}
+@keyframes petSquish{0%,100%{transform:translate(-50%,var(--pet-y)) scale(1)}35%{transform:translate(-50%,calc(var(--pet-y) + 7px)) scale(1.12,.82)}65%{transform:translate(-50%,calc(var(--pet-y) - 5px)) scale(.92,1.1)}}
+@keyframes petDance{0%,100%{transform:translate(-50%,var(--pet-y)) rotate(0)}20%{transform:translate(-50%,calc(var(--pet-y) - 10px)) rotate(-8deg)}40%{transform:translate(-50%,var(--pet-y)) rotate(7deg)}60%{transform:translate(-50%,calc(var(--pet-y) - 12px)) rotate(-6deg)}80%{transform:translate(-50%,var(--pet-y)) rotate(7deg)}}
 .pet-svg.is-blinking .eyes{opacity:0}.pet-svg.is-blinking .eyes-sleep{opacity:1}
 
 .speech{position:absolute;z-index:8;left:50%;bottom:212px;transform:translate(-50%,8px);opacity:0;pointer-events:none;max-width:250px;padding:10px 13px;border-radius:16px 16px 16px 4px;background:#fff;color:#3d345e;font-weight:800;font-size:13px;box-shadow:0 8px 25px rgba(48,38,100,.15);transition:.2s}.speech.show{opacity:1;transform:translate(-50%,0)}
@@ -39,9 +39,9 @@
 .game-shell.panel-collapsed .panel-body{display:none}
 .game-shell.panel-collapsed .panel-chevron{transform:rotate(180deg);background:#7658f5;color:#fff}
 .game-shell.panel-collapsed .identity,.game-shell.panel-collapsed .family-goal,.game-shell.panel-collapsed .wallet,.game-shell.panel-collapsed .adult-quick{opacity:0;transform:translateY(-10px);pointer-events:none}
-.game-shell.panel-collapsed .pet{bottom:34px;width:min(58vw,255px);height:min(58vw,255px)}
+.game-shell.panel-collapsed .pet{top:57%;bottom:auto;--pet-y:-50%;width:min(58vw,255px);height:min(58vw,255px)}
 .game-shell.panel-collapsed .speech{bottom:min(290px,42vh)}
-.game-shell.panel-collapsed .hill.back{height:230px}.game-shell.panel-collapsed .hill.front{height:180px}
+.game-shell.panel-collapsed .hill.back{height:300px;bottom:18px}.game-shell.panel-collapsed .hill.front{height:235px;bottom:35px}
 .game-shell.panel-collapsed .scene-object.tree{bottom:70px}.game-shell.panel-collapsed .scene-object.books,.game-shell.panel-collapsed .scene-object.plant{bottom:62px}.game-shell.panel-collapsed .scene-object.telescope{bottom:105px}
 .next-card{margin:14px 14px 7px;border-radius:20px;background:linear-gradient(135deg,#f5f1ff,#fff8e8);border:1px solid #e7e0ff;padding:13px 14px}.next-card:empty{display:none}.next-row{display:flex;align-items:center;gap:11px}.next-icon{width:44px;height:44px;display:grid;place-items:center;border-radius:14px;background:#fff;font-size:24px;box-shadow:0 5px 15px rgba(70,50,130,.08)}.next-body{flex:1;min-width:0}.next-body small{display:block;color:#766d96;font-weight:800;font-size:11px}.next-body strong{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}.next-reward{font-size:12px;font-weight:900;color:#7658f5}.next-card .btn{min-height:38px;padding:7px 11px;font-size:13px;border-radius:13px}
 .game-nav{display:grid;grid-template-columns:repeat(5,1fr);gap:3px;padding:4px 8px 6px;border-bottom:1px solid #eeeaf8}.nav-item{border:0;background:transparent;padding:7px 2px;border-radius:13px;color:#7a7296;font-weight:800}.nav-item span{font-size:21px;display:block}.nav-item small{font-size:10px}.nav-item.active{background:#eee9ff;color:#5942c6}
@@ -54,7 +54,7 @@
 .toast{position:fixed;z-index:150;left:50%;bottom:24px;transform:translate(-50%,20px);opacity:0;pointer-events:none;width:min(90%,390px);background:#282144;color:#fff;border-radius:17px;padding:12px 14px;box-shadow:0 14px 35px rgba(25,17,70,.25);transition:.22s}.toast.show{opacity:1;transform:translate(-50%,0)}.toast strong,.toast span{display:block}.toast span{font-size:12px;color:#dbd5f5;margin-top:2px}.code-input{text-transform:uppercase;text-align:center;letter-spacing:.11em;font:900 25px var(--display)}.connect-pipo,.onboard-pet{width:120px;height:120px;margin:-5px auto 4px}.onboarding-card{text-align:center}.onboarding-card .field{text-align:left}.picker-title{text-align:left}.gate-question{font:900 32px var(--display);text-align:center;padding:8px}.celebration{text-align:center}.celebration-card{text-align:center}.big-celebration{font-size:65px}.bonus{font:900 23px var(--display);color:#6548dd;margin:15px 0 18px}
 
 @media(min-width:520px){.game-body{padding:22px}.game-shell{min-height:790px;height:min(900px,calc(100dvh - 44px));border-radius:32px;box-shadow:0 30px 80px rgba(55,40,120,.22)}.scene{flex-basis:390px;height:390px;min-height:390px}.play-panel{min-height:400px}.game-shell.panel-collapsed .play-panel{flex-basis:61px;min-height:61px}.game-shell.panel-collapsed .scene{min-height:0}.game-shell.panel-collapsed .pet{width:255px;height:255px}}
-@media(max-height:720px){.scene{flex-basis:39dvh;min-height:300px;height:39dvh}.pet{width:170px;height:170px}.speech{bottom:178px}.family-goal{top:78px}.play-panel{min-height:340px}.game-shell.panel-collapsed .scene{min-height:0;height:auto}.game-shell.panel-collapsed .pet{width:200px;height:200px;bottom:25px}.game-shell.panel-collapsed .speech{bottom:225px}}
+@media(max-height:720px){.scene{flex-basis:39dvh;min-height:300px;height:39dvh}.pet{width:170px;height:170px}.speech{bottom:178px}.family-goal{top:78px}.play-panel{min-height:340px}.game-shell.panel-collapsed .scene{min-height:0;height:auto}.game-shell.panel-collapsed .pet{width:200px;height:200px;top:57%;bottom:auto}.game-shell.panel-collapsed .speech{bottom:225px}}
 @media(max-width:360px){.panel-toggle{grid-template-columns:34px 1fr 32px}.panel-toggle-copy small{display:none}.game-shell.panel-collapsed .pet{width:220px;height:220px}}
 
 /* Etapa 4: acabamento mobile/PWA */
@@ -69,3 +69,15 @@
 .panel-content{-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
 @media(display-mode:standalone){.game-shell{height:100dvh}.panel-toggle{user-select:none;-webkit-user-select:none}}
 @media(max-height:720px){.family-goal{top:calc(78px + var(--safe-top))}}
+
+
+/* 0.4.1: viewport fix, touch confiável e alça sempre acessível */
+.game-body{height:100dvh;overflow:hidden;touch-action:manipulation}
+.game-shell{height:100dvh;min-height:0;overscroll-behavior:none}
+.play-panel{touch-action:pan-y}
+.panel-toggle{position:relative;flex:0 0 auto;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.panel-body{min-height:0}
+.next-card,.game-nav,.game-footer{flex:0 0 auto}
+.panel-content{flex:1 1 0;min-height:0;overflow-y:auto;overflow-x:hidden;touch-action:pan-y;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch}
+@media(max-width:519px){.play-panel{min-height:0}.game-shell{height:100dvh}.scene{min-height:0}}
+@media(display-mode:standalone){.game-body,.game-shell{height:100dvh;min-height:0}}

@@ -1,4 +1,4 @@
-# DesafIA 0.4.0
+# DesafIA 0.4.1
 
 **Pequenos desafios, grandes hábitos.**
 
@@ -30,6 +30,9 @@ O Supabase é compartilhado por vários produtos BigCorps. Para não habilitar A
 As ações da criança passam por RPCs específicas e precisam apresentar o segredo. O responsável pode revogar o aparelho pelo portal a qualquer momento.
 
 ## Funcionalidades desta versão
+
+Correções 0.4.1: portal dos pais com estados exclusivos (login/setup/dashboard), primeiro acesso simplificado, logo oficial, painel mobile sem scroll preso e personagem centralizado no modo imersivo.
+
 
 - schema isolado `desafia.*`, sem alterações globais em `public`;
 - tabelas sem acesso direto para `anon` ou `authenticated`;

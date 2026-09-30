@@ -1,8 +1,8 @@
-# DesafIA 0.4.0 — passo a passo final de publicação e teste
+# DesafIA 0.4.1 — passo a passo de publicação e teste
 
 Este guia usa a arquitetura definida para a BigCorps: **projeto Vercel separado para o DesafIA e o mesmo Supabase da minhAi, isolado no schema `desafia`.**
 
-> Se a migration `20260929000100_desafia_schema.sql` já foi aplicada, **não aplique novamente e não há SQL novo obrigatório na 0.4.0**.
+> Se a migration `20260929000100_desafia_schema.sql` já foi aplicada, **não aplique novamente. A 0.4.1 não exige SQL novo.**
 
 ---
 
@@ -74,7 +74,8 @@ Em `/`, escolha **Experimentar sem conectar** e valide:
 7. feche/reabra a página e confirme que o painel mantém a preferência;
 8. abra o painel novamente e teste Missões / Casa / Prêmios / Família / Visual;
 9. toque em **Pais** e valide o gate adulto;
-10. no modo local, o gate ativa as confirmações locais.
+10. depois da continha, confirme que o jogo navega para `/pais/` mesmo estando em modo local/demo;
+11. expanda o painel, role a lista até o fim e confirme que a alça continua acessível e o conteúdo consegue voltar normalmente.
 
 ### Economia esperada no primeiro dia local
 
@@ -97,9 +98,12 @@ Em produção, abra:
 1. toque em **Continuar com Google**;
 2. escolha a conta;
 3. confirme retorno para `/pais/`;
-4. na primeira entrada, crie a família;
-5. use o botão **Jogo** do topo e confirme que volta para `/` na mesma janela/PWA;
-6. volte ao portal pelo botão **Pais** dentro do jogo.
+4. na primeira entrada, deve aparecer **somente** o campo de nome da família;
+5. crie a família e confirme que o dashboard abre imediatamente no topo;
+6. saia e entre novamente com Google e confirme que o dashboard abre direto, sem tela de criação;
+7. confirme que login/setup/dashboard nunca aparecem empilhados;
+8. use o botão **Jogo** do topo e confirme que volta para `/` na mesma janela/PWA;
+9. volte ao portal pelo botão **Pais** dentro do jogo.
 
 O login Google não depende do SMTP de Magic Link.
 
@@ -206,6 +210,9 @@ Não considere o portal dos pais um recurso offline: aprovações e administraç
 ## 12. Checklist antes de considerar aprovado
 
 - [ ] Google entra e retorna para `/pais/`.
+- [ ] Primeiro acesso pede só o nome da família e abre o dashboard.
+- [ ] Acessos seguintes abrem o dashboard direto.
+- [ ] Login, criação e dashboard nunca aparecem juntos.
 - [ ] Família é criada/carregada.
 - [ ] Código conecta a criança.
 - [ ] Missão pendente chega ao portal.
@@ -213,7 +220,8 @@ Não considere o portal dos pais um recurso offline: aprovações e administraç
 - [ ] Negar missão não soma pontos.
 - [ ] Prêmio reserva e devolve saldo corretamente quando negado.
 - [ ] Revogar aparelho invalida o vínculo.
-- [ ] Modo imersivo abre/fecha e persiste.
+- [ ] Modo imersivo abre/fecha e persiste, com personagem centralizado.
+- [ ] Ao rolar o painel até o fim, a alça continua acessível e o touch não fica preso.
 - [ ] Cards não cobrem o balão de fala.
 - [ ] Reações do personagem não empilham.
 - [ ] Pai ↔ jogo navega dentro da PWA.
