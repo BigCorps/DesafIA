@@ -1,7 +1,7 @@
 name: Android (TWA)
 
-# Roda só quando você pedir (Actions → Android (TWA) → Run workflow).
-# Precisa do projeto gerado pelo Bubblewrap em android/twa (veja android/README.md).
+# O projeto Android é gerado uma vez pelo Bubblewrap em android/twa.
+# Depois: Actions → Android (TWA) → Run workflow.
 on:
   workflow_dispatch:
 
