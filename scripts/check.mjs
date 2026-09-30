@@ -81,8 +81,25 @@ if(!gameCss.includes('--app-height')||!gameCss.includes('.panel-chevron svg'))fa
 if(!gameCss.includes('0.5.3: personagem novamente apoiado no terreno')||!gameCss.includes('height:330px;min-height:0;bottom:-92px')||!gameCss.includes('.scene::after'))fail('correção de apoio do personagem 0.5.3 ausente');else ok('personagem apoiado no terreno no modo imersivo');
 if(!gameCss.includes('bottom:-13%'))fail('cobertura inferior do terreno imersivo ausente');else ok('terreno imersivo cobre a base da cena');
 
+// 0.6.0 — parque de minijogos
+const registry=readFileSync(join(root,'src/games/registry.js'),'utf8');
+const gameIds=[...registry.matchAll(/id: '([a-z]+)'/g)].map((m)=>m[1]);
+const playSql=readFileSync(join(root,'supabase/migrations/20260930000200_desafia_minijogos.sql'),'utf8');
+const sqlIds=(playSql.match(/array\[([^\]]+)\]::text\[\]/)||[])[1]?.match(/'([a-z]+)'/g)?.map((x)=>x.replace(/'/g,''))||[];
+if(gameIds.length!==10)fail(`catálogo deveria ter 10 jogos, tem ${gameIds.length}`);else ok('catálogo com 10 minijogos');
+if(gameIds.join(',')!==sqlIds.join(','))fail('catálogo do front diferente de desafia.game_catalog()');else ok('catálogo igual no front e no banco');
+for(const id of gameIds){if(!existsSync(join(root,`src/games/${id}.js`)))fail(`arquivo do jogo ${id} ausente`)}
+ok('arquivos dos 10 jogos presentes');
+if(!/grant execute on function desafia\.play_tick\(text, integer\) to anon/.test(playSql)||/grant[^;]*play_state[^;]*to (anon|authenticated)/.test(playSql))fail('permissões dos minijogos incorretas');else ok('RPCs do parque expostas só pelo segredo do aparelho');
+if(!/least\(\s*greatest\(coalesce\(p_seconds,0\),0\),\s*60,/.test(playSql))fail('play_tick sem limite de tempo real');else ok('tempo de jogo limitado no servidor');
+if(!game.includes("createArcade(")||!readFileSync(join(root,'index.html'),'utf8').includes('data-tab="jogos"'))fail('aba Jogos não integrada ao jogo');else ok('aba Jogos integrada ao jogo');
+if(!readFileSync(join(root,'src/pais/main.js'),'utf8').includes("rpc('parent_update_play'"))fail('controle de tempo dos pais ausente');else ok('portal dos pais controla o tempo de jogo');
+const gamesSrc=gameIds.map((id)=>readFileSync(join(root,`src/games/${id}.js`),'utf8')).join('\n');
+if(/fetch\(|XMLHttpRequest|https?:\/\//.test(gamesSrc))fail('minijogo acessando a rede');else ok('minijogos sem rede, anúncios ou links externos');
+if(!readFileSync(join(root,'public/sw.js'),'utf8').includes('matchAll(/assets'))fail('service worker não pré-carrega os minijogos');else ok('minijogos disponíveis offline');
+
 const pkg=JSON.parse(readFileSync(join(root,'package.json'),'utf8'));
-if(pkg.version!=='0.5.3')fail(`versão inesperada: ${pkg.version}`);else ok('versão final 0.5.3');
+if(pkg.version!=='0.6.0')fail(`versão inesperada: ${pkg.version}`);else ok('versão final 0.6.0');
 
 if(failed)process.exit(1);
 console.log('\nDesafIA: checagem estática concluída.');

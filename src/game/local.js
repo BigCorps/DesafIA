@@ -1,4 +1,8 @@
 import { DEFAULT_LOOK } from '../shared/pet.js';
+import { GAME_IDS } from '../games/registry.js';
+
+const PLAY_KEY = 'desafia-local-play-v1';
+const LOCAL_PLAY_MINUTES = 30;
 
 const KEY = 'desafia-local-v3';
 const TZ = 'America/Sao_Paulo';
@@ -68,7 +72,30 @@ function snapshotFrom(s) {
   };
 }
 
+function playLoad() {
+  let p;
+  try { p = JSON.parse(localStorage.getItem(PLAY_KEY) || 'null'); } catch { p = null; }
+  p = { day: localDay(), used: 0, startedDay: null, unlocked: [], newGames: [], featured: null, best: {}, ...(p || {}) };
+  if (p.day !== localDay()) { p.day = localDay(); p.used = 0; p.newGames = []; }
+  return p;
+}
+function playSave(p) { try { localStorage.setItem(PLAY_KEY, JSON.stringify(p)); } catch { /* ignora */ } }
+
 export function createLocal() {
+  function playState() {
+    const p = playLoad();
+    const total = state.missions.length;
+    const done = state.missions.filter((m) => m.status === 'done').length;
+    const waiting = state.missions.filter((m) => m.status === 'pending').length;
+    return {
+      day: p.day, enabled: true, minutes: LOCAL_PLAY_MINUTES, allowed_seconds: LOCAL_PLAY_MINUTES * 60,
+      used_seconds: p.used, remaining_seconds: Math.max(0, LOCAL_PLAY_MINUTES * 60 - p.used),
+      started: p.startedDay === p.day,
+      missions: { total, done, waiting, requires_approval: false, ok: total > 0 && done + waiting === total },
+      unlocked: p.unlocked, new_games: p.startedDay === p.day ? p.newGames : [], featured: p.startedDay === p.day ? p.featured : null,
+      disabled: [], best: p.best
+    };
+  }
   let state = normalize(load()); save(state);
   const commit = () => { state = normalize(state); save(state); return snapshotFrom(state); };
   const maybeBonus = () => {
@@ -99,7 +126,34 @@ export function createLocal() {
       state.recentRewards=state.recentRewards.slice(-8);return commit();
     },
     async savePet(name,look){ state.petName=(name||'Pipo').trim().slice(0,12)||'Pipo';state.look={...state.look,...look};return commit(); },
-    async reset(){ state=initial();return commit(); },
+    // Parque de minijogos (modo sem conexão: 30 min/dia; missões "esperando" contam,
+    // porque neste modo não há adulto conectado para aprovar)
+    async playStatus(){ return playState(); },
+    async playStart(){
+      const st=playState();
+      if(!st.missions.ok) throw new Error('MISSIONS_PENDING');
+      const p=playLoad();
+      if(p.startedDay===p.day) return st;
+      const pool=GAME_IDS.filter((id)=>!p.unlocked.includes(id)).sort(()=>Math.random()-0.5).slice(0,p.unlocked.length?1:2);
+      p.unlocked.push(...pool);
+      p.newGames=pool;
+      p.featured=pool[0]||[...p.unlocked].filter((id)=>id!==p.featured).sort(()=>Math.random()-0.5)[0]||p.unlocked[0];
+      p.startedDay=p.day;
+      playSave(p);
+      return playState();
+    },
+    async playTick(seconds){
+      const p=playLoad();
+      p.used=Math.min(LOCAL_PLAY_MINUTES*60,p.used+Math.min(60,Math.max(0,Number(seconds)||0)));
+      playSave(p);
+      return { remaining_seconds: Math.max(0,LOCAL_PLAY_MINUTES*60-p.used) };
+    },
+    async gameScore(game,score){
+      const p=playLoad();const before=Number(p.best[game]||0);
+      p.best[game]=Math.max(before,Number(score)||0);playSave(p);
+      return { best:p.best[game], record:p.best[game]>before };
+    },
+    async reset(){ state=initial();try{localStorage.removeItem(PLAY_KEY)}catch{}return commit(); },
     async unpair(){ return commit(); },
     subscribe(){ return ()=>{}; }
   };

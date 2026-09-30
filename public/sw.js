@@ -1,4 +1,4 @@
-const CACHE = 'desafia-v8-20260930';
+const CACHE = 'desafia-v9-20260930-jogos';
 const CACHE_PREFIX = 'desafia-';
 const SHELL = [
   '/',
@@ -35,9 +35,27 @@ async function precache() {
     }
   }));
 
+  // Segunda passada: os minijogos são carregados sob demanda (import dinâmico),
+  // então procuramos os nomes dos pedaços dentro dos JS para deixá-los offline.
+  const lazy = new Set();
   await Promise.all([...discovered].map(async (path) => {
     const response = await fetch(path, { cache: 'reload' });
-    if (response.ok) await cache.put(path, response);
+    if (!response.ok) return;
+    if (path.endsWith('.js')) {
+      const text = await response.clone().text();
+      for (const match of text.matchAll(/assets\/[\w.-]+\.(?:js|css)/g)) {
+        const asset = `/${match[0]}`;
+        if (!discovered.has(asset)) lazy.add(asset);
+      }
+    }
+    await cache.put(path, response);
+  }));
+
+  await Promise.all([...lazy].map(async (path) => {
+    try {
+      const response = await fetch(path, { cache: 'reload' });
+      if (response.ok) await cache.put(path, response);
+    } catch { /* um jogo que falhar aqui é baixado no primeiro uso */ }
   }));
 }
 

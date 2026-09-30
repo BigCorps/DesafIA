@@ -47,6 +47,11 @@ export function createCloud(sb) {
     markDone:(id)=>call('mark_mission_done',{p_mission:id}),
     requestReward:(id)=>call('request_reward',{p_reward:id}),
     savePet:(name,look)=>call('update_my_pet',{p_pet_name:name,p_look:look}),
+    // Parque de minijogos
+    playStatus:()=>call('play_status'),
+    playStart:()=>call('play_start'),
+    playTick:(seconds)=>call('play_tick',{p_seconds:Math.max(0,Math.round(seconds))}),
+    gameScore:(game,score)=>call('game_score',{p_game:game,p_score:Math.max(0,Math.round(score))}),
     async unpair(){
       try { await call('unpair_device'); } finally { token = rotateDeviceToken(); }
     },

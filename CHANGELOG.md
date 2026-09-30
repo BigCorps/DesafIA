@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.6.0 — parque de minijogos
+
+- 10 minijogos novos, feitos do zero para o DesafIA (sem código de terceiros): Pula-Pula, Voa Alto, Trenzinho de Frutas, Torre Alta, Quebra-Bloquinhos, Evolução, Combina Frutas, Memória, Pega-Estrelinha e Siga as Cores;
+- parque abre só quando todas as missões do dia estão concluídas; pais escolhem 10, 30, 60 min ou tempo livre, extra de +15 min no dia e quais jogos ficam ligados;
+- opção de exigir aprovação de todas as missões antes de liberar os jogos (padrão);
+- álbum de jogos: 2 jogos surpresa no primeiro dia completo e 1 a cada dia completo depois, com roleta animada; álbum completo sorteia o destaque do dia;
+- recordes por jogo, medalhas bronze/prata/ouro e dificuldade progressiva;
+- personagem aparece nos jogos com cor, chapéu e acessório da criança;
+- tempo contado no servidor (`play_tick`), limitado ao tempo real decorrido; pausa automática quando o app sai da tela;
+- jogos sem rede, anúncios, links ou compras; sons sintetizados; 2 a 5 KB cada, carregados sob demanda e pré-carregados pelo service worker para uso offline;
+- nova aba **Jogos** no app infantil e no portal dos pais;
+- migration `20260930000200_desafia_minijogos.sql` + `VERIFICACAO-MINIJOGOS.sql`;
+- `npm run check` confere o catálogo nos dois lados, as permissões e a ausência de rede nos jogos;
+- cache PWA incrementado.
+
 ## 0.5.3 — personagem apoiado no terreno
 
 - restaurada a geometria da montanha que mantém o personagem apoiado no modo imersivo;

@@ -55,6 +55,12 @@ const MESSAGES = {
   INVALID_DEVICE_TOKEN: 'Não foi possível validar este aparelho. Conecte-o novamente.',
   INVALID_MISSION: 'Essa missão não está mais disponível.',
   INVALID_REWARD: 'Esse prêmio não está mais disponível.',
+  MISSIONS_PENDING: 'O parque abre quando todas as missões do dia estiverem concluídas.',
+  PLAY_OFF: 'Os jogos estão desligados pelos adultos.',
+  PLAY_NOT_STARTED: 'Abra o parque de jogos primeiro.',
+  GAME_LOCKED: 'Esse jogo ainda não foi descoberto.',
+  KEEP_ONE_GAME: 'Deixe pelo menos um jogo ligado.',
+  INVALID_MINUTES: 'Escolha um tempo entre 0 e 180 minutos.',
   CHILD_ONLY: 'Esse código só pode conectar uma criança.'
 };
 export function friendlyError(err) {

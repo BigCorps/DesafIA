@@ -1,6 +1,8 @@
-# DesafIA 0.5.3
+# DesafIA 0.6.0
 
 **Pequenos desafios, grandes hábitos.**
+
+**Novo na 0.6.0 — Parque de jogos:** 10 minijogos que abrem quando todas as missões do dia estão concluídas, pelo tempo que os pais escolherem (10, 30, 60 min ou livre). A cada dia completo, um jogo surpresa entra no álbum da criança.
 
 **Ícone oficial 0.5.2:** personagem ampliado para melhor leitura no celular e na Play Store.
 
@@ -65,6 +67,44 @@ As ações da criança passam por RPCs específicas e precisam apresentar o segr
 - distribuição Google Play em modo consumption-only, sem checkout externo dentro do app;
 - estrutura preparada para `provider = google_play` no futuro.
 
+## Parque de jogos (0.6.0)
+
+Quando **todas as missões infantis do dia** estão concluídas, o parque abre. Os pais controlam tudo na aba **Jogos** do portal:
+
+- tempo por dia: desligado, 10, 30, 60 minutos ou um valor livre até 180;
+- **+15 min hoje** para um dia especial, por criança;
+- exigir aprovação de todas as missões antes de liberar (padrão) ou aceitar as "esperando adulto";
+- ligar e desligar cada jogo.
+
+Na criança:
+
+- o personagem avisa "Tudo feito! O parque de jogos abriu 🎡" e aparece um botão na cena;
+- ao abrir o parque, uma roleta sorteia o **jogo surpresa do dia** para o álbum (2 no primeiro dia, depois 1 por dia completo; com o álbum completo, sorteia um destaque diferente de ontem);
+- cada jogo tem recorde, medalhas de bronze/prata/ouro e dificuldade que cresce;
+- o personagem aparece nos jogos com a cor, o chapéu e o acessório que a criança escolheu;
+- quando o tempo acaba, ele boceja: "Hora de descansar os olhos. Amanhã tem mais!".
+
+| Jogo | Idade | Como joga |
+|---|---|---|
+| 🏃 Pula-Pula | 4+ | corrida com pulo duplo, 3 corações |
+| 🪽 Voa Alto | 5+ | voar entre árvores, chão e teto só empurram |
+| 🚂 Trenzinho de Frutas | 5+ | cobrinha que atravessa as bordas, com setas na tela |
+| 🏗️ Torre Alta | 4+ | empilhar blocos, bônus por acerto certinho |
+| 🧱 Quebra-Bloquinhos | 6+ | fases infinitas, blocos fortes e estrelas bônus |
+| 🌱 Evolução | 7+ | juntar peças iguais de semente até diamante |
+| 🍓 Combina Frutas | 6+ | combinar 3, 25 jogadas, combos dão jogadas extras |
+| 🃏 Memória | 4+ | 5 fases, com uma olhadinha nas cartas no começo |
+| ⭐ Pega-Estrelinha | 3+ | pegar estrelas e fugir da chuva em 40 s |
+| 🎵 Siga as Cores | 4+ | sequência de cores e sons, com segunda chance |
+
+Regras técnicas:
+
+- o tempo é descontado **no servidor** (`play_tick`), limitado ao tempo real decorrido; apagar os dados do app não zera o limite;
+- os jogos não acessam a rede, não têm anúncios, links nem compras; os sons são sintetizados;
+- cada jogo tem 2 a 5 KB, é carregado só quando aberto e fica disponível offline pelo service worker;
+- a lista de jogos existe em dois lugares que precisam ser iguais: `src/games/registry.js` e `desafia.game_catalog()` (o `npm run check` confere);
+- no modo sem conexão, o parque usa 30 min por dia e as missões "esperando adulto" contam.
+
 ## DesafIA Plus e pagamentos
 
 O preço do Plus **não fica no frontend**. Configure o secret da Edge Function:
@@ -89,9 +129,15 @@ A cobrança Plus acrescenta:
 
 `supabase/migrations/20260930000100_desafia_billing.sql`
 
+O parque de minijogos acrescenta (rode depois da de billing):
+
+`supabase/migrations/20260930000200_desafia_minijogos.sql`
+
+Depois confira com `supabase/VERIFICACAO-MINIJOGOS.sql`.
+
 A migration antiga foi removida do ZIP final para evitar aplicação acidental.
 
-Se a migration base já está aplicada, para atualizar da 0.4.x para a 0.5.0 execute **somente a migration de billing**. Não rode novamente a migration base.
+Se a migration base já está aplicada, para atualizar da 0.4.x para a 0.5.0 execute **somente a migration de billing**. Da 0.5.x para a 0.6.0, execute **somente a de minijogos**. Não rode novamente as anteriores.
 
 O schema `desafia` deve estar incluído em **Data API → Exposed schemas**. As tabelas continuam protegidas; o frontend acessa apenas as RPCs explicitamente liberadas.
 
@@ -164,6 +210,7 @@ Sem `.env.local`, o jogo pode ser testado por **Experimentar sem conectar**.
 ```text
 src/
   game/                 jogo infantil
+  games/                parque: registry, kit, arcade e os 10 minijogos
   pais/                 portal dos responsáveis
   shared/               personagem, progressão, PWA e estilos
   lib/supabase.js       clientes Supabase + segredo local do aparelho

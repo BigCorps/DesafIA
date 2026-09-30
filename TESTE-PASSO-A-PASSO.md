@@ -1,3 +1,18 @@
+# DesafIA 0.6.0 — parque de jogos
+
+1. Aplique **somente** `supabase/migrations/20260930000200_desafia_minijogos.sql` (a base e o billing já devem estar aplicados).
+2. Rode `supabase/VERIFICACAO-MINIJOGOS.sql` e confira os itens.
+3. No portal, aba **Jogos**, escolha 10 min e deixe "Só liberar depois que um adulto aprovar" marcado.
+4. No aparelho da criança, abra a aba 🎮 **Jogos**: deve dizer quantas missões faltam.
+5. Marque todas as missões como feitas. O parque ainda **não** abre (falta aprovação).
+6. Aprove todas no portal. Em até 8 s o personagem avisa que o parque abriu e aparece o botão na cena.
+7. Toque em **Abrir o parque**: a roleta mostra 2 jogos surpresa (primeiro dia).
+8. Jogue. O cronômetro no topo desce; ao sair e voltar para o app aparece **Pausado**.
+9. Termine uma partida: aparece a pontuação, as medalhas e o recorde.
+10. Espere o tempo acabar: o personagem boceja e o jogo fecha. Reabra o app: continua bloqueado.
+11. No portal, toque em **+15 min hoje**: o parque volta a abrir.
+12. No dia seguinte, complete de novo: entra 1 jogo novo no álbum.
+
 # DesafIA 0.5.3 — checklist de teste
 
 Antes dos testes de cobrança, valide também:
@@ -331,6 +346,12 @@ Não considere o portal dos pais um recurso offline: aprovações e administraç
 - [ ] Renovação antecipada preserva dias restantes.
 - [ ] `?store=play` oculta checkout e links de compra no portal.
 - [ ] Plus adquirido fora do app é reconhecido no modo Play.
+- [ ] Parque só abre com todas as missões concluídas (e aprovadas, se exigido).
+- [ ] Roleta sorteia 2 jogos no primeiro dia e 1 nos seguintes.
+- [ ] Tempo acaba no limite escolhido e não reinicia ao reabrir o app.
+- [ ] **+15 min hoje** e desligar jogos funcionam no portal.
+- [ ] Os 10 jogos abrem e terminam com pontuação e recorde.
+- [ ] Jogos funcionam sem internet depois da primeira abertura do app.
 - [ ] `npm run check` e `npm run build` passam.
 
 Quando todos estiverem marcados, a versão web está pronta para seguir para o teste da TWA/Play Store.

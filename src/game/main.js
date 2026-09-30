@@ -6,6 +6,7 @@ import { createCloud } from './cloud.js';
 import { createLocal } from './local.js';
 import { setupPWA } from '../shared/pwa.js';
 import { initDistribution } from '../shared/platform.js';
+import { createArcade } from '../games/arcade.js';
 
 const $=(id)=>document.getElementById(id);
 const esc=(v)=>String(v??'').replace(/[&<>"']/g,(c)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -18,6 +19,7 @@ const PERIOD={manha:'de manhã',tarde:'à tarde',noite:'à noite'};
 
 let api=null,snap=null,tab='missoes',parentMode=false,unsubscribe=()=>{},refreshing=false,lastReaction=-1,reactionLockedUntil=0;
 const kidSb=createKidSupabase();
+const arcade=createArcade({getApi:()=>api,getSnap:()=>snap,say:(t,ms)=>say(t,ms),toast:(a,b)=>toast(a,b),onChange:(goTab)=>{if(goTab){tab=goTab;expandPanel();renderPanel();return}if(tab==='jogos')renderPanel();}});
 initDistribution();
 
 function petName(){return String(snap?.petName||$('onboardName')?.value||'Pipo').trim().slice(0,12)||'Pipo'}
@@ -169,7 +171,7 @@ function visualView(){
 }
 function renderPanel(){
   if(!snap)return;document.querySelectorAll('.nav-item').forEach((b)=>b.classList.toggle('active',b.dataset.tab===tab));
-  $('panel').innerHTML=tab==='missoes'?missionsView():tab==='casa'?houseView():tab==='premios'?rewardsView():tab==='familia'?familyView():visualView();
+  $('panel').innerHTML=tab==='missoes'?missionsView():tab==='casa'?houseView():tab==='premios'?rewardsView():tab==='familia'?familyView():tab==='jogos'?arcade.view():visualView();
   if(tab==='visual'){const svg=$('visualPreview')?.querySelector('svg');applyLook(svg,snap.look,snap.xp);$('petNameInput')?.addEventListener('change',async(e)=>{await savePet(e.target.value,snap.look)});}
 }
 function renderAll(){renderStats();renderNext();renderPanel();}
@@ -179,9 +181,9 @@ function checkFresh(prev,next){
   const seen=new Set(seenList(seenRewardKey));const fresh=(next.recentRewards||[]).filter((r)=>!seen.has(r.id));if(fresh.length){const r=fresh.at(-1);markSeen(seenRewardKey,r.id);if(r.status==='delivered'){jump();burst(['🎉','🎁','✨',r.icon],18);toast('Prêmio entregue!',r.title)}else{say('Esse prêmio ficou para depois. Suas estrelas voltaram!');}}
   if(next.dailyBonusDay&&!seenList(seenDayKey).includes(next.dailyBonusDay)){markSeen(seenDayKey,next.dailyBonusDay);openModal('celebrationModal');burst(['🎉','⭐','✨','💜'],22);jump();}
 }
-async function refresh(){if(!api||refreshing)return;refreshing=true;try{const next=await api.snapshot();if(!next){if(api.kind==='cloud'){unsubscribe();openModal('connectModal');}return}const prev=snap;snap=next;checkFresh(prev,next);renderAll();}catch(e){console.warn(e)}finally{refreshing=false}}
-async function startLocal(){unsubscribe();api=createLocal();snap=await api.snapshot();closeModal('connectModal');renderAll();unsubscribe=api.subscribe(refresh);if(!localStorage.getItem('desafia-local-onboarded'))openModal('onboardingModal');}
-async function startCloud(){unsubscribe();api=createCloud(kidSb);const next=await api.snapshot();if(!next){openModal('connectModal');return false}snap=next;closeModal('connectModal');renderAll();unsubscribe=api.subscribe(refresh);return true;}
+async function refresh(){if(!api||refreshing)return;refreshing=true;try{const next=await api.snapshot();if(!next){if(api.kind==='cloud'){unsubscribe();openModal('connectModal');}return}const prev=snap;snap=next;checkFresh(prev,next);renderAll();arcade.onSnapshot(prev,next);}catch(e){console.warn(e)}finally{refreshing=false}}
+async function startLocal(){unsubscribe();api=createLocal();snap=await api.snapshot();closeModal('connectModal');renderAll();arcade.onSnapshot(null,snap);unsubscribe=api.subscribe(refresh);if(!localStorage.getItem('desafia-local-onboarded'))openModal('onboardingModal');}
+async function startCloud(){unsubscribe();api=createCloud(kidSb);const next=await api.snapshot();if(!next){openModal('connectModal');return false}snap=next;closeModal('connectModal');renderAll();arcade.onSnapshot(null,snap);unsubscribe=api.subscribe(refresh);return true;}
 async function savePet(name,look){try{await api.savePet(name,look);await refresh()}catch(e){toast('Não foi possível salvar',friendlyError(e));}}
 
 $('codeInput').addEventListener('input',(e)=>{const raw=e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,8);e.target.value=raw.length>4?`${raw.slice(0,4)}-${raw.slice(4)}`:raw;});
@@ -212,6 +214,7 @@ $('celebrationClose').addEventListener('click',()=>closeModal('celebrationModal'
 $('familyGoalBtn').addEventListener('click',()=>{tab='familia';expandPanel();renderPanel();});
 $('pet').addEventListener('click',petReaction);
 document.querySelector('.game-nav').addEventListener('click',(e)=>{const b=e.target.closest('[data-tab]');if(!b)return;tab=b.dataset.tab;renderPanel();});
+document.addEventListener('click',(e)=>{const b=e.target.closest('[data-tab-go]');if(!b)return;tab=b.dataset.tabGo;expandPanel();renderPanel();});
 
 async function action(act,id,el){if(!api)return;el?.setAttribute('disabled','');try{
   if(act==='done'){await api.markDone(id);toast('Missão enviada','Um adulto vai confirmar.');}

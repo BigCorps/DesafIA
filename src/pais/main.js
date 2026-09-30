@@ -4,6 +4,7 @@ import { levelOf } from '../shared/progression.js';
 import { setupPWA } from '../shared/pwa.js';
 import { initDistribution, isPlayDistribution } from '../shared/platform.js';
 import { createBillingClient } from './billing.js';
+import { GAMES, medalOf, MEDAL_ICON } from '../games/registry.js';
 
 const $=(id)=>document.getElementById(id);
 const esc=(v)=>String(v??'').replace(/[&<>"']/g,(c)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -101,7 +102,75 @@ function planView(){
   return `<div class="plan-card-head"><div><span class="plan-kicker">${active?'PLUS ATIVO':'PLANO ATUAL'}</span><strong>${active?'DesafIA Plus ✦':'Grátis'}</strong></div>${active&&expires?`<span class="plan-valid">até ${fmtDate(expires)}</span>`:''}</div><div class="plan-price"><strong>${price}</strong><span>${Number(plan.price_cents||0)>0?'por 30 dias':''}</span></div>${plusBenefits(plan.features)}${pending?`<div class="pending-payment"><span>PIX aguardando pagamento</span><strong>${fmtMoney(pending.amount_cents)}</strong><button class="btn btn-main btn-block" data-act="billing-resume">Continuar pagamento</button></div>`:`<button class="btn btn-main btn-block" data-act="billing-create" ${configured?'':'disabled'}>${active?'Renovar Plus por 30 dias':'Ativar DesafIA Plus'}</button>`}${!configured?'<p class="billing-small">A infraestrutura está pronta. Falta configurar o valor mensal e/ou a credencial de cobrança no Supabase.</p>':'<p class="billing-small">Pagamento único por PIX para 30 dias de Plus. A renovação não é automática.</p>'}`;
 }
 function configView(){return `<div class="grid"><section class="card half"><h2>Configurações da família</h2><form class="form" data-form="update-family"><label class="field">Nome<input class="input" name="name" maxlength="60" value="${esc(dash.family.name)}"></label><label class="field">Meta semanal de estrelas<input class="input" type="number" min="100" max="10000" step="50" name="goal" value="${dash.family.weekly_goal}"></label><button class="btn btn-main">Salvar</button></form></section><section class="card half plan-card"><h2>Plano</h2>${planView()}</section><section class="card danger-zone"><h2>Privacidade e acesso</h2><p class="lead">Crianças não têm conta de e-mail. O aparelho guarda um segredo local que pode ser revogado aqui na aba Família. Sessões dos responsáveis usam o Supabase Auth.</p><a href="/privacidade/">Política de privacidade</a> · <a href="/termos/">Termos</a></section></div>`}
-function render(){if(!dash)return;renderHeader();$('view').innerHTML=tab==='hoje'?todayView():tab==='familia'?familyView():tab==='rotina'?routineView():tab==='premios'?rewardsView():tab==='desafios'?challengesView():tab==='liga'?leagueView():configView();}
+
+// ---------------------------------------------------------------------------
+// Parque de minijogos (aba Jogos)
+// ---------------------------------------------------------------------------
+let playSettings=null,playLoadedFor=null,playLoadedAt=0,playLoading=false;
+const PLAY_PRESETS=[0,10,30,60];
+const fmtMin=(sec)=>{const m=Math.round((Number(sec)||0)/60);return `${m} min`};
+async function loadPlaySettings(force=false){
+  if(!familyId||playLoading)return;
+  if(!force&&playLoadedFor===familyId&&Date.now()-playLoadedAt<20000)return;
+  playLoading=true;
+  try{playSettings=await rpc('parent_play_settings',{p_family:familyId});playLoadedFor=familyId;playLoadedAt=Date.now();}
+  catch(err){playSettings={error:friendlyError(err)}}
+  finally{playLoading=false}
+  const box=$('playView');if(box)box.innerHTML=playInner();
+}
+function playInner(){
+  const ps=playSettings;
+  if(!ps)return '<section class="card"><p class="lead">Carregando…</p></section>';
+  if(ps.error)return `<section class="card"><p class="lead">${esc(ps.error)}</p><button class="btn btn-soft" data-play="reload">Tentar de novo</button></section>`;
+  const custom=!PLAY_PRESETS.includes(Number(ps.minutes));
+  const opts=PLAY_PRESETS.map((m)=>`<button class="btn ${Number(ps.minutes)===m?'btn-main':'btn-soft'}" data-play="minutes" data-min="${m}">${m===0?'Desligado':`${m} min`}</button>`).join('');
+  const kids=(ps.children||[]).map((c)=>{
+    const left=Math.max(0,Number(ps.minutes)*60+Number(c.bonus_seconds||0)-Number(c.used_seconds||0));
+    const m=c.missions||{};
+    const state=!Number(m.total)?'Sem missões ativas hoje':m.ok?(c.opened_today?`Jogou ${fmtMin(c.used_seconds)} · restam ${fmtMin(left)}`:'Parque liberado, ainda não abriu'):`Missões: ${Number(m.done||0)}/${Number(m.total||0)} concluídas${m.waiting?` · ${m.waiting} para aprovar`:''}`;
+    const best=Object.entries(c.best||{}).map(([id,v])=>{const g=GAMES.find((x)=>x.id===id);if(!g)return '';return `<span class="play-best" title="${esc(g.title)}">${g.icon} ${Number(v.best)||0}${MEDAL_ICON[medalOf(g,Number(v.best)||0)]?' '+MEDAL_ICON[medalOf(g,Number(v.best)||0)]:''}</span>`}).join('');
+    return `<li><span class="row-main"><strong>${esc(c.avatar||'🌸')} ${esc(c.nickname)}</strong><small>${state}</small><small>Álbum: ${Number(c.unlocked)||0}/${GAMES.length} jogos descobertos</small>${best?`<span class="play-bests">${best}</span>`:''}</span>
+      <span class="row-actions"><button class="btn btn-soft" data-play="bonus" data-id="${c.id}" data-min="15">+15 min hoje</button></span></li>`;
+  }).join('');
+  const games=GAMES.map((g)=>{const off=(ps.disabled||[]).includes(g.id);return `<label class="play-game ${off?'off':''}"><input type="checkbox" data-play="toggle" data-id="${g.id}" ${off?'':'checked'}><span class="pg-ic" style="background:${g.color}">${g.icon}</span><span><strong>${esc(g.title)}</strong><small>Idade ${g.ages}</small></span></label>`}).join('');
+  return `<div class="grid">
+    <section class="card"><h2>Parque de jogos</h2>
+      <p class="lead">Quando a criança completa todas as missões do dia, o parque abre por um tempo que vocês escolhem. A cada dia completo, um jogo surpresa entra no álbum dela. Sem anúncios, sem compras e sem internet dentro dos jogos.</p>
+      <h3>Tempo por dia</h3><div class="play-presets">${opts}</div>
+      <label class="field play-custom">Outro tempo (minutos)<input class="input" type="number" min="0" max="180" step="5" data-play="custom" value="${custom?Number(ps.minutes):''}" placeholder="ex.: 45"></label>
+      <label class="switch"><input type="checkbox" data-play="approval" ${ps.requires_approval?'checked':''}> Só liberar depois que um adulto aprovar todas as missões</label>
+      <p class="lead" style="margin-top:8px">${ps.requires_approval?'Recomendado: evita que a criança toque em “Fiz!” só para abrir os jogos.':'O parque abre assim que a criança marcar todas as missões, mesmo antes da aprovação.'}</p>
+    </section>
+    <section class="card"><h2>Hoje</h2><ul class="rows">${kids||'<li><span class="row-main"><small>Adicione uma criança na aba Família.</small></span></li>'}</ul></section>
+    <section class="card"><h2>Jogos disponíveis</h2><p class="lead">Desmarque os jogos que não quiser no álbum.</p><div class="play-games">${games}</div></section>
+  </div>`;
+}
+function gamesView(){setTimeout(()=>loadPlaySettings(),0);return `<div id="playView">${playInner()}</div>`}
+async function savePlay(patch){
+  const ps=playSettings;if(!ps||ps.error)return;
+  const next={minutes:Number(ps.minutes),requires_approval:Boolean(ps.requires_approval),disabled:[...(ps.disabled||[])],...patch};
+  try{
+    await rpc('parent_update_play',{p_family:familyId,p_minutes:next.minutes,p_requires_approval:next.requires_approval,p_disabled:next.disabled});
+    Object.assign(playSettings,next);
+    toast('Pronto','Parque de jogos atualizado.');
+  }catch(err){toast('Ops',friendlyError(err))}
+  const box=$('playView');if(box)box.innerHTML=playInner();
+}
+document.addEventListener('click',async(e)=>{
+  const b=e.target.closest('button[data-play]');if(!b)return;
+  const act=b.dataset.play;
+  if(act==='reload'){await loadPlaySettings(true);return}
+  if(act==='minutes'){await savePlay({minutes:Number(b.dataset.min)});return}
+  if(act==='bonus'){b.disabled=true;try{await rpc('parent_add_play_time',{p_family:familyId,p_player:b.dataset.id,p_minutes:Number(b.dataset.min)});toast('Tempo extra','+15 minutos só para hoje.');await loadPlaySettings(true)}catch(err){toast('Ops',friendlyError(err))}finally{b.disabled=false}}
+});
+document.addEventListener('change',async(e)=>{
+  const t=e.target.closest('[data-play]');if(!t||t.tagName==='BUTTON')return;
+  const act=t.dataset.play;
+  if(act==='custom'){const v=Math.round(Number(t.value));if(!Number.isFinite(v)||t.value==='')return;await savePlay({minutes:Math.max(0,Math.min(180,v))});return}
+  if(act==='approval'){await savePlay({requires_approval:t.checked});return}
+  if(act==='toggle'){const set=new Set(playSettings?.disabled||[]);if(t.checked)set.delete(t.dataset.id);else set.add(t.dataset.id);await savePlay({disabled:[...set]});}
+});
+function render(){if(!dash)return;if(tab==='jogos'&&$('playView')&&document.activeElement?.closest?.('#playView')){renderHeader();return}renderHeader();$('view').innerHTML=tab==='hoje'?todayView():tab==='familia'?familyView():tab==='rotina'?routineView():tab==='premios'?rewardsView():tab==='desafios'?challengesView():tab==='liga'?leagueView():tab==='jogos'?gamesView():configView();}
 
 document.querySelector('.parent-nav').addEventListener('click',(e)=>{const b=e.target.closest('[data-tab]');if(!b)return;tab=b.dataset.tab;render();if(tab==='config')loadBillingStatus()});
 
