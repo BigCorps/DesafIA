@@ -11,7 +11,8 @@ export default defineConfig({
         jogo: r('./index.html'),
         pais: r('./pais/index.html'),
         privacidade: r('./privacidade/index.html'),
-        termos: r('./termos/index.html')
+        termos: r('./termos/index.html'),
+        exclusao: r('./exclusao/index.html')
       }
     }
   }
