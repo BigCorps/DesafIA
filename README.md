@@ -1,8 +1,10 @@
-# DesafIA 0.5.2
+# DesafIA 0.5.3
 
 **Pequenos desafios, grandes hábitos.**
 
 **Ícone oficial 0.5.2:** personagem ampliado para melhor leitura no celular e na Play Store.
+
+**Correção 0.5.3:** personagem novamente apoiado na montanha no modo imersivo, mantendo a cobertura total do terreno na base da tela.
 
 **0.5.1:** corrige o retorno Pais → Jogo em mobile, mantém a alça do painel acessível após BFCache/alteração de viewport, cobre a base do terreno no modo imersivo e usa chevron SVG alinhado no expansor.
 

@@ -78,10 +78,11 @@ if(!Array.isArray(manifest.shortcuts)||manifest.shortcuts.length<2)fail('manifes
 
 if(!game.includes('function restoreGameLayout()')||!game.includes("window.addEventListener('pageshow',restoreGameLayout)"))fail('rehidratação do painel após Pais/BFCache ausente');else ok('retorno Pais → jogo reidrata viewport/painel');
 if(!gameCss.includes('--app-height')||!gameCss.includes('.panel-chevron svg'))fail('ajustes mobile/chevron 0.5.2 ausentes');else ok('viewport móvel e chevron SVG presentes');
+if(!gameCss.includes('0.5.3: personagem novamente apoiado no terreno')||!gameCss.includes('height:330px;min-height:0;bottom:-92px')||!gameCss.includes('.scene::after'))fail('correção de apoio do personagem 0.5.3 ausente');else ok('personagem apoiado no terreno no modo imersivo');
 if(!gameCss.includes('bottom:-13%'))fail('cobertura inferior do terreno imersivo ausente');else ok('terreno imersivo cobre a base da cena');
 
 const pkg=JSON.parse(readFileSync(join(root,'package.json'),'utf8'));
-if(pkg.version!=='0.5.2')fail(`versão inesperada: ${pkg.version}`);else ok('versão final 0.5.2');
+if(pkg.version!=='0.5.3')fail(`versão inesperada: ${pkg.version}`);else ok('versão final 0.5.3');
 
 if(failed)process.exit(1);
 console.log('\nDesafIA: checagem estática concluída.');

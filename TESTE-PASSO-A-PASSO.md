@@ -1,4 +1,4 @@
-# DesafIA 0.5.2 — checklist de teste
+# DesafIA 0.5.3 — checklist de teste
 
 Antes dos testes de cobrança, valide também:
 
@@ -14,6 +14,15 @@ Este guia usa a arquitetura definida para a BigCorps: **projeto Vercel separado 
 > Se a migration base `20260929000100_desafia_schema.sql` já foi aplicada, **não aplique novamente**. Para a 0.5.0 execute somente `20260930000100_desafia_billing.sql`.
 
 ---
+
+
+## 0.5.3 — teste visual do modo imersivo
+
+1. recolha o painel em **Ver só o personagem**;
+2. confirme que os pés/sombra do personagem encostam visualmente na montanha;
+3. confirme que não existe faixa azul entre o terreno e a alça inferior;
+4. teste também depois de entrar em `/pais/` e voltar ao jogo;
+5. repita em orientação vertical e, se possível, em uma tela mais baixa.
 
 ## 1. Supabase — confirmar a base
 

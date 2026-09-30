@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.5.3 — personagem apoiado no terreno
+
+- restaurada a geometria da montanha que mantém o personagem apoiado no modo imersivo;
+- removido o efeito colateral da 0.5.1/0.5.2 que fazia o personagem parecer flutuar;
+- adicionada uma faixa de terreno de segurança na base da cena para impedir vazamento do céu;
+- variante noturna usa a mesma cor escura do morro frontal;
+- ajuste específico para telas de menor altura;
+- cache PWA incrementado para distribuir a correção.
+
 ## 0.5.2 — ícone oficial ampliado
 
 - personagem ampliado no ícone para ficar legível em tamanhos pequenos no celular;

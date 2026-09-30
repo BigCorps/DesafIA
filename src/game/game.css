@@ -95,3 +95,20 @@
 .panel-toggle:active .panel-chevron{transform:scale(.94)}
 .game-shell.panel-collapsed .panel-toggle:active .panel-chevron{transform:rotate(180deg) scale(.94)}
 @media(display-mode:standalone){.game-body,.game-shell{height:var(--app-height);min-height:0}}
+
+
+/* 0.5.3: personagem novamente apoiado no terreno no modo imersivo */
+.game-shell.panel-collapsed .hill{left:-18%;right:-18%;border-radius:50% 50% 0 0/62% 62% 0 0}
+.game-shell.panel-collapsed .hill.back{height:330px;min-height:0;bottom:-92px}
+.game-shell.panel-collapsed .hill.front{height:285px;min-height:0;bottom:-100px}
+.game-shell.panel-collapsed .pet{top:57%;bottom:auto;--pet-y:-50%}
+.game-shell.panel-collapsed .scene::after{content:"";position:absolute;z-index:1;left:-2px;right:-2px;bottom:-2px;height:96px;background:#57bf7a;pointer-events:none}
+.game-shell.panel-collapsed .scene[data-time="noite"]::after{background:#356858}
+.game-shell.panel-collapsed .pet,.game-shell.panel-collapsed .scene-object{z-index:6}
+.game-shell.panel-collapsed .speech{z-index:8}
+@media(max-height:720px){
+  .game-shell.panel-collapsed .hill.back{height:285px;bottom:-82px}
+  .game-shell.panel-collapsed .hill.front{height:245px;bottom:-88px}
+  .game-shell.panel-collapsed .pet{top:58%;bottom:auto}
+  .game-shell.panel-collapsed .scene::after{height:82px}
+}
