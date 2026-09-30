@@ -5,6 +5,7 @@ import { createKidSupabase, supabaseReady, friendlyError } from '../lib/supabase
 import { createCloud } from './cloud.js';
 import { createLocal } from './local.js';
 import { setupPWA } from '../shared/pwa.js';
+import { initDistribution } from '../shared/platform.js';
 
 const $=(id)=>document.getElementById(id);
 const esc=(v)=>String(v??'').replace(/[&<>"']/g,(c)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -17,6 +18,7 @@ const PERIOD={manha:'de manhã',tarde:'à tarde',noite:'à noite'};
 
 let api=null,snap=null,tab='missoes',parentMode=false,unsubscribe=()=>{},refreshing=false,lastReaction=-1,reactionLockedUntil=0;
 const kidSb=createKidSupabase();
+initDistribution();
 
 function petName(){return String(snap?.petName||$('onboardName')?.value||'Pipo').trim().slice(0,12)||'Pipo'}
 function readPanelState(){try{return localStorage.getItem(panelStateKey)==='1'}catch{return false}}

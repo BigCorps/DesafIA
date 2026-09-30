@@ -1,29 +1,38 @@
-# DesafIA — evolução visual e conceitual
+# DesafIA — etapas concluídas
 
-## Etapa 1/4 — concluída
-- Google OAuth para responsáveis.
-- Acesso ao portal dos pais por dentro do jogo/PWA.
-- Cards da esquerda recolhem durante as falas do personagem.
+## 0.3.1 — Login e acesso dos pais
+- Google OAuth.
+- Área dos pais dentro do jogo.
+- HUD sai da frente durante as falas.
 
-## Etapa 2/4 — concluída
-- Painel inferior recolhível/expansível.
-- Modo imersivo **Ver só o personagem**.
-- Preferência persistida no aparelho.
-- HUD sai da frente no modo imersivo.
+## 0.3.2 — Modo imersivo
+- Painel recolhível.
+- Modo só personagem.
+- Preferência salva no aparelho.
 
-## Etapa 3/4 — concluída
-- Reações aleatórias ao toque, com cooldown e movimento reduzido.
-- Vibração leve quando suportada.
-- Sugestões Pipo, Lumi, Nino e Zupi + nome livre.
-- Nome escolhido usado dinamicamente na interface.
+## 0.3.3 — Personalidade
+- Reações aleatórias ao toque.
+- Cooldown e vibração leve.
+- Pipo, Lumi, Nino, Zupi e nome livre.
 
-## Etapa 4/4 — concluída neste ZIP
-- Service worker refeito sem clone tardio de `Response`.
-- Cache versionado + pré-cache dos assets Vite encontrados nas páginas.
-- Aviso de atualização da PWA com atualização sob controle do usuário.
-- Safe areas para notch e modo standalone.
-- Navegação pai ↔ jogo dentro da mesma PWA.
-- Atalhos da PWA para Jogo e Área dos pais.
-- Proteção contra variáveis Supabase placeholder.
-- Migration antiga removida do pacote final.
-- Documentação e checklist final consolidados.
+## 0.4.x — Acabamento mobile/PWA
+- Service worker e atualização controlada.
+- Safe areas.
+- Login/setup/dashboard corrigidos.
+- Personagem centralizado.
+- Touch/scroll do painel corrigido.
+
+## 0.5.0 — Plus + pagamentos
+- Checkout PIX Banco Inter no Web/PWA.
+- 30 dias de Plus por pagamento confirmado.
+- Renovação antecipada preserva dias restantes.
+- Invoices/subscriptions isoladas em `desafia.*`.
+- Google Play inicial em modo consumption-only.
+- Estrutura pronta para provider `google_play` futuro.
+
+## Próximas etapas sugeridas
+1. segundo responsável por convite;
+2. notificações de missão/prêmio;
+3. exclusão de criança/família e fluxo LGPD;
+4. domínio definitivo + Bubblewrap + AAB/Play Store;
+5. opcional: Google Play Billing/User Choice Billing no futuro.

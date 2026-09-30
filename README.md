@@ -1,4 +1,4 @@
-# DesafIA 0.4.1
+# DesafIA 0.5.0
 
 **Pequenos desafios, grandes hábitos.**
 
@@ -31,7 +31,7 @@ As ações da criança passam por RPCs específicas e precisam apresentar o segr
 
 ## Funcionalidades desta versão
 
-Correções 0.4.1: portal dos pais com estados exclusivos (login/setup/dashboard), primeiro acesso simplificado, logo oficial, painel mobile sem scroll preso e personagem centralizado no modo imersivo.
+0.5.0 adiciona a cobrança real do Plus via PIX Banco Inter no Web/PWA e separa o entitlement do meio de pagamento, deixando a primeira versão da Google Play em modo consumption-only.
 
 
 - schema isolado `desafia.*`, sem alterações globais em `public`;
@@ -53,16 +53,39 @@ Correções 0.4.1: portal dos pais com estados exclusivos (login/setup/dashboard
 - cache offline do shell e assets já visitados/pré-carregados;
 - aviso de nova versão da PWA antes de ativar um service worker novo;
 - safe areas para celulares com recorte/notch.
+- cobrança do DesafIA Plus via PIX Banco Inter no portal Web/PWA;
+- liberação idempotente de 30 dias de Plus após confirmação do PIX;
+- histórico de invoices e subscriptions no schema `desafia`;
+- distribuição Google Play em modo consumption-only, sem checkout externo dentro do app;
+- estrutura preparada para `provider = google_play` no futuro.
+
+## DesafIA Plus e pagamentos
+
+O preço do Plus **não fica no frontend**. Configure o secret da Edge Function:
+
+```text
+DESAFIA_PLUS_MONTHLY_CENTS=<valor em centavos>
+```
+
+A Edge Function `desafia-billing` reutiliza a infraestrutura Banco Inter/BigCorps já usada pelos produtos minhAi. A chave `BANCO_INTER_API_KEY` permanece somente no Supabase.
+
+Fluxo Web/PWA: **Config. → Plano → PIX → confirmação Inter → +30 dias de Plus**. A renovação PIX não é automática nesta versão.
+
+Para a Google Play, a primeira publicação é consumption-only: o app reconhece um Plus existente, mas não exibe checkout PIX nem link de compra. O TWA deve iniciar por `/?store=play`. Veja [`PLUS-E-PLAY.md`](PLUS-E-PLAY.md).
 
 ## Supabase
 
-A migration correta é somente:
+A instalação base usa:
 
 `supabase/migrations/20260929000100_desafia_schema.sql`
 
+A cobrança Plus acrescenta:
+
+`supabase/migrations/20260930000100_desafia_billing.sql`
+
 A migration antiga foi removida do ZIP final para evitar aplicação acidental.
 
-Se você **já aplicou essa migration no Supabase da minhAi**, a versão 0.4.0 não exige SQL adicional.
+Se a migration base já está aplicada, para atualizar da 0.4.x para a 0.5.0 execute **somente a migration de billing**. Não rode novamente a migration base.
 
 O schema `desafia` deve estar incluído em **Data API → Exposed schemas**. As tabelas continuam protegidas; o frontend acessa apenas as RPCs explicitamente liberadas.
 
@@ -138,10 +161,14 @@ src/
   pais/                 portal dos responsáveis
   shared/               personagem, progressão, PWA e estilos
   lib/supabase.js       clientes Supabase + segredo local do aparelho
+  pais/billing.js       cliente da Edge Function de cobrança
+  shared/platform.js    separa Web/PWA da distribuição Google Play
 supabase/
   migrations/           migration isolada do DesafIA
   VERIFICACAO-...sql    auditoria somente leitura
   ATIVAR-PLUS-TESTE.sql helper opcional de teste
+  VERIFICACAO-BILLING.sql auditoria somente leitura do billing
+  functions/desafia-billing/ Edge Function Inter/Plus
 public/
   manifest.webmanifest
   sw.js

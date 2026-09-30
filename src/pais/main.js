@@ -2,18 +2,27 @@ import './pais.css';
 import { createParentSupabase, supabaseReady, friendlyError } from '../lib/supabase.js';
 import { levelOf } from '../shared/progression.js';
 import { setupPWA } from '../shared/pwa.js';
+import { initDistribution, isPlayDistribution } from '../shared/platform.js';
+import { createBillingClient } from './billing.js';
 
 const $=(id)=>document.getElementById(id);
 const esc=(v)=>String(v??'').replace(/[&<>"']/g,(c)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const sb=createParentSupabase();
+const billing=createBillingClient(sb);
+initDistribution();
 let session=null,families=[],familyId=null,dash=null,tab='hoje',poll=null,entering=false;
+let billingState={familyId:null,loading:false,data:null,error:''},billingPoll=null;
 
 function toast(title,text){$('toastTitle').textContent=title;$('toastText').textContent=text;$('toast').classList.add('show');setTimeout(()=>$('toast').classList.remove('show'),2600)}
+function stopBillingPoll(){if(billingPoll){clearInterval(billingPoll);billingPoll=null}}
 function openInfo(html){$('modalBody').innerHTML=html;$('infoModal').classList.add('open')}
-$('modalClose').addEventListener('click',()=>$('infoModal').classList.remove('open'));
+function closeInfo(){stopBillingPoll();$('infoModal').classList.remove('open')}
+$('modalClose').addEventListener('click',closeInfo);
 async function rpc(fn,args={}){const {data,error}=await sb.rpc(fn,args);if(error)throw error;return data}
 function isPlus(){return Boolean(dash?.family?.plus)}
 function fmtDate(v){if(!v)return '—';try{return new Intl.DateTimeFormat('pt-BR',{dateStyle:'short',timeStyle:'short'}).format(new Date(v))}catch{return v}}
+function fmtMoney(cents){return new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format((Number(cents)||0)/100)}
+function billingError(err){const code=String(err?.message||err||'');const map={billing_price_not_configured:'O preço do Plus ainda não foi configurado.',banco_inter_not_configured:'A cobrança PIX ainda não foi configurada no servidor.',billing_company_not_found:'A conta recebedora BigCorps não foi encontrada.',billing_pix_key_not_configured:'A chave PIX da BigCorps não está configurada.',pix_create_failed:'Não foi possível gerar o PIX agora. Tente novamente.',paid_amount_mismatch:'O valor recebido não confere com esta cobrança. O acesso não foi liberado automaticamente.',invoice_not_found:'Esta cobrança não foi encontrada.',invoice_without_pix:'Esta cobrança ainda não recebeu um PIX válido.',forbidden:'Você não tem permissão para administrar este plano.',unauthorized:'Sua sessão expirou. Entre novamente.'};return map[code]||friendlyError(err)}
 
 function topNow(){requestAnimationFrame(()=>window.scrollTo({top:0,left:0,behavior:'auto'}))}
 function showAuth(){clearInterval(poll);$('authView').hidden=false;$('setupView').hidden=true;$('appView').hidden=true;$('logoutBtn').hidden=true;$('familySelect').hidden=true;topNow()}
@@ -47,7 +56,7 @@ $('googleLoginBtn').addEventListener('click',async()=>{
 $('logoutBtn').addEventListener('click',async()=>{await sb.auth.signOut();session=null;showAuth()});
 
 async function loadFamilies(){families=await rpc('my_families')||[];const sel=$('familySelect');sel.innerHTML=families.map((f)=>`<option value="${f.id}">${esc(f.name)}</option>`).join('');if(!familyId||!families.some((f)=>f.id===familyId))familyId=families[0]?.id||null;if(familyId)sel.value=familyId;}
-$('familySelect').addEventListener('change',async(e)=>{familyId=e.target.value;await loadDashboard()});
+$('familySelect').addEventListener('change',async(e)=>{familyId=e.target.value;billingState={familyId:null,loading:false,data:null,error:''};stopBillingPoll();await loadDashboard();if(tab==='config')await loadBillingStatus();});
 
 function setupView(){
   const suggested=suggestedFamily();
@@ -78,12 +87,68 @@ function routineView(){const child=dash.missions.filter((m)=>m.audience==='child
 function rewardsView(){return `<div class="grid"><section class="card"><h2>Prêmios da família</h2><p class="lead">São combinados reais. O jogo infantil não vende nada.</p><ul class="rows">${dash.rewards.map((r)=>`<li class="row"><span class="row-icon">${esc(r.icon)}</span><span class="row-main"><strong>${esc(r.title)} ${r.is_custom?'<span class="badge badge-plus">personalizado</span>':''}</strong><small>${r.cost} estrelas · ${r.active?'ativo':'desligado'}</small></span><span class="row-actions"><button class="btn btn-soft" data-act="edit-reward" data-id="${r.id}">Editar</button>${r.is_custom?`<button class="btn btn-danger" data-act="delete-reward" data-id="${r.id}">Excluir</button>`:''}</span></li>`).join('')}</ul></section><section class="card">${isPlus()?`<h2>Novo prêmio</h2><form class="form" data-form="create-reward"><div class="two"><label class="field">Nome<input class="input" name="title" maxlength="60" required></label><label class="field">Ícone<input class="input" name="icon" maxlength="8" value="🎁"></label></div><label class="field">Custo em estrelas<input class="input" type="number" name="cost" min="1" max="10000" value="100"></label><button class="btn btn-main">Criar prêmio</button></form>`:`<div class="plus-lock"><strong>Prêmios personalizados são Plus ✦</strong><p class="lead">Os prêmios padrão continuam disponíveis no plano grátis.</p></div>`}</section></div>`}
 function challengesView(){const list=(dash.challenges||[]).length?`<ul class="rows">${dash.challenges.map((c)=>`<li class="row"><span class="row-icon">🎯</span><span class="row-main"><strong>${esc(c.title)}</strong><small>${c.target_days} dias · ${esc(c.mission_title)}${c.prize?` · ${esc(c.prize)}`:''}</small></span><button class="btn btn-danger" data-act="delete-challenge" data-id="${c.id}">Excluir</button></li>`).join('')}</ul>`:empty('Nenhum desafio criado.');return `<div class="grid"><section class="card"><h2>Desafios</h2>${list}</section><section class="card">${isPlus()?`<h2>Novo desafio</h2><form class="form" data-form="create-challenge"><label class="field">Título<input class="input" name="title" maxlength="60" required placeholder="7 dias lendo juntos"></label><label class="field">Missão<select class="input" name="mission">${dash.missions.filter((m)=>m.audience==='child'&&m.active).map((m)=>`<option value="${m.id}">${esc(m.icon)} ${esc(m.title)}</option>`).join('')}</select></label><div class="two"><label class="field">Meta de dias<input class="input" type="number" name="days" min="1" max="60" value="7"></label><label class="field">Para<select class="input" name="player"><option value="">Todas as crianças</option>${dash.players.filter((p)=>p.kind==='child').map((p)=>`<option value="${p.id}">${esc(p.nickname)}</option>`).join('')}</select></label></div><label class="field">Prêmio especial (opcional)<input class="input" name="prize" maxlength="80"></label><button class="btn btn-main">Criar desafio</button></form>`:`<div class="plus-lock"><strong>Desafios fazem parte do Plus ✦</strong><p class="lead">O jogo básico, missões, estrelas e recompensas continuam funcionando no plano grátis.</p></div>`}</section></div>`}
 function leagueView(){const list=(dash.leagues||[]).length?dash.leagues.map((l)=>`<section class="card"><h2>${esc(l.name)}</h2><p class="lead">Código: <strong>${esc(l.code||'visível ao responsável')}</strong></p><ul class="rows">${(l.families||[]).map((f,i)=>`<li class="row"><span class="row-icon">${i+1}</span><span class="row-main"><strong>${esc(f.avatar)} ${esc(f.nickname)}</strong><small>${f.points} estrelas na semana</small></span></li>`).join('')}</ul></section>`).join(''):'';return `<div class="grid">${list||'<section class="card">'+empty('Sua família ainda não participa de uma liga.')+'</section>'}<section class="card">${isPlus()?`<h2>Criar ou entrar em uma liga</h2><div class="two"><form class="form" data-form="create-league"><label class="field">Nome da liga<input class="input" name="name" required maxlength="40"></label><label class="field">Apelido da família<input class="input" name="nickname" required maxlength="30" value="${esc(dash.family.name)}"></label><button class="btn btn-main">Criar liga</button></form><form class="form" data-form="join-league"><label class="field">Código<input class="input" name="code" required maxlength="9"></label><label class="field">Apelido da família<input class="input" name="nickname" required maxlength="30" value="${esc(dash.family.name)}"></label><button class="btn btn-soft">Entrar</button></form></div>`:`<div class="plus-lock"><strong>Ligas entre famílias são Plus ✦</strong><p class="lead">A competição é opcional; a meta cooperativa da própria família existe em todos os planos.</p></div>`}</section></div>`}
-function configView(){return `<div class="grid"><section class="card half"><h2>Configurações da família</h2><form class="form" data-form="update-family"><label class="field">Nome<input class="input" name="name" maxlength="60" value="${esc(dash.family.name)}"></label><label class="field">Meta semanal de estrelas<input class="input" type="number" min="100" max="10000" step="50" name="goal" value="${dash.family.weekly_goal}"></label><button class="btn btn-main">Salvar</button></form></section><section class="card half"><h2>Plano</h2><p class="lead"><strong>${dash.family.plus?'Plus ativo':'Plano grátis'}</strong><br>${dash.family.plan_expires_at?`Válido até ${fmtDate(dash.family.plan_expires_at)}`:'Sem cobrança configurada neste ZIP.'}</p><p class="lead">Para testes, o Plus pode ser ativado manualmente pelo SQL descrito no guia.</p></section><section class="card danger-zone"><h2>Privacidade e acesso</h2><p class="lead">Crianças não têm conta de e-mail. O aparelho guarda um segredo local que pode ser revogado aqui na aba Família. Sessões dos responsáveis usam o Supabase Auth.</p><a href="/privacidade/">Política de privacidade</a> · <a href="/termos/">Termos</a></section></div>`}
+function plusBenefits(features=[]){const fallback=['Até 10 crianças na família','Missões personalizadas','Prêmios personalizados','Desafios em família','Ligas entre famílias'];return `<ul class="plan-benefits">${(features.length?features:fallback).map((x)=>`<li>✓ ${esc(x)}</li>`).join('')}</ul>`}
+function planView(){
+  const active=Boolean(dash.family.plus),expires=dash.family.plan_expires_at;
+  if(isPlayDistribution()){
+    return `<div class="plan-card-head"><div><span class="plan-kicker">${active?'PLUS ATIVO':'PLANO ATUAL'}</span><strong>${active?'DesafIA Plus ✦':'Grátis'}</strong></div>${active&&expires?`<span class="plan-valid">até ${fmtDate(expires)}</span>`:''}</div>${plusBenefits(billingState.data?.plan?.features)}<div class="play-billing-note"><strong>App da Google Play</strong><p>${active?'Seu Plus é reconhecido automaticamente neste app.':'A contratação e a renovação do Plus são feitas fora deste aplicativo. Ao entrar com a mesma conta Google, o acesso é reconhecido automaticamente.'}</p></div>`;
+  }
+  if(billingState.loading&&!billingState.data)return `<div class="billing-loading">Carregando plano…</div>`;
+  if(billingState.error&&!billingState.data)return `<p class="lead">${esc(billingState.error)}</p><button class="btn btn-soft btn-block" data-act="billing-refresh">Tentar novamente</button>`;
+  const info=billingState.data,plan=info?.plan||{},pending=info?.pending_payment;
+  const price=Number(plan.price_cents||0)>0?fmtMoney(plan.price_cents):'Preço em configuração';
+  const configured=Boolean(info?.configured);
+  return `<div class="plan-card-head"><div><span class="plan-kicker">${active?'PLUS ATIVO':'PLANO ATUAL'}</span><strong>${active?'DesafIA Plus ✦':'Grátis'}</strong></div>${active&&expires?`<span class="plan-valid">até ${fmtDate(expires)}</span>`:''}</div><div class="plan-price"><strong>${price}</strong><span>${Number(plan.price_cents||0)>0?'por 30 dias':''}</span></div>${plusBenefits(plan.features)}${pending?`<div class="pending-payment"><span>PIX aguardando pagamento</span><strong>${fmtMoney(pending.amount_cents)}</strong><button class="btn btn-main btn-block" data-act="billing-resume">Continuar pagamento</button></div>`:`<button class="btn btn-main btn-block" data-act="billing-create" ${configured?'':'disabled'}>${active?'Renovar Plus por 30 dias':'Ativar DesafIA Plus'}</button>`}${!configured?'<p class="billing-small">A infraestrutura está pronta. Falta configurar o valor mensal e/ou a credencial de cobrança no Supabase.</p>':'<p class="billing-small">Pagamento único por PIX para 30 dias de Plus. A renovação não é automática.</p>'}`;
+}
+function configView(){return `<div class="grid"><section class="card half"><h2>Configurações da família</h2><form class="form" data-form="update-family"><label class="field">Nome<input class="input" name="name" maxlength="60" value="${esc(dash.family.name)}"></label><label class="field">Meta semanal de estrelas<input class="input" type="number" min="100" max="10000" step="50" name="goal" value="${dash.family.weekly_goal}"></label><button class="btn btn-main">Salvar</button></form></section><section class="card half plan-card"><h2>Plano</h2>${planView()}</section><section class="card danger-zone"><h2>Privacidade e acesso</h2><p class="lead">Crianças não têm conta de e-mail. O aparelho guarda um segredo local que pode ser revogado aqui na aba Família. Sessões dos responsáveis usam o Supabase Auth.</p><a href="/privacidade/">Política de privacidade</a> · <a href="/termos/">Termos</a></section></div>`}
 function render(){if(!dash)return;renderHeader();$('view').innerHTML=tab==='hoje'?todayView():tab==='familia'?familyView():tab==='rotina'?routineView():tab==='premios'?rewardsView():tab==='desafios'?challengesView():tab==='liga'?leagueView():configView();}
 
-document.querySelector('.parent-nav').addEventListener('click',(e)=>{const b=e.target.closest('[data-tab]');if(!b)return;tab=b.dataset.tab;render()});
+document.querySelector('.parent-nav').addEventListener('click',(e)=>{const b=e.target.closest('[data-tab]');if(!b)return;tab=b.dataset.tab;render();if(tab==='config')loadBillingStatus()});
+
+
+async function loadBillingStatus({rerender=true}={}){
+  if(!familyId||isPlayDistribution()){if(rerender&&tab==='config')render();return null}
+  if(billingState.loading)return billingState.data;
+  billingState={...billingState,familyId,loading:true,error:''};if(rerender&&tab==='config')render();
+  try{const data=await billing.status(familyId);billingState={familyId,loading:false,data,error:''};return data}
+  catch(err){billingState={familyId,loading:false,data:null,error:billingError(err)};return null}
+  finally{if(rerender&&tab==='config')render()}
+}
+function copyText(value){if(navigator.clipboard?.writeText)return navigator.clipboard.writeText(value);const t=document.createElement('textarea');t.value=value;t.style.position='fixed';t.style.opacity='0';document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();return Promise.resolve()}
+function paymentModal(payment){
+  const code=String(payment?.pix_code||''),qr=String(payment?.qr_code_url||''),amount=fmtMoney(payment?.amount_cents||0);
+  openInfo(`<div class="pix-checkout"><div class="pix-mark">✦</div><h2>DesafIA Plus</h2><div class="pix-amount"><strong>${amount}</strong><span>30 dias de Plus</span></div>${qr?`<img class="pix-qr" src="${esc(qr)}" alt="QR Code PIX">`:''}<p class="pix-help">Escaneie o QR Code ou copie o PIX abaixo. A liberação acontece automaticamente após a confirmação.</p><div class="pix-copy"><code id="pixCode">${esc(code)}</code><button class="btn btn-soft" id="copyPix">Copiar PIX</button></div><div class="payment-wait" id="paymentWait"><span class="payment-pulse"></span><span id="paymentWaitText">Aguardando pagamento…</span></div><button class="btn btn-main btn-block" id="checkPayment">Já paguei · verificar agora</button><small class="billing-small">O PIX expira em ${fmtDate(payment?.expires_at)}.</small></div>`);
+  $('copyPix')?.addEventListener('click',()=>copyText(code).then(()=>toast('PIX copiado','Cole no aplicativo do seu banco.')));
+  $('checkPayment')?.addEventListener('click',()=>checkBillingPayment(payment.invoice_id,false));
+  stopBillingPoll();billingPoll=setInterval(()=>checkBillingPayment(payment.invoice_id,true),4500);
+}
+async function checkBillingPayment(invoiceId,silent=true){
+  if(!invoiceId||!familyId)return;
+  const btn=$('checkPayment');if(btn&&!silent)btn.disabled=true;
+  try{
+    const result=await billing.check(familyId,invoiceId);
+    if(result.status==='paid'){
+      stopBillingPoll();
+      if($('modalBody'))$('modalBody').innerHTML='<div class="payment-success"><div>🎉</div><h2>Plus liberado!</h2><p>O pagamento foi confirmado e os recursos Plus já estão disponíveis para sua família.</p></div>';
+      await loadDashboard(true);await loadBillingStatus({rerender:false});if(tab==='config')render();toast('DesafIA Plus ativo','Pagamento confirmado.');
+      return;
+    }
+    if(result.status==='expired'){
+      stopBillingPoll();const t=$('paymentWaitText');if(t)t.textContent='Este PIX expirou. Feche e gere uma nova cobrança.';if(btn)btn.disabled=true;await loadBillingStatus({rerender:false});return;
+    }
+    const t=$('paymentWaitText');if(t&&!silent)t.textContent='Ainda aguardando a confirmação do PIX…';
+  }catch(err){if(!silent)toast('Não foi possível verificar',billingError(err))}
+  finally{if(btn&&!silent)btn.disabled=false}
+}
+async function beginBilling(){
+  if(isPlayDistribution()){toast('Plano Plus','A contratação é feita fora do aplicativo da Google Play.');return}
+  try{const result=await billing.create(familyId);if(!result?.payment)throw new Error('pix_create_failed');billingState={familyId,loading:false,data:{...(billingState.data||{}),pending_payment:result.payment},error:''};paymentModal(result.payment)}catch(err){toast('Não foi possível gerar o PIX',billingError(err))}
+}
 
 async function doAction(act,id){try{
+  if(act==='billing-refresh'){await loadBillingStatus();return}
+  if(act==='billing-create'){await beginBilling();return}
+  if(act==='billing-resume'){const p=billingState.data?.pending_payment;if(p)paymentModal(p);else await beginBilling();return}
   if(act==='open-game'){window.location.assign('/');return}
   if(act==='mission-approve')await rpc('decide_mission',{p_log:id,p_approve:true});
   if(act==='mission-reject')await rpc('decide_mission',{p_log:id,p_approve:false});

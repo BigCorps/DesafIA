@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.5.0 — Plus + Banco Inter + arquitetura Google Play
+
+- checkout real do DesafIA Plus via PIX Banco Inter no Web/PWA;
+- nova Edge Function `desafia-billing`, autenticada pelo Supabase Auth;
+- valor do Plus vem do secret `DESAFIA_PLUS_MONTHLY_CENTS`, nunca do navegador;
+- invoices, subscriptions e eventos de billing isolados em `desafia.*`;
+- confirmação valida status e valor no Inter antes de liberar o plano;
+- `apply_paid_invoice` idempotente acrescenta 30 dias sem perder dias de uma renovação antecipada;
+- modal PIX com QR Code, Copia e Cola, polling e verificação manual;
+- card de Plano agora permite ativar/renovar Plus no portal Web/PWA;
+- distribuição Google Play marcada por `/?store=play`;
+- versão Play inicial funciona como consumption-only: reconhece Plus, mas oculta checkout/link externo;
+- schema preparado para futuro provider `google_play` sem alterar regras do jogo;
+- cache PWA incrementado para a versão 0.5.0.
+
 ## 0.4.1 — correções de teste mobile/pais
 
 - Área dos pais passa a abrir o portal real mesmo quando o jogo está em modo local/demo;

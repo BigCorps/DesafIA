@@ -5,8 +5,8 @@ import { execFileSync } from 'node:child_process';
 const root=new URL('../',import.meta.url).pathname;
 const required=[
   'index.html','pais/index.html','src/game/main.js','src/game/cloud.js','src/game/local.js','src/pais/main.js',
-  'src/lib/supabase.js','src/shared/pet.js','src/shared/progression.js','src/shared/pwa.js',
-  'supabase/migrations/20260929000100_desafia_schema.sql','TESTE-PASSO-A-PASSO.md','vercel.json',
+  'src/lib/supabase.js','src/shared/pet.js','src/shared/progression.js','src/shared/pwa.js','src/shared/platform.js','src/pais/billing.js',
+  'supabase/migrations/20260929000100_desafia_schema.sql','supabase/migrations/20260930000100_desafia_billing.sql','supabase/functions/desafia-billing/index.ts','TESTE-PASSO-A-PASSO.md','vercel.json',
   'public/manifest.webmanifest','public/sw.js'
 ];
 let failed=false;
@@ -29,10 +29,12 @@ function walk(dir){
 walk(join(root,'src'));walk(join(root,'scripts'));
 
 const sql=readFileSync(join(root,'supabase/migrations/20260929000100_desafia_schema.sql'),'utf8');
+const billingSql=readFileSync(join(root,'supabase/migrations/20260930000100_desafia_billing.sql'),'utf8');
 for(const dangerous of ['revoke all on all tables in schema public','nspname = \'public\'','signInAnonymously','alter publication supabase_realtime']){
-  if(sql.toLowerCase().includes(dangerous.toLowerCase()))fail(`migration contém padrão proibido: ${dangerous}`)
+  for(const [name,body] of [['base',sql],['billing',billingSql]]) if(body.toLowerCase().includes(dangerous.toLowerCase()))fail(`migration ${name} contém padrão proibido: ${dangerous}`)
 }
 if(!sql.includes('create schema if not exists desafia'))fail('migration não cria schema desafia');else ok('migration isolada em schema desafia');
+if(!billingSql.includes('desafia.billing_invoices')||!billingSql.includes('desafia.apply_paid_invoice'))fail('migration de billing incompleta');else ok('billing isolado em desafia.*');
 if(existsSync(join(root,'supabase/migrations/20260928000000_desafia_init.sql')))fail('migration antiga ainda está no pacote final');else ok('migration antiga removida do pacote final');
 
 const sources=['src/game/cloud.js','src/lib/supabase.js'].map((f)=>readFileSync(join(root,f),'utf8')).join('\n');
@@ -57,6 +59,13 @@ const gameCss=readFileSync(join(root,'src/game/game.css'),'utf8');
 if(!gameCss.includes('top:57%;bottom:auto;--pet-y:-50%'))fail('personagem não centralizado no modo imersivo');else ok('personagem centralizado no modo imersivo');
 if(!gameCss.includes('height:100dvh;overflow:hidden'))fail('viewport mobile ainda pode rolar externamente');else ok('viewport mobile fixa e painel rolável');
 
+const billingClient=readFileSync(join(root,'src/pais/billing.js'),'utf8');
+const platform=readFileSync(join(root,'src/shared/platform.js'),'utf8');
+const billingFn=readFileSync(join(root,'supabase/functions/desafia-billing/index.ts'),'utf8');
+if(!billingClient.includes("functions.invoke('desafia-billing'")||!parent.includes('billing-create'))fail('frontend Plus/PIX incompleto');else ok('frontend Plus chama Edge Function dedicada');
+if(!platform.includes("get('store')")||!parent.includes('isPlayDistribution()'))fail('modo Google Play consumption-only ausente');else ok('modo Google Play separa checkout Web do app');
+if(!billingFn.includes('DESAFIA_PLUS_MONTHLY_CENTS')||!billingFn.includes('inter.btsolucao.com.br/cob.php')||!billingFn.includes('apply_paid_invoice'))fail('Edge Function de billing incompleta');else ok('billing usa Inter e entitlement idempotente');
+
 const sw=readFileSync(join(root,'public/sw.js'),'utf8');
 if(!sw.includes("event.data?.type === 'SKIP_WAITING'"))fail('service worker sem atualização controlada');else ok('service worker aceita atualização controlada');
 if(sw.includes('cache.put(req, res.clone())')||sw.includes('cache.put(request, response.clone())'))fail('service worker contém clone tardio conhecido');else ok('service worker sem padrão de clone tardio');
@@ -67,7 +76,7 @@ const manifest=JSON.parse(readFileSync(join(root,'public/manifest.webmanifest'),
 if(!Array.isArray(manifest.shortcuts)||manifest.shortcuts.length<2)fail('manifest sem atalhos Jogo/Pais');else ok('manifest com atalhos Jogo/Pais');
 
 const pkg=JSON.parse(readFileSync(join(root,'package.json'),'utf8'));
-if(pkg.version!=='0.4.1')fail(`versão inesperada: ${pkg.version}`);else ok('versão final 0.4.1');
+if(pkg.version!=='0.5.0')fail(`versão inesperada: ${pkg.version}`);else ok('versão final 0.5.0');
 
 if(failed)process.exit(1);
 console.log('\nDesafIA: checagem estática concluída.');

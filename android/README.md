@@ -1,30 +1,51 @@
 # Android / TWA — DesafIA
 
-O app Android deve ser uma **Trusted Web Activity (TWA)** apontando para o domínio de produção do DesafIA.
+O app Android deve ser uma **Trusted Web Activity (TWA)** apontando para o domínio definitivo do DesafIA.
 
-Durante os testes web você pode usar `https://desafia.vercel.app/`. Para a Play Store, prefira definir primeiro o domínio definitivo e gerar o pacote Android já com ele, evitando uma atualização só para trocar de host.
+Durante os testes web use `https://desafia.vercel.app/`. Para a Play Store, defina primeiro o domínio definitivo e só então gere o projeto Bubblewrap.
+
+## Estratégia de pagamento na primeira publicação
+
+O app da Google Play será **consumption-only**: ele reconhece o Plus comprado no Web/PWA, mas não mostra checkout PIX nem link externo de compra dentro da versão distribuída pela Play.
+
+Para marcar a instalação como distribuição Play, configure o `startUrl` do Bubblewrap como:
+
+```text
+https://SEU-DOMINIO/?store=play
+```
+
+O frontend persiste esse marcador e, no Portal dos Pais, troca o card de cobrança por uma mensagem informativa. Um PWA instalado diretamente pelo navegador continua com checkout PIX normal.
+
+Mais detalhes: `PLUS-E-PLAY.md`.
 
 ## Antes de gerar
 
-1. publique a versão final na Vercel;
-2. confirme o `manifest.webmanifest` no domínio escolhido;
-3. gere/obtenha o certificado de assinatura Android;
-4. coloque o SHA-256 correto em `public/.well-known/assetlinks.json`;
-5. faça deploy novamente;
-6. confirme `/.well-known/assetlinks.json` publicamente;
-7. teste Jogo → Pais → Google → retorno ao `/pais/` em aparelho real.
+1. publique e teste a versão web;
+2. defina o domínio definitivo;
+3. confirme o `manifest.webmanifest`;
+4. gere o projeto `android/twa` com Bubblewrap usando `/?store=play` como Start URL;
+5. gere/obtenha o certificado de assinatura Android;
+6. coloque o SHA-256 correto em `public/.well-known/assetlinks.json`;
+7. faça deploy novamente;
+8. confirme `/.well-known/assetlinks.json` publicamente;
+9. teste Jogo → Pais → Google → retorno ao `/pais/`;
+10. confira que o app Play reconhece Plus existente, mas não mostra o botão PIX.
 
 ## Configuração conceitual
 
-- Start URL: `/`
+- Start URL: `/?store=play`
 - Scope: `/`
 - Display: `standalone`
 - Orientação: `portrait`
 - Cor principal: `#7658F5`
 - Área dos pais: `/pais/`
 
-Você pode usar PWABuilder ou Bubblewrap para gerar a TWA. O `assetlinks.json` precisa corresponder exatamente ao package name e ao certificado usados na versão assinada.
+O `assetlinks.json` precisa corresponder exatamente ao package name e ao certificado usados na versão assinada.
 
-## Observação sobre Google OAuth
+## Google OAuth
 
-Ao sair da origem do DesafIA para a tela do Google, o Android pode mostrar UI do navegador/Custom Tab temporariamente. O importante é que, após autenticar, o redirect permitido do Supabase retorne para `<domínio>/pais/` e a sessão seja recuperada pelo `supabase-js`.
+Ao sair da origem do DesafIA para a tela do Google, o Android pode mostrar UI do navegador/Custom Tab temporariamente. Após autenticar, o redirect permitido do Supabase deve retornar para `<domínio>/pais/` e a sessão é recuperada pelo `supabase-js`.
+
+## Depois do Bubblewrap
+
+O repositório já possui workflow de GitHub Actions preparado para compilar o projeto Android em `android/twa` e gerar o AAB. Bubblewrap cria o projeto uma vez; o Actions passa a fazer os builds seguintes.
