@@ -1,4 +1,4 @@
-const CACHE = 'desafia-v9-20260930-jogos';
+const CACHE = 'desafia-v10-20260930-playready';
 const CACHE_PREFIX = 'desafia-';
 const SHELL = [
   '/',

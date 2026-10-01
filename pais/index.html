@@ -11,6 +11,10 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <style>
+    /* Preparação Google Play: não exibir indicação de idade/dificuldade nos minijogos. */
+    .play-game span:last-child > small { display: none !important; }
+  </style>
 </head>
 <body>
   <header class="topbar">

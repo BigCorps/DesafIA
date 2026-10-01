@@ -112,3 +112,16 @@
   .game-shell.panel-collapsed .pet{top:58%;bottom:auto}
   .game-shell.panel-collapsed .scene::after{height:82px}
 }
+
+/* 0.6.0 Play-ready: balão acima do personagem no modo imersivo.
+   A borda inferior do balão fica acima do topo do pet, inclusive durante pulo/dança. */
+.game-shell.panel-collapsed .speech{
+  bottom:calc(43% + min(29vw,127.5px) + 52px);
+  max-width:min(78vw,280px);
+}
+@media(max-height:720px){
+  .game-shell.panel-collapsed .speech{bottom:calc(42% + 100px + 46px)}
+}
+@media(max-width:360px) and (min-height:721px){
+  .game-shell.panel-collapsed .speech{bottom:calc(43% + 110px + 46px)}
+}

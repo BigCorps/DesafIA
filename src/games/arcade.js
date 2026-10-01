@@ -89,7 +89,7 @@ export function createArcade({ getApi, getSnap, say, toast, onChange }) {
       const canPlay = status.missionsOk && status.started && status.remaining > 0 && !off;
       return `<button class="arc-card ${status.featured === g.id ? 'featured' : ''}" style="--gc:${g.color}" data-arc="play" data-id="${g.id}" ${canPlay ? '' : 'disabled'}>
         ${status.newGames.includes(g.id) ? '<span class="new">Novo!</span>' : medal ? `<span class="medal">${medal}</span>` : ''}
-        <span class="ic">${g.icon}</span><b>${esc(g.title)}</b><small>${off ? 'Desligado pelos adultos' : best ? `Recorde: ${best}` : `Idade ${g.ages}`}</small></button>`;
+        <span class="ic">${g.icon}</span><b>${esc(g.title)}</b><small>${off ? 'Desligado pelos adultos' : best ? `Recorde: ${best}` : 'Novo no seu álbum'}</small></button>`;
     }).join('')}</div>`;
   }
   function view() {
@@ -157,6 +157,7 @@ export function createArcade({ getApi, getSnap, say, toast, onChange }) {
     player = { root, game: null, inst: null, phase: 'closed', remaining: 0, pending: 0, timer: 0, score: 0 };
     root.addEventListener('click', onPlayerClick);
     document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('online', onOnline);
     return player;
   }
   const $p = (id) => player.root.querySelector(`#${id}`);
@@ -326,6 +327,10 @@ export function createArcade({ getApi, getSnap, say, toast, onChange }) {
     p.root.hidden = true;
     await refresh();
     if (status?.remaining <= 0 && status?.started) say?.('Foi muito divertido! Agora vamos descansar um pouco? 😴', 3000);
+  }
+
+  function onOnline() {
+    if (player?.pending > 0) flush();
   }
 
   function onVisibility() {
