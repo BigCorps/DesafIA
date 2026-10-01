@@ -1,0 +1,4 @@
+#Thu Oct 01 12:48:35 UTC 2026
+base.0=/workspaces/DesafIA/android/twa/app/build/intermediates/dex/release/minifyReleaseWithR8/classes.dex
+renamed.0=classes.dex
+path.0=classes.dex

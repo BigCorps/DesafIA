@@ -1,0 +1,16 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.app.desafia",
+      "sha256_cert_fingerprints": [
+        "3E:3B:15:2B:A3:DC:86:C6:F5:FE:76:90:1D:DA:75:6B:89:6B:B1:A1:7A:6B:FD:AC:57:34:61:A8:C9:AE:F3:6C",
+        "B8:6B:0B:8A:37:75:CB:44:64:24:FF:2E:46:F9:4E:37:33:36:0D:3E:C5:9E:6E:1A:BC:D2:1D:18:B8:29:05:77",
+        "94:5B:A6:BC:BC:9B:6A:F3:CE:34:A5:25:AC:7D:03:7C:A2:BC:5B:E3:5C:14:0F:EB:4E:9E:F1:BA:AE:61:9A:F1"
+      ]
+    }
+  }
+]

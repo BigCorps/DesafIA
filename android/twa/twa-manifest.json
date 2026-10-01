@@ -1,0 +1,60 @@
+{
+  "packageId": "com.app.desafia",
+  "host": "desafia.app",
+  "name": "DesafIA: pequenos desafios, grandes hábitos",
+  "launcherName": "DesafIA",
+  "display": "standalone",
+  "themeColor": "#7658F5",
+  "themeColorDark": "#000000",
+  "navigationColor": "#000000",
+  "navigationColorDark": "#000000",
+  "navigationDividerColor": "#000000",
+  "navigationDividerColorDark": "#000000",
+  "backgroundColor": "#7658F5",
+  "enableNotifications": true,
+  "startUrl": "/?store=play",
+  "iconUrl": "https://desafia.app/icons/icon-512.png",
+  "maskableIconUrl": "https://desafia.app/icons/maskable-512.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "/workspaces/DesafIA/android/twa/android.keystore",
+    "alias": "android"
+  },
+  "appVersionName": "0.6.0",
+  "appVersionCode": 1,
+  "shortcuts": [
+    {
+      "name": "Jogar",
+      "shortName": "Jogar",
+      "url": "https://desafia.app/?origem=atalho",
+      "chosenIconUrl": "https://desafia.app/icons/icon-192.png"
+    },
+    {
+      "name": "Área dos pais",
+      "shortName": "Pais",
+      "url": "https://desafia.app/pais/?origem=atalho",
+      "chosenIconUrl": "https://desafia.app/icons/icon-192.png"
+    }
+  ],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://desafia.app/manifest.webmanifest",
+  "fallbackType": "customtabs",
+  "features": {},
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "fullScopeUrl": "https://desafia.app/",
+  "minSdkVersion": 21,
+  "orientation": "portrait",
+  "fingerprints": [],
+  "additionalTrustedOrigins": [],
+  "retainedBundles": [],
+  "protocolHandlers": [],
+  "fileHandlers": [],
+  "launchHandlerClientMode": "",
+  "displayOverride": [],
+  "appVersion": "1"
+}
