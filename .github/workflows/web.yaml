@@ -14,5 +14,11 @@ jobs:
         with:
           node-version: 22
       - run: npm install
+      - name: Prepare assetlinks check before Bubblewrap
+        run: |
+          if [ ! -f public/.well-known/assetlinks.json ]; then
+            mkdir -p public/.well-known
+            printf '[]\n' > public/.well-known/assetlinks.json
+          fi
       - run: npm run check
       - run: npm run build
