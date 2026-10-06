@@ -175,7 +175,7 @@ para timeout/HTTP 429/5xx. Falhas definitivas viram failed; falta de elegibilida
 vira skipped. Timeout HTTP é 15 segundos. Idempotência do fornecedor não é garantia
 indefinida; não reabrir manualmente items sent ou recriar UUIDs para retry.
 
-## Edge Function e scheduler futuro
+## Edge Function e scheduler
 
 Código: `supabase/functions/desafia-notifications/index.ts` + `delivery.js`.
 Endpoint futuro:
@@ -185,18 +185,39 @@ Endpoint futuro:
   `configured` indica app ID/key presentes; `delivery_enabled` exige também flag
   exata true. Com configured=true e delivery_enabled=false, consentimento,
   preferências, permission prompt por clique e inscrições continuam disponíveis.
-- POST `{"action":"process"}`: exige `Authorization: Bearer <service role>`;
-  segredo apenas no scheduler confiável. Não chamar esse endpoint do frontend.
+- POST `{"action":"process"}`: aceita `apikey` exatamente igual à chave
+  `cron_automations` do JSON `SUPABASE_SECRET_KEYS`. Outras chaves, valores vazios
+  e JSON inválido não autorizam esse método. Mantém compatibilidade com
+  `Authorization: Bearer <SUPABASE_SERVICE_ROLE_KEY>` para chamadas internas.
+  Requisições não autorizadas retornam 401; status permanece público.
+  Nenhuma credencial é retornada ou registrada. Não chamar process do frontend.
 - Flag ausente/false/outro valor: retorna `push_disabled`, não acessa fornecedor
   nem marca qualquer entrega como sent. Key/app ID ausentes: fail-closed.
 
-Preparar execução externa a cada **15 minutos**; não existe cron nesta branch.
-Uma implantação futura precisará `--no-verify-jwt` para a capability pública com
-publishable keys modernas. A autorização do processamento é verificada dentro da
-função; a operação continua protegida por service role mesmo sem o JWT gateway.
-Não alterar auth global do Supabase compartilhado. Use um scheduler confiável com
-credencial protegida, sem expor service role em código client ou logs. Criar rotina
-de retenção dos registros técnicos será uma decisão operacional separada.
+A migration `20261006000200_desafia_notifications_scheduler.sql` prepara o job
+**desafia-notifications**, executado a cada **15 minutos** (`*/15 * * * *`) por
+pg_cron + pg_net. Remove apenas o job anterior com o mesmo nome antes de registrar
+novamente, dentro de uma transação, permitindo reaplicação. Não modifica outros
+jobs, schemas de produtos, extensões ou secrets. Não foi aplicada remotamente.
+
+Em runtime, o Postgres lê `project_url` e `cron_secret_key` de
+`vault.decrypted_secrets`. A chave enviada no header apikey deve corresponder à
+entrada `cron_automations` fornecida à Edge em `SUPABASE_SECRET_KEYS`. São bindings
+existentes; nenhuma nova secret é criada. Service role não fica armazenada no cron.
+O comando agendado contém consultas ao Vault, nunca valores secretos literais.
+
+Com `DESAFIA_PUSH_ENABLED=false`, o scheduler pode chamar a função, mas ela retorna
+push_disabled sem preparar/processar fila ou enviar push. Somente o valor exato
+true permite processamento normal, condicionado à configuração e elegibilidade.
+A migration não muda essa flag e não envia push por si só.
+
+A implantação deve manter `--no-verify-jwt`: permite capability pública e o header
+apikey moderno; a função verifica a autorização de process internamente. Não
+alterar auth global do Supabase compartilhado. Primeiro redeployar a Edge com o
+helper de autorização, depois aplicar a migration revisada, mantendo envio
+false. Conferir presença de pg_cron/pg_net e os dois bindings Vault existentes;
+monitorar execuções/HTTP sem imprimir headers ou valores secretos. A validade dos
+bindings e execução real dependem dessa validação operacional externa.
 
 ## Validação e troubleshooting
 
@@ -218,6 +239,11 @@ npm install --prefix /tmp/desafia-push-tools --no-audit --no-fund @electric-sql/
 DESAFIA_TEST_PGLITE_ROOT=/tmp/desafia-push-tools/node_modules/@electric-sql/pglite \
   node --test scripts/notifications-sql.test.mjs
 ```
+
+O harness PGlite não oferece pg_cron/pg_net/Vault: a nova migration do scheduler
+requer PostgreSQL com essas extensões, e o harness atual precisará isolar essa
+migration antes de ser usado novamente para os testes do núcleo. Nesta revisão,
+o scheduler é coberto por teste estático; sua execução real permanece pendente.
 
 O harness simula somente `auth.uid/jwt` e roles locais para carregar todas as
 migrations reais e testar isolamento/RLS/ACL, identidades, consentimento,
@@ -245,7 +271,7 @@ configuração do scheduler, sem imprimir credenciais ou respostas cruas do vend
 2. Revisar a CSP adicionada, conferir a origem no OneSignal e validar frontend no
    Preview de staging, mantendo envio desligado.
 3. Revisar SQL, segurança e teste de concorrência em banco isolado; validar Edge
-   com Deno/runtime Supabase. Só depois aplicar migration e publicar função mediante
+   com Deno/runtime Supabase. Só depois publicar função e aplicar migration mediante
    autorização, mantendo `DESAFIA_PUSH_ENABLED=false`.
 4. Validar permissões/opt-out e inscrições em aparelhos de teste, configurar
    scheduler protegido e decidir retenção. Qualquer envio real/ativação exige

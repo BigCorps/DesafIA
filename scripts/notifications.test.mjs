@@ -240,3 +240,50 @@ test('parent save error restores confirmed UI preferences without removing a hea
   assert.equal(fields.summary.checked, false);
   assert.equal(root.dataset.busy, 'false');
 });
+
+test('scheduler auth accepts only cron_automations or the legacy service bearer without leaking keys', async () => {
+  const cron = 'test-only-cron-key', other = 'test-only-other-key';
+  const json = JSON.stringify({ default: other, cron_automations: cron });
+  for (const [keys, apiKey, authorized] of [
+    [json, cron, true], [json, 'wrong', false], [json, other, false],
+    ['{malformed', cron, false], ['{}', cron, false], ['null', cron, false],
+    ['[]', cron, false], ['{"cron_automations":42}', '42', false],
+    ['{"cron_automations":""}', '', false], [undefined, cron, false]
+  ]) {
+    const { handler, calls, requests } = backend({ SUPABASE_SECRET_KEYS: keys });
+    const request = new Request('https://local.invalid/', { method: 'POST',
+      headers: { apikey: apiKey }, body: JSON.stringify({ action: 'process' }) });
+    const res = await handler(request), body = await res.text();
+    assert.equal(res.status, authorized ? 200 : 401);
+    for (const secret of [cron, other, 'test-only-service', 'test-only-key']) assert.equal(body.includes(secret), false);
+    if (!authorized) { assert.deepEqual(calls, []); assert.deepEqual(requests, []); }
+    else assert.equal(requests.length, 1); // simulated provider only
+  }
+  const { handler } = backend({ SUPABASE_SECRET_KEYS: '{malformed' });
+  assert.equal((await handler(req())).status, 200); // legacy bearer still valid
+  const status = await handler(new Request('https://local.invalid/', { method: 'POST', body: JSON.stringify({ action: 'status' }) }));
+  assert.equal(status.status, 200);
+  assert.deepEqual(await status.json(), { configured: true, delivery_enabled: true, status: 'available' });
+});
+
+test('valid cron key with delivery disabled never touches the queue or provider', async () => {
+  const { handler, calls, requests } = backend({ DESAFIA_PUSH_ENABLED: 'false', SUPABASE_SECRET_KEYS: JSON.stringify({ cron_automations: 'test-only-cron-key' }) });
+  const res = await handler(new Request('https://local.invalid/', { method: 'POST', headers: { apikey: 'test-only-cron-key' }, body: '{"action":"process"}' }));
+  assert.equal(res.status, 200);
+  assert.deepEqual(await res.json(), { status: 'push_disabled', sent: 0 });
+  assert.deepEqual(calls, []); assert.deepEqual(requests, []);
+});
+
+test('scheduler migration is scoped, repeatable and reads existing Vault bindings at runtime', () => {
+  const migration = readFileSync(new URL('../supabase/migrations/20261006000200_desafia_notifications_scheduler.sql', import.meta.url), 'utf8');
+  assert.match(migration, /cron\.unschedule\('desafia-notifications'\)[\s\S]*where exists[\s\S]*cron\.job where jobname = 'desafia-notifications'/);
+  assert.match(migration, /cron\.schedule\(\s*'desafia-notifications',\s*'\*\/15 \* \* \* \*'/);
+  assert.match(migration, /net\.http_post\(/);
+  assert.equal((migration.match(/vault\.decrypted_secrets/g) || []).length, 2);
+  assert.match(migration, /where name = 'project_url'/);
+  assert.match(migration, /'apikey',\s*\(\s*select decrypted_secret from vault\.decrypted_secrets\s*where name = 'cron_secret_key'/);
+  assert.match(migration, /body := '\{"action":"process"\}'::jsonb/);
+  assert.doesNotMatch(migration, /sb_secret_|SUPABASE_SERVICE_ROLE_KEY|Bearer|Authorization|create\s+extension|alter\s|create\s+table/i);
+  assert.doesNotMatch(migration, /'apikey',\s*'[^']+'/);
+  assert.match(migration, /begin;[\s\S]*commit;/);
+});
