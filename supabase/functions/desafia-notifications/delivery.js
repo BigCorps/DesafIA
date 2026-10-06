@@ -18,6 +18,18 @@ export function notificationContent(item) {
   throw new Error('unsupported_event');
 }
 
+// Accept only the designated cron key; malformed/missing configuration fails closed.
+export function isAuthorizedProcessRequest(req, env) {
+  const serviceKey = env('SUPABASE_SERVICE_ROLE_KEY');
+  if (typeof serviceKey === 'string' && serviceKey.length > 0
+    && req.headers.get('authorization') === `Bearer ${serviceKey}`) return true;
+  try {
+    const keys = JSON.parse(env('SUPABASE_SECRET_KEYS') || '{}');
+    const cronKey = keys && !Array.isArray(keys) && keys.cron_automations;
+    return typeof cronKey === 'string' && cronKey.length > 0 && req.headers.get('apikey') === cronKey;
+  } catch { return false; }
+}
+
 export function createNotificationHandler({ env, rpc, request = fetch }) {
   return async (req) => {
     if (req.method === 'OPTIONS') return response({ ok: true });
@@ -30,8 +42,7 @@ export function createNotificationHandler({ env, rpc, request = fetch }) {
       const configured = Boolean(env('DESAFIA_ONESIGNAL_APP_ID') && env('DESAFIA_ONESIGNAL_REST_API_KEY'));
       return response({ configured, delivery_enabled: enabled && configured, status: !enabled ? 'push_disabled' : configured ? 'available' : 'push_not_configured' });
     }
-    const serviceKey = env('SUPABASE_SERVICE_ROLE_KEY') || '';
-    if (!serviceKey || req.headers.get('authorization') !== `Bearer ${serviceKey}`) return response({ error: 'unauthorized' }, 401);
+    if (!isAuthorizedProcessRequest(req, env)) return response({ error: 'unauthorized' }, 401);
     if (!enabled) return response({ status: 'push_disabled', sent: 0 });
     const appId = env('DESAFIA_ONESIGNAL_APP_ID'), apiKey = env('DESAFIA_ONESIGNAL_REST_API_KEY');
     if (!appId || !apiKey) return response({ status: 'push_not_configured', sent: 0 }, 503);
