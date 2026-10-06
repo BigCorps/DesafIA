@@ -125,3 +125,6 @@
 @media(max-width:360px) and (min-height:721px){
   .game-shell.panel-collapsed .speech{bottom:calc(43% + 110px + 46px)}
 }
+
+/* Optional, explicitly consented push CTA; never shown in local/demo/QA. */
+.push-child-cta{position:fixed;z-index:90;bottom:max(8px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);width:min(420px,calc(100vw - 20px));padding:10px;border-radius:12px;background:#fff;color:#2a2350;box-shadow:0 3px 16px #0002;display:flex;flex-wrap:wrap;gap:6px;font:12px/1.4 system-ui,sans-serif}

@@ -1,4 +1,5 @@
 import './game.css';
+import { createChildNotificationUI } from './notifications.js';
 import { qaEnabled, uiStorage } from '../shared/qa-environment.js';
 import { petMarkup, applyLook, COLORS, HATS, ACCS, PET_NAMES } from '../shared/pet.js';
 import { HOUSE_ITEMS, levelOf, levelProgress } from '../shared/progression.js';
@@ -21,6 +22,7 @@ const PERIOD={manha:'de manhã',tarde:'à tarde',noite:'à noite'};
 let api=null,snap=null,tab='missoes',parentMode=false,unsubscribe=()=>{},refreshing=false,lastReaction=-1,reactionLockedUntil=0;
 let qaController=null;
 const kidSb=qaEnabled?null:createKidSupabase();
+const childNotifications=createChildNotificationUI(kidSb);
 const arcade=createArcade({getApi:()=>api,getSnap:()=>snap,say:(t,ms)=>say(t,ms),toast:(a,b)=>toast(a,b),onChange:(goTab)=>{if(goTab){tab=goTab;expandPanel();renderPanel();return}if(tab==='jogos')renderPanel();}});
 if(!qaEnabled)initDistribution();
 
@@ -69,7 +71,7 @@ syncViewport();
 window.addEventListener('pageshow',restoreGameLayout);
 window.addEventListener('resize',syncViewport,{passive:true});
 window.visualViewport?.addEventListener('resize',syncViewport,{passive:true});
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')restoreGameLayout()});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){restoreGameLayout();if(!qaEnabled)childNotifications.refresh(api,{visible:true});}});
 
 $('petMount').innerHTML=petMarkup('main');
 $('connectPet').innerHTML=petMarkup('connect');
@@ -183,9 +185,9 @@ function checkFresh(prev,next){
   const seen=new Set(seenList(seenRewardKey));const fresh=(next.recentRewards||[]).filter((r)=>!seen.has(r.id));if(fresh.length){const r=fresh.at(-1);markSeen(seenRewardKey,r.id);if(r.status==='delivered'){jump();burst(['🎉','🎁','✨',r.icon],18);toast('Prêmio entregue!',r.title)}else{say('Esse prêmio ficou para depois. Suas estrelas voltaram!');}}
   if(next.dailyBonusDay&&!seenList(seenDayKey).includes(next.dailyBonusDay)){markSeen(seenDayKey,next.dailyBonusDay);openModal('celebrationModal');burst(['🎉','⭐','✨','💜'],22);jump();}
 }
-async function refresh(){if(!api||refreshing)return;refreshing=true;try{const next=await api.snapshot();if(!next){if(api.kind==='cloud'){unsubscribe();openModal('connectModal');}return}const prev=snap;snap=next;checkFresh(prev,next);renderAll();arcade.onSnapshot(prev,next);}catch(e){console.warn(e)}finally{refreshing=false}}
-async function startLocal(){unsubscribe();api=qaController?.api||createLocal();snap=await api.snapshot();closeModal('connectModal');renderAll();arcade.onSnapshot(null,snap);unsubscribe=api.subscribe(refresh);if(!uiStorage.getItem('desafia-local-onboarded'))openModal('onboardingModal');}
-async function startCloud(){unsubscribe();api=createCloud(kidSb);const next=await api.snapshot();if(!next){openModal('connectModal');return false}snap=next;closeModal('connectModal');renderAll();arcade.onSnapshot(null,snap);unsubscribe=api.subscribe(refresh);return true;}
+async function refresh(){if(!api||refreshing)return;refreshing=true;try{const next=await api.snapshot();if(!next){if(api.kind==='cloud'){unsubscribe();if(!qaEnabled)childNotifications.refresh(api);openModal('connectModal');}return}const prev=snap;snap=next;checkFresh(prev,next);renderAll();arcade.onSnapshot(prev,next);if(!qaEnabled)childNotifications.refresh(api);}catch(e){console.warn(e)}finally{refreshing=false}}
+async function startLocal(){if(!qaEnabled)childNotifications.refresh(null);unsubscribe();api=qaController?.api||createLocal();snap=await api.snapshot();closeModal('connectModal');renderAll();arcade.onSnapshot(null,snap);unsubscribe=api.subscribe(refresh);if(!uiStorage.getItem('desafia-local-onboarded'))openModal('onboardingModal');}
+async function startCloud(){unsubscribe();api=createCloud(kidSb);const next=await api.snapshot();if(!next){childNotifications.refresh(api);openModal('connectModal');return false}snap=next;closeModal('connectModal');renderAll();arcade.onSnapshot(null,snap);unsubscribe=api.subscribe(refresh);childNotifications.refresh(api);return true;}
 async function savePet(name,look){try{await api.savePet(name,look);await refresh()}catch(e){toast('Não foi possível salvar',friendlyError(e));}}
 
 $('codeInput').addEventListener('input',(e)=>{const raw=e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,8);e.target.value=raw.length>4?`${raw.slice(0,4)}-${raw.slice(4)}`:raw;});

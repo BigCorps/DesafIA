@@ -34,6 +34,8 @@ export function createCloud(sb) {
   }
   return {
     kind:'cloud',
+    notificationState:()=>call('device_notification_state'),
+    notificationSubscription:(active)=>call('device_notification_subscription',{p_active:active}),
     async snapshot(){ return map(await call('kid_snapshot')); },
     async pair(code){
       const { data, error } = await sb.rpc('pair_device', {
