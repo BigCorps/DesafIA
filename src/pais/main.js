@@ -1,4 +1,6 @@
 import './pais.css';
+import { renderNotifications } from './notifications.js';
+import { notifications } from '../shared/notifications.js';
 import { createParentSupabase, supabaseReady, friendlyError } from '../lib/supabase.js';
 import { levelOf } from '../shared/progression.js';
 import { setupPWA } from '../shared/pwa.js';
@@ -54,7 +56,7 @@ $('googleLoginBtn').addEventListener('click',async()=>{
     $('loginError').textContent=friendlyError(err);btn.disabled=false;
   }
 });
-$('logoutBtn').addEventListener('click',async()=>{await sb.auth.signOut();session=null;showAuth()});
+$('logoutBtn').addEventListener('click',async()=>{notifications.logout();await sb.auth.signOut();session=null;showAuth()});
 
 async function loadFamilies(){families=await rpc('my_families')||[];const sel=$('familySelect');sel.innerHTML=families.map((f)=>`<option value="${f.id}">${esc(f.name)}</option>`).join('');if(!familyId||!families.some((f)=>f.id===familyId))familyId=families[0]?.id||null;if(familyId)sel.value=familyId;}
 $('familySelect').addEventListener('change',async(e)=>{familyId=e.target.value;billingState={familyId:null,loading:false,data:null,error:''};stopBillingPoll();await loadDashboard();if(tab==='config')await loadBillingStatus();});
@@ -101,7 +103,7 @@ function planView(){
   const configured=Boolean(info?.configured);
   return `<div class="plan-card-head"><div><span class="plan-kicker">${active?'PLUS ATIVO':'PLANO ATUAL'}</span><strong>${active?'DesafIA Plus ✦':'Grátis'}</strong></div>${active&&expires?`<span class="plan-valid">até ${fmtDate(expires)}</span>`:''}</div><div class="plan-price"><strong>${price}</strong><span>${Number(plan.price_cents||0)>0?'por 30 dias':''}</span></div>${plusBenefits(plan.features)}${pending?`<div class="pending-payment"><span>PIX aguardando pagamento</span><strong>${fmtMoney(pending.amount_cents)}</strong><button class="btn btn-main btn-block" data-act="billing-resume">Continuar pagamento</button></div>`:`<button class="btn btn-main btn-block" data-act="billing-create" ${configured?'':'disabled'}>${active?'Renovar Plus por 30 dias':'Ativar DesafIA Plus'}</button>`}${!configured?'<p class="billing-small">A infraestrutura está pronta. Falta configurar o valor mensal e/ou a credencial de cobrança no Supabase.</p>':'<p class="billing-small">Pagamento único por PIX para 30 dias de Plus. A renovação não é automática.</p>'}`;
 }
-function configView(){return `<div class="grid"><section class="card half"><h2>Configurações da família</h2><form class="form" data-form="update-family"><label class="field">Nome<input class="input" name="name" maxlength="60" value="${esc(dash.family.name)}"></label><label class="field">Meta semanal de estrelas<input class="input" type="number" min="100" max="10000" step="50" name="goal" value="${dash.family.weekly_goal}"></label><button class="btn btn-main">Salvar</button></form></section><section class="card half plan-card"><h2>Plano</h2>${planView()}</section><section class="card danger-zone"><h2>Privacidade e acesso</h2><p class="lead">Crianças não têm conta de e-mail. O aparelho guarda um segredo local que pode ser revogado aqui na aba Família. Sessões dos responsáveis usam o Supabase Auth.</p><a href="/privacidade/">Política de privacidade</a> · <a href="/termos/">Termos</a></section></div>`}
+function configView(){return `<div class="grid"><section class="card half"><h2>Configurações da família</h2><form class="form" data-form="update-family"><label class="field">Nome<input class="input" name="name" maxlength="60" value="${esc(dash.family.name)}"></label><label class="field">Meta semanal de estrelas<input class="input" type="number" min="100" max="10000" step="50" name="goal" value="${dash.family.weekly_goal}"></label><button class="btn btn-main">Salvar</button></form></section><section class="card half plan-card"><h2>Plano</h2>${planView()}</section><section class="card" id="notificationsSettings"></section><section class="card danger-zone"><h2>Privacidade e acesso</h2><p class="lead">Crianças não têm conta de e-mail. O aparelho guarda um segredo local que pode ser revogado aqui na aba Família. Sessões dos responsáveis usam o Supabase Auth.</p><a href="/privacidade/">Política de privacidade</a> · <a href="/termos/">Termos</a></section></div>`}
 
 // ---------------------------------------------------------------------------
 // Parque de minijogos (aba Jogos)
@@ -170,7 +172,7 @@ document.addEventListener('change',async(e)=>{
   if(act==='approval'){await savePlay({requires_approval:t.checked});return}
   if(act==='toggle'){const set=new Set(playSettings?.disabled||[]);if(t.checked)set.delete(t.dataset.id);else set.add(t.dataset.id);await savePlay({disabled:[...set]});}
 });
-function render(){if(!dash)return;if(tab==='jogos'&&$('playView')&&document.activeElement?.closest?.('#playView')){renderHeader();return}renderHeader();$('view').innerHTML=tab==='hoje'?todayView():tab==='familia'?familyView():tab==='rotina'?routineView():tab==='premios'?rewardsView():tab==='desafios'?challengesView():tab==='liga'?leagueView():tab==='jogos'?gamesView():configView();}
+function render(){if(!dash)return;if(tab==='config'&&($('notificationsSettings')?.dataset.busy==='true'||document.activeElement?.closest?.('#notificationsSettings'))){renderHeader();return;}if(tab==='jogos'&&$('playView')&&document.activeElement?.closest?.('#playView')){renderHeader();return}renderHeader();$('view').innerHTML=tab==='hoje'?todayView():tab==='familia'?familyView():tab==='rotina'?routineView():tab==='premios'?rewardsView():tab==='desafios'?challengesView():tab==='liga'?leagueView():tab==='jogos'?gamesView():configView();if(tab==='config')renderNotifications({sb,familyId,root:$('notificationsSettings')});}
 
 document.querySelector('.parent-nav').addEventListener('click',(e)=>{const b=e.target.closest('[data-tab]');if(!b)return;tab=b.dataset.tab;render();if(tab==='config')loadBillingStatus()});
 
@@ -265,7 +267,7 @@ async function bootstrap(){
 }
 sb?.auth.onAuthStateChange((event,next)=>{
   const hadSession=Boolean(session);session=next;
-  if(!next){showAuth();return}
+  if(!next){if(notifications.remembered()?.kind==='parent')notifications.logout();showAuth();return}
   if(!hadSession||event==='SIGNED_IN')setTimeout(()=>enterAuthenticated().catch((err)=>toast('Ops',friendlyError(err))),0);
 });
 setupPWA();
