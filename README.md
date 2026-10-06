@@ -58,6 +58,15 @@ BigCorps/DesafIA
               └── schema desafia
 ```
 
+## Notificações opcionais (preparadas, envio desligado)
+
+A integração OneSignal v16 usa consentimento explícito do responsável e do
+aparelho infantil, identidades opacas e fila isolada em `desafia`.
+`DESAFIA_PUSH_ENABLED` deve permanecer `false` até ativação autorizada. Nenhuma
+migration, Edge Function ou cron é aplicada automaticamente por esta branch.
+Veja [docs/ONESIGNAL.md](docs/ONESIGNAL.md) para configuração, testes e os
+pré-requisitos externos de CSP/origem antes de validar push no Preview.
+
 ## Segurança do aparelho infantil
 
 O Supabase é compartilhado por vários produtos BigCorps. Para não habilitar Anonymous Auth globalmente, o aparelho infantil cria um segredo aleatório de 256 bits. O banco guarda somente o SHA-256 desse segredo em `desafia.devices`.
