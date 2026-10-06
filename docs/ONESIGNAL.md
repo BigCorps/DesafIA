@@ -55,15 +55,19 @@ Referências: [Web SDK](https://documentation.onesignal.com/docs/web-sdk-referen
 [worker](https://documentation.onesignal.com/docs/onesignal-service-worker),
 [Create notification](https://documentation.onesignal.com/reference/create-notification).
 
-### Pré-requisito externo: CSP e origem
+### CSP e origem
 
-O `vercel.json` atual limita `script-src` a `'self'` e `connect-src` ao Supabase.
-Isso **bloqueia o SDK/worker remoto e as requisições do OneSignal**. O arquivo não
-foi alterado, conforme o escopo solicitado. Não há bypass ou proxy para contornar
-a política. Uma revisão separada deverá permitir somente os domínios oficiais
-necessários: `cdn.onesignal.com` para scripts/worker e `api.onesignal.com` /
-`onesignal.com` para o SDK, ajustando diretivas de script/conexão do worker conforme
-as requisições efetivas observadas. Não liberar wildcards indiscriminadamente.
+A revisão permite somente estas origens adicionais em `vercel.json`:
+
+- `script-src`: `https://cdn.onesignal.com`, para SDK/shim e importScripts do worker;
+- `connect-src`: `https://onesignal.com` e `https://api.onesignal.com`, para os endpoints oficiais do SDK v16.
+
+O worker local continua com `worker-src 'self'` e escopo `/onesignal/`. A regra
+CSP geral também é aplicada à resposta do worker e permite seu importScripts.
+Não são necessários frame-src externo ou proxy iframe nesta integração HTTPS
+same-origin. Não foram adicionados wildcard, `https:` irrestrito ou unsafe-eval.
+Todas as demais diretivas, headers e política de deployment main/staging foram
+preservadas. O teste JS verifica a CSP e é executado por `npm run check`.
 
 No painel OneSignal, usar configuração Custom Code ou garantir que prompts
 automáticos, bell e auto-resubscribe estejam desligados. A integração não os
@@ -71,16 +75,18 @@ contorna; configurações efetivas incompatíveis bloqueiam a ativação.
 O app Web Push também precisa aceitar a origem HTTPS de teste nas configurações
 OneSignal. URLs Vercel Preview e produção têm origens e inscrições distintas.
 Sem CSP/origem compatíveis, push falha silenciosamente e o app segue funcionando.
-Nesta branch não se modifica a configuração externa OneSignal/Vercel.
+Nesta branch somente a CSP versionada foi ajustada; não se modifica configuração remota OneSignal/Vercel.
 
 ## Consentimento e identidades
 
 **Responsável:** Config. → Notificações → ativa aviso de missão e/ou resumo por
-interação explícita. A RPC autenticada obtém/cria um UUID aleatório próprio,
-distinto do `auth.users.id`; o browser pede permissão e só depois salva opções
-ativas. A identidade é estável por responsável; preferências são por
-responsável/família. Em um navegador novo, as opções não indicam inscrição ativa
-até o responsável consentir nesse aparelho. Logout faz optOut/logout e remove o
+interação explícita e salva as preferências independentemente da inscrição
+neste browser. Um botão separado “Ativar notificações neste aparelho” pede
+permissão somente após clique. A RPC autenticada obtém/cria um UUID aleatório próprio,
+distinto do `auth.users.id`; o browser pede permissão e sincroniza sua inscrição. A identidade é estável por responsável; preferências são por
+responsável/família. Em um navegador novo, as checkboxes continuam refletindo as preferências backend;
+o estado de inscrição local aparece separadamente. Erros ao salvar não retiram
+inscrições saudáveis nem apagam preferências confirmadas. Logout faz optOut/logout e remove o
 marcador de consentimento local. O opt-out também tenta remover a inscrição
 push nativa exclusivamente da registration `/onesignal/`, caso CSP/fornecedor
 impeça o SDK; nunca remove a registration PWA `/`. A saída do Supabase não
@@ -176,7 +182,9 @@ Endpoint futuro:
 `https://<PROJECT_REF>.supabase.co/functions/v1/desafia-notifications`.
 
 - POST `{"action":"status"}`: capability pública, sem credenciais/identidades;
-  enabled só quando flag exata true e configuração privada presente.
+  `configured` indica app ID/key presentes; `delivery_enabled` exige também flag
+  exata true. Com configured=true e delivery_enabled=false, consentimento,
+  preferências, permission prompt por clique e inscrições continuam disponíveis.
 - POST `{"action":"process"}`: exige `Authorization: Bearer <service role>`;
   segredo apenas no scheduler confiável. Não chamar esse endpoint do frontend.
 - Flag ausente/false/outro valor: retorna `push_disabled`, não acessa fornecedor
@@ -223,7 +231,7 @@ permissão do sistema e configuração OneSignal. iOS normalmente exige PWA inst
 na tela inicial; browsers podem exigir um novo clique após carregar SDK/rede para
 preservar a ativação do usuário. Negação não será repetida automaticamente.
 
-Se a seção disser indisponível: flag falsa, Edge ainda não implantada, config
+Se a seção disser indisponível: Edge ainda não implantada, config
 ausente, RPC não instalada ou rede bloqueada. Se permissão não ativar: verificar
 CSP no console, origem OneSignal, instalação/suporte do browser e permissões do
 sistema. Status infantil autorizado significa consentimento parental, não push
@@ -234,7 +242,7 @@ configuração do scheduler, sem imprimir credenciais ou respostas cruas do vend
 ## Sequência externa após revisão
 
 1. Revisar diff e PR para staging; não há merge nesta tarefa.
-2. Aprovar separadamente a compatibilidade de CSP/origem e validar frontend no
+2. Revisar a CSP adicionada, conferir a origem no OneSignal e validar frontend no
    Preview de staging, mantendo envio desligado.
 3. Revisar SQL, segurança e teste de concorrência em banco isolado; validar Edge
    com Deno/runtime Supabase. Só depois aplicar migration e publicar função mediante
@@ -243,3 +251,18 @@ configuração do scheduler, sem imprimir credenciais ou respostas cruas do vend
    scheduler protegido e decidir retenção. Qualquer envio real/ativação exige
    autorização separada. A branch, sozinha, não torna backend ou push prontos para
    produção.
+
+## Frequência de consultas frontend
+
+Capability `action=status`: cache em memória por cliente Supabase de cinco minutos,
+inclusive respostas negativas, com deduplicação de chamadas concorrentes. A UI usa
+`configured`, nunca `delivery_enabled`, como disponibilidade para configuração.
+A Edge continua retornando push_disabled sem preparar/processar fila ou chamar
+fornecedor quando `DESAFIA_PUSH_ENABLED` não for exatamente true.
+
+Estado infantil: consulta no início cloud e depois no máximo a cada três minutos;
+os snapshots de oito segundos continuam passando pelo throttle sem RPC adicional.
+Ao voltar a visible, permite rechecagem somente após pelo menos um minuto desde a
+última consulta. Clique no CTA sempre revalida consentimento. Inscrição é sincronizada
+somente se o estado observado divergir de `push_active`. Revogação bloqueia envios
+no backend imediatamente; optOut local ocorre na próxima checagem razoável.

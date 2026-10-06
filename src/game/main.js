@@ -71,7 +71,7 @@ syncViewport();
 window.addEventListener('pageshow',restoreGameLayout);
 window.addEventListener('resize',syncViewport,{passive:true});
 window.visualViewport?.addEventListener('resize',syncViewport,{passive:true});
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')restoreGameLayout()});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){restoreGameLayout();if(!qaEnabled)childNotifications.refresh(api,{visible:true});}});
 
 $('petMount').innerHTML=petMarkup('main');
 $('connectPet').innerHTML=petMarkup('connect');

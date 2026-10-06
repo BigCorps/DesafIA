@@ -65,7 +65,7 @@ aparelho infantil, identidades opacas e fila isolada em `desafia`.
 `DESAFIA_PUSH_ENABLED` deve permanecer `false` até ativação autorizada. Nenhuma
 migration, Edge Function ou cron é aplicada automaticamente por esta branch.
 Veja [docs/ONESIGNAL.md](docs/ONESIGNAL.md) para configuração, testes e os
-pré-requisitos externos de CSP/origem antes de validar push no Preview.
+CSP e pré-requisitos de origem antes de validar inscrições no Preview com envio desligado.
 
 ## Segurança do aparelho infantil
 

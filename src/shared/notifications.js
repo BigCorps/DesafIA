@@ -46,9 +46,10 @@ export async function initializeNotificationsSDK(sdk, appId) {
 }
 
 // Dependency injection keeps browser consent behavior independently testable.
-export function createNotifications({ load = loadSDK, storage = globalThis.localStorage,
+export function createNotifications({ load = loadSDK, storage = globalThis.localStorage, now = Date.now,
   appId = import.meta.env?.VITE_ONESIGNAL_APP_ID || PUBLIC_APP_ID } = {}) {
   let sdk = null;
+  const capabilities = new WeakMap();
   const remembered = () => { try { return JSON.parse(storage.getItem(LOCAL_KEY) || 'null'); } catch { return null; } };
   const remember = (identity) => storage.setItem(LOCAL_KEY, JSON.stringify(identity));
   const state = () => ({ supported: Boolean(sdk), permission: sdk?.Notifications.permissionNative || globalThis.Notification?.permission || 'default',
@@ -74,8 +75,15 @@ export function createNotifications({ load = loadSDK, storage = globalThis.local
   return {
     state, remembered,
     async available(sb) {
-      try { const { data, error } = await sb.functions.invoke('desafia-notifications', { body: { action: 'status' } }); return !error && data?.enabled === true; }
-      catch { return false; }
+      if (!sb) return false;
+      const cached = capabilities.get(sb);
+      if (cached && now() < cached.expires) return cached.promise;
+      const promise = (async () => {
+        try { const { data, error } = await sb.functions.invoke('desafia-notifications', { body: { action: 'status' } }); return !error && data?.configured === true; }
+        catch { return false; }
+      })();
+      capabilities.set(sb, { promise, expires: now() + 5 * 60 * 1000 });
+      return promise;
     },
     async activate(externalId, kind, { consent, enabled, interaction } = {}) {
       if (consent !== true || enabled !== true || interaction !== true || !/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(externalId || '')) return false;

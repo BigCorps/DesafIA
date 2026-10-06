@@ -28,7 +28,7 @@ export function createNotificationHandler({ env, rpc, request = fetch }) {
     // Public capability information contains no credentials or identities.
     if (body?.action === 'status') {
       const configured = Boolean(env('DESAFIA_ONESIGNAL_APP_ID') && env('DESAFIA_ONESIGNAL_REST_API_KEY'));
-      return response({ enabled: enabled && configured, status: !enabled ? 'push_disabled' : configured ? 'available' : 'push_not_configured' });
+      return response({ configured, delivery_enabled: enabled && configured, status: !enabled ? 'push_disabled' : configured ? 'available' : 'push_not_configured' });
     }
     const serviceKey = env('SUPABASE_SERVICE_ROLE_KEY') || '';
     if (!serviceKey || req.headers.get('authorization') !== `Bearer ${serviceKey}`) return response({ error: 'unauthorized' }, 401);

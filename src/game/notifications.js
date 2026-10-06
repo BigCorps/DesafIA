@@ -1,24 +1,31 @@
 import { notifications } from '../shared/notifications.js';
 
-export function createChildNotificationUI(sb) {
-  let busy = false, root = null, latest = null;
+export function createChildNotificationUI(sb, { notify = notifications, now = Date.now } = {}) {
+  let busy = false, root = null, latest = null, lastCheck = -Infinity, currentApi = null;
   const hide = () => { root?.remove(); root = null; };
   return {
-    async refresh(api) {
+    async refresh(api, { visible = false } = {}) {
+      if (api?.kind !== 'cloud' || !sb) { hide(); currentApi = null; lastCheck = -Infinity; return; }
+      const interval = visible ? 60 * 1000 : 3 * 60 * 1000;
+      if (api === currentApi && now() - lastCheck < interval) return;
       if (busy) return;
-      busy = true;
+      busy = true; currentApi = api; lastCheck = now();
       try {
-        if (api?.kind !== 'cloud' || !sb) { hide(); return; }
         const authorized = await api.notificationState();
+        if (api !== currentApi) return;
         latest = authorized;
-        if (!authorized?.authorized || !await notifications.available(sb)) {
-          hide(); if (notifications.remembered()?.kind === 'child_device') await notifications.optOut();
+        const configured = authorized?.authorized && await notify.available(sb);
+        if (api !== currentApi) return;
+        if (!configured) {
+          hide(); if (notify.remembered()?.kind === 'child_device') await notify.optOut();
           return;
         }
-        if (await notifications.restore(authorized.external_id, 'child_device')) {
-          hide(); await api.notificationSubscription(true); return;
+        const active = await notify.restore(authorized.external_id, 'child_device');
+        if (api !== currentApi) return;
+        if (active) {
+          hide(); if (authorized.push_active !== true) await api.notificationSubscription(true); return;
         }
-        await api.notificationSubscription(false);
+        if (authorized.push_active === true) await api.notificationSubscription(false);
         if (root) return;
         root = document.createElement('aside');
         root.className = 'push-child-cta';
@@ -29,16 +36,16 @@ export function createChildNotificationUI(sb) {
           const button = event.currentTarget; button.disabled = true;
           try {
             // Consent can be revoked between boot and this click; reread it.
-            latest = await api.notificationState();
-            const enabled = await notifications.available(sb);
-            const active = await notifications.activate(latest?.external_id, 'child_device', { consent: latest?.authorized === true, enabled, interaction: true });
-            if (active) { await api.notificationSubscription(true); hide(); }
+            latest = await api.notificationState(); lastCheck = now();
+            const enabled = await notify.available(sb);
+            const active = await notify.activate(latest?.external_id, 'child_device', { consent: latest?.authorized === true, enabled, interaction: true });
+            if (active) { if (latest.push_active !== true) await api.notificationSubscription(true); hide(); }
             else { button.textContent = 'Não ativado · tentar depois'; }
-          } catch { await notifications.optOut(); button.textContent = 'Indisponível · tentar depois'; }
+          } catch { await notify.optOut(); button.textContent = 'Indisponível · tentar depois'; }
           finally { button.disabled = false; }
         });
         if (!sessionStorage.getItem('desafia-push-dismissed')) document.body.appendChild(root);
-      } catch { hide(); if (notifications.remembered()?.kind === 'child_device') await notifications.optOut(); }
+      } catch { hide(); if (notify.remembered()?.kind === 'child_device') await notify.optOut(); }
       finally { busy = false; }
     }
   };
