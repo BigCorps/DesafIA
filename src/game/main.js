@@ -1,4 +1,5 @@
 import './game.css';
+import { qaEnabled, uiStorage } from '../shared/qa-environment.js';
 import { petMarkup, applyLook, COLORS, HATS, ACCS, PET_NAMES } from '../shared/pet.js';
 import { HOUSE_ITEMS, levelOf, levelProgress } from '../shared/progression.js';
 import { createKidSupabase, supabaseReady, friendlyError } from '../lib/supabase.js';
@@ -18,12 +19,13 @@ const TIMES=['dia','tarde','noite'];
 const PERIOD={manha:'de manhã',tarde:'à tarde',noite:'à noite'};
 
 let api=null,snap=null,tab='missoes',parentMode=false,unsubscribe=()=>{},refreshing=false,lastReaction=-1,reactionLockedUntil=0;
-const kidSb=createKidSupabase();
+let qaController=null;
+const kidSb=qaEnabled?null:createKidSupabase();
 const arcade=createArcade({getApi:()=>api,getSnap:()=>snap,say:(t,ms)=>say(t,ms),toast:(a,b)=>toast(a,b),onChange:(goTab)=>{if(goTab){tab=goTab;expandPanel();renderPanel();return}if(tab==='jogos')renderPanel();}});
-initDistribution();
+if(!qaEnabled)initDistribution();
 
 function petName(){return String(snap?.petName||$('onboardName')?.value||'Pipo').trim().slice(0,12)||'Pipo'}
-function readPanelState(){try{return localStorage.getItem(panelStateKey)==='1'}catch{return false}}
+function readPanelState(){try{return uiStorage.getItem(panelStateKey)==='1'}catch{return false}}
 function viewportHeight(){return Math.round(window.visualViewport?.height||window.innerHeight||document.documentElement.clientHeight||0)}
 let viewportRaf=0;
 function syncViewport(){
@@ -59,7 +61,7 @@ function setPanelCollapsed(collapsed,{persist=true}={}){
   $('panelToggle').setAttribute('aria-expanded',String(!collapsed));
   $('panelToggleHint').textContent=collapsed?'toque para ver missões, casa e prêmios':'toque para esconder missões e menus';
   syncPetLabels();
-  if(persist){try{localStorage.setItem(panelStateKey,collapsed?'1':'0')}catch{}}
+  if(persist){try{uiStorage.setItem(panelStateKey,collapsed?'1':'0')}catch{}}
 }
 function expandPanel(){setPanelCollapsed(false)}
 setPanelCollapsed(readPanelState(),{persist:false});
@@ -130,8 +132,8 @@ function burst(chars=['⭐','✨','💜'],n=12){
   const x=rect.left-scene.left+rect.width/2,y=rect.top-scene.top+rect.height/2;
   for(let i=0;i<n;i+=1){const e=document.createElement('span');e.className='particle';e.textContent=chars[i%chars.length];e.style.left=`${x}px`;e.style.top=`${y}px`;$('fx').appendChild(e);const a=Math.random()*Math.PI*2,d=55+Math.random()*85,dx=Math.cos(a)*d,dy=Math.sin(a)*d-45;e.animate([{transform:'translate(-50%,-50%) scale(.4)',opacity:1},{transform:`translate(calc(-50% + ${dx}px),calc(-50% + ${dy}px)) scale(1.2)`,opacity:1,offset:.62},{transform:`translate(calc(-50% + ${dx}px),calc(-50% + ${dy+34}px)) scale(.75)`,opacity:0}],{duration:reduce?20:800+Math.random()*400,easing:'cubic-bezier(.2,.8,.3,1)'}).onfinish=()=>e.remove();}
 }
-function seenList(key){try{return JSON.parse(localStorage.getItem(key)||'[]')}catch{return[]}}
-function markSeen(key,id){const a=[...new Set([...seenList(key),id])].slice(-100);localStorage.setItem(key,JSON.stringify(a));}
+function seenList(key){try{return JSON.parse(uiStorage.getItem(key)||'[]')}catch{return[]}}
+function markSeen(key,id){const a=[...new Set([...seenList(key),id])].slice(-100);uiStorage.setItem(key,JSON.stringify(a));}
 
 function renderStats(){
   if(!snap)return;const p=levelProgress(snap.xp);$('starCount').textContent=snap.wallet;$('petNameTitle').textContent=snap.petName;$('lvlText').textContent=`Nível ${p.level} · ${p.remaining} XP para o próximo`;$('xpFill').style.width=`${p.pct}%`;$('xpBar').setAttribute('aria-valuenow',String(p.pct));applyLook(petSvg,snap.look,snap.xp);
@@ -182,12 +184,12 @@ function checkFresh(prev,next){
   if(next.dailyBonusDay&&!seenList(seenDayKey).includes(next.dailyBonusDay)){markSeen(seenDayKey,next.dailyBonusDay);openModal('celebrationModal');burst(['🎉','⭐','✨','💜'],22);jump();}
 }
 async function refresh(){if(!api||refreshing)return;refreshing=true;try{const next=await api.snapshot();if(!next){if(api.kind==='cloud'){unsubscribe();openModal('connectModal');}return}const prev=snap;snap=next;checkFresh(prev,next);renderAll();arcade.onSnapshot(prev,next);}catch(e){console.warn(e)}finally{refreshing=false}}
-async function startLocal(){unsubscribe();api=createLocal();snap=await api.snapshot();closeModal('connectModal');renderAll();arcade.onSnapshot(null,snap);unsubscribe=api.subscribe(refresh);if(!localStorage.getItem('desafia-local-onboarded'))openModal('onboardingModal');}
+async function startLocal(){unsubscribe();api=qaController?.api||createLocal();snap=await api.snapshot();closeModal('connectModal');renderAll();arcade.onSnapshot(null,snap);unsubscribe=api.subscribe(refresh);if(!uiStorage.getItem('desafia-local-onboarded'))openModal('onboardingModal');}
 async function startCloud(){unsubscribe();api=createCloud(kidSb);const next=await api.snapshot();if(!next){openModal('connectModal');return false}snap=next;closeModal('connectModal');renderAll();arcade.onSnapshot(null,snap);unsubscribe=api.subscribe(refresh);return true;}
 async function savePet(name,look){try{await api.savePet(name,look);await refresh()}catch(e){toast('Não foi possível salvar',friendlyError(e));}}
 
 $('codeInput').addEventListener('input',(e)=>{const raw=e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,8);e.target.value=raw.length>4?`${raw.slice(0,4)}-${raw.slice(4)}`:raw;});
-$('codeBtn').addEventListener('click',async()=>{const code=$('codeInput').value;const btn=$('codeBtn');$('codeError').textContent='';btn.disabled=true;try{api=createCloud(kidSb);await api.pair(code);await startCloud();openModal('onboardingModal');}catch(e){$('codeError').textContent=friendlyError(e)}finally{btn.disabled=false}});
+$('codeBtn').addEventListener('click',async()=>{if(qaEnabled)return;const code=$('codeInput').value;const btn=$('codeBtn');$('codeError').textContent='';btn.disabled=true;try{api=createCloud(kidSb);await api.pair(code);await startCloud();openModal('onboardingModal');}catch(e){$('codeError').textContent=friendlyError(e)}finally{btn.disabled=false}});
 $('localBtn').addEventListener('click',startLocal);
 
 let onboardLook={color:'rosa',hat:'none',acc:'none'};
@@ -198,13 +200,14 @@ $('onboardName').addEventListener('input',()=>{syncOnboardNames();syncPetLabels(
 syncOnboardNames();
 $('onboardColors').innerHTML=Object.entries(COLORS).map(([id,c])=>`<button class="color-dot" data-color="${id}" aria-label="${c.name}" style="background:linear-gradient(135deg,${c.g[0]},${c.g[2]})"></button>`).join('');
 $('onboardColors').addEventListener('click',(e)=>{const b=e.target.closest('[data-color]');if(!b)return;onboardLook.color=b.dataset.color;applyLook($('onboardPet').querySelector('svg'),onboardLook,0);$('onboardColors').querySelectorAll('button').forEach((x)=>x.setAttribute('aria-pressed',String(x===b)));});
-$('onboardDone').addEventListener('click',async()=>{const name=$('onboardName').value.trim()||'Pipo';try{await savePet(name,onboardLook);localStorage.setItem(api.kind==='local'?'desafia-local-onboarded':'desafia-cloud-onboarded','1');closeModal('onboardingModal');say(`Oi! Eu sou o ${name}. Vamos crescer juntos?`,3000)}catch(e){$('onboardError').textContent=friendlyError(e)}});
+$('onboardDone').addEventListener('click',async()=>{const name=$('onboardName').value.trim()||'Pipo';try{await savePet(name,onboardLook);uiStorage.setItem(api.kind==='local'?'desafia-local-onboarded':'desafia-cloud-onboarded','1');closeModal('onboardingModal');say(`Oi! Eu sou o ${name}. Vamos crescer juntos?`,3000)}catch(e){$('onboardError').textContent=friendlyError(e)}});
 applyLook($('connectPet').querySelector('svg'),{color:'lilas'},0);applyLook($('onboardPet').querySelector('svg'),onboardLook,0);
 
 function gate(){return new Promise((resolve)=>{const a=2+Math.floor(Math.random()*8),b=2+Math.floor(Math.random()*8);$('gateQ').textContent=`${a} × ${b} = ?`;$('gateInput').value='';$('gateError').textContent='';openModal('gateModal');const ok=()=>{if(Number($('gateInput').value)===a*b){cleanup();closeModal('gateModal');resolve(true)}else $('gateError').textContent='Tente de novo.'};const cancel=()=>{cleanup();closeModal('gateModal');resolve(false)};const cleanup=()=>{$('gateOk').removeEventListener('click',ok);$('gateCancel').removeEventListener('click',cancel)};$('gateOk').addEventListener('click',ok);$('gateCancel').addEventListener('click',cancel);});}
 async function openAdults(){
+  if(qaEnabled){parentMode=!parentMode;tab='missoes';expandPanel();renderPanel();return;}
   if(!(await gate()))return;
-  try{localStorage.setItem(panelStateKey,document.querySelector('.game-shell')?.classList.contains('panel-collapsed')?'1':'0')}catch{}
+  try{uiStorage.setItem(panelStateKey,document.querySelector('.game-shell')?.classList.contains('panel-collapsed')?'1':'0')}catch{}
   window.location.assign('/pais/');
 }
 $('adultsBtn').addEventListener('click',openAdults);
@@ -233,6 +236,17 @@ async function action(act,id,el){if(!api)return;el?.setAttribute('disabled','');
 document.addEventListener('click',(e)=>{const b=e.target.closest('[data-act]');if(b)action(b.dataset.act,b.dataset.id,b);});
 
 (async function boot(){
+  if(qaEnabled){
+    const { mountQA } = await import('./qa.js');
+    qaController=mountQA({
+      storage:uiStorage, beforeChange:()=>arcade.close(),
+      onChange:async()=>{api=qaController.api;await refresh();await arcade.refresh();},
+      onboarding:(show)=>{closeModal('connectModal');closeModal('celebrationModal');show?openModal('onboardingModal'):closeModal('onboardingModal');},
+      games:()=>{tab='jogos';expandPanel();renderPanel();}
+    });
+    await startLocal();
+    return;
+  }
   setupPWA();
   if(supabaseReady){try{if(await startCloud())return}catch(e){console.warn('cloud boot',e)}}
   openModal('connectModal');

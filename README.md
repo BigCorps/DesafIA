@@ -1,5 +1,32 @@
 # DesafIA 0.6.0
 
+## Modo QA local (desenvolvimento / Vercel Preview)
+
+Em desenvolvimento (`npm run dev`) ou em um deployment **Preview** da Vercel,
+abra `/?qa=1`. O painel QA permite pular/reabrir onboarding, simular missões
+a fazer, aguardando aprovação ou aprovadas, editar estrelas/XP, selecionar
+progresso baixo/intermediário/avançado e desbloquear os dez jogos existentes.
+“Desbloquear e ver todos os jogos” também aprova as missões simuladas e reinicia
+os 30 minutos do parque local. Os presets de missões reiniciam a economia do
+dia simulado antes de aplicar as regras existentes de recompensa e bônus.
+Em QA, os botões de pais alternam a visão de aprovação local, sem abrir login.
+
+Os dados QA ficam em `sessionStorage`, sob `desafia-qa-v1:`, isolados do estado
+normal e do Supabase. Persistem ao recarregar a mesma aba; o reset limpa apenas
+esse namespace, incluindo onboarding, recordes e preferências QA. O QA não
+registra service worker e requer conexão para carregar assets não disponíveis.
+Sem `?qa=1`, a interface e o fluxo normais permanecem iguais.
+
+O build só libera QA quando `VERCEL_ENV=preview`; builds de produção ou sem
+essa identificação removem o painel, mesmo com `?qa=1`. Para conferir Preview
+localmente: `VERCEL_ENV=preview npm run build`. Não use esse artefato como build
+de produção. A variável de sistema `VERCEL_ENV` precisa estar disponível no
+build da Vercel; sua ausência bloqueia QA por padrão.
+
+Validação: `npm run check`, `node --test scripts/qa-state.test.mjs` e
+`npm run build`. Os testes cobrem isolamento, aprovação, economia, reset,
+desbloqueio de jogos, limites de progresso e o bloqueio de produção.
+
 **Pequenos desafios, grandes hábitos.**
 
 **Novo na 0.6.0 — Parque de jogos:** 10 minijogos que abrem quando todas as missões do dia estão concluídas, pelo tempo que os pais escolherem (10, 30, 60 min ou livre). A cada dia completo, um jogo surpresa entra no álbum da criança.

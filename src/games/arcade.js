@@ -369,5 +369,5 @@ export function createArcade({ getApi, getSnap, say, toast, onChange }) {
     }
   });
 
-  return { refresh, onSnapshot, view, get status() { return status; } };
+  return { close, refresh, onSnapshot, view, get status() { return status; } };
 }

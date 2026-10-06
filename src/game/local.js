@@ -39,10 +39,10 @@ function initial() {
     nickname:'Você',familyName:'Minha família'
   };
 }
-function load() {
-  try { return { ...initial(), ...JSON.parse(localStorage.getItem(KEY) || '{}') }; } catch { return initial(); }
+function loadState(storage, key) {
+  try { return { ...initial(), ...JSON.parse(storage.getItem(key) || '{}') }; } catch { return initial(); }
 }
-function save(s) { localStorage.setItem(KEY, JSON.stringify(s)); }
+function saveState(s, storage, key) { storage.setItem(key, JSON.stringify(s)); }
 function normalize(s) {
   const today = localDay(); const week = mondayKey();
   if (s.week !== week) { s.week = week; s.weekPoints = 0; }
@@ -72,16 +72,20 @@ function snapshotFrom(s) {
   };
 }
 
-function playLoad() {
+function loadPlay(storage, key) {
   let p;
-  try { p = JSON.parse(localStorage.getItem(PLAY_KEY) || 'null'); } catch { p = null; }
+  try { p = JSON.parse(storage.getItem(key) || 'null'); } catch { p = null; }
   p = { day: localDay(), used: 0, startedDay: null, unlocked: [], newGames: [], featured: null, best: {}, ...(p || {}) };
   if (p.day !== localDay()) { p.day = localDay(); p.used = 0; p.newGames = []; }
   return p;
 }
-function playSave(p) { try { localStorage.setItem(PLAY_KEY, JSON.stringify(p)); } catch { /* ignora */ } }
+function savePlay(p, storage, key) { try { storage.setItem(key, JSON.stringify(p)); } catch { /* ignora */ } }
 
-export function createLocal() {
+export function createLocal({ storage = globalThis.localStorage, stateKey = KEY, playKey = PLAY_KEY } = {}) {
+  const load = () => loadState(storage, stateKey);
+  const save = (s) => saveState(s, storage, stateKey);
+  const playLoad = () => loadPlay(storage, playKey);
+  const playSave = (p) => savePlay(p, storage, playKey);
   function playState() {
     const p = playLoad();
     const total = state.missions.length;
@@ -153,7 +157,7 @@ export function createLocal() {
       p.best[game]=Math.max(before,Number(score)||0);playSave(p);
       return { best:p.best[game], record:p.best[game]>before };
     },
-    async reset(){ state=initial();try{localStorage.removeItem(PLAY_KEY)}catch{}return commit(); },
+    async reset(){ state=initial();try{storage.removeItem(playKey)}catch{}return commit(); },
     async unpair(){ return commit(); },
     subscribe(){ return ()=>{}; }
   };

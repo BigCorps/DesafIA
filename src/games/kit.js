@@ -1,3 +1,4 @@
+import { uiStorage } from '../shared/qa-environment.js';
 // Kit compartilhado dos minijogos do DesafIA.
 // Sem dependências, sem rede e sem arquivos de áudio: tudo é desenhado e sintetizado aqui.
 import { COLORS } from '../shared/pet.js';
@@ -99,8 +100,8 @@ function tone(freq, dur = 0.12, { type = 'sine', vol = 0.18, slide = 0, delay = 
 }
 const NOTES = [329.63, 392.0, 523.25, 659.25, 783.99, 880.0];
 export const sound = {
-  get muted() { try { return localStorage.getItem(SOUND_KEY) === 'off'; } catch { return false; } },
-  set muted(v) { try { localStorage.setItem(SOUND_KEY, v ? 'off' : 'on'); } catch { /* ignora */ } },
+  get muted() { try { return uiStorage.getItem(SOUND_KEY) === 'off'; } catch { return false; } },
+  set muted(v) { try { uiStorage.setItem(SOUND_KEY, v ? 'off' : 'on'); } catch { /* ignora */ } },
   unlock() { const a = ac(); if (a && a.state === 'suspended') a.resume().catch(() => {}); },
   play(name, i = 0) {
     switch (name) {
