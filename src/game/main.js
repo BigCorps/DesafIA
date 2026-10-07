@@ -116,7 +116,7 @@ function refreshCompanionMood(){
   applyMoodFace(companionMood);
 }
 function happy(){mouth?.setAttribute('d','M86 121 Q100 146 114 121 Z');mouth?.setAttribute('fill','#2A2350');petSvg.classList.remove('is-resting');clearTimeout(happy.t);happy.t=setTimeout(()=>applyMoodFace(companionMood),1100);}
-function clearPetMotions(){$('pet').classList.remove('jump','giggle','wiggle','twirl','squish','dance','hug','highfive','proud','curious')}
+function clearPetMotions(){$('pet').classList.remove('jump','giggle','wiggle','twirl','squish','dance','hug','highfive','proud','curious','wave','march')}
 function motion(name){
   happy();
   if(reduce)return;
@@ -156,6 +156,8 @@ function petReaction(){
     ()=>{motion('giggle');burst(['😄','✨'],6);say('Hihi! Isso faz cócegas!',1350);haptic([10,35,10])},
     ()=>{motion('wiggle');say('Olha eu balançando! ✨',1300);haptic(12)},
     ()=>{motion('twirl');burst(['⭐','✨'],5);say('Uma voltinha!',1200);haptic([10,30,10])},
+    ()=>{motion('wave');say('Oiii! 👋',1200);haptic(8)},
+    ()=>{motion('march');burst(['⭐','✨'],5);say('Olha meus passinhos! 😄',1300);haptic([8,28,8])},
     ()=>{blink(650);motion('squish');say('Pisca-pisca! 👀',1250);haptic(9)},
     ()=>{motion('dance');burst(['🎵','💜'],6);say('Dancinha do dia! 🎵',1450);haptic([9,30,9,30,9])},
     ()=>{blink(700);motion(companionMood==='sleepy'?'hug':'curious');say(companionAmbientLine(companionMood,name),1800);haptic(8)}
@@ -180,6 +182,8 @@ function scheduleCompanionIdle(){
       if(companionMood==='sleepy')blink(1100);
       else if(companionMood==='proud')motion('proud');
       else if(companionMood==='curious')motion('curious');
+      else if(companionMood==='excited')motion('march');
+      else if(Math.random()<.28)motion('wave');
       else blink(420);
     }
     scheduleCompanionIdle();
