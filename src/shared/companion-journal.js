@@ -72,7 +72,7 @@ export function observeCompanion(raw, snapshot = {}) {
     if (!state.discoveries.includes(id)) state.discoveries.push(id);
     remember(`found:${id}`);
   }
-  if (snapshot.dailyBonusDay || snapshot.adventure?.eligible || state.discoveries.length) remember('first_day');
+  if (snapshot.dailyBonusDay || snapshot.adventure?.eligible || snapshot.companionJournal?.has_completed_day || state.discoveries.length) remember('first_day');
   if (state.discoveries.length) { remember('first_adventure'); remember('first_discovery'); }
   for (const level of MILESTONES) if (levelOf(snapshot.xp) >= level) remember(`level:${level}`);
   return state;
@@ -103,6 +103,18 @@ export function companionProfile(raw) {
   };
 }
 
+function remoteCompanionState(snapshot) {
+  const remote = snapshot?.connected ? snapshot?.companionJournal : null;
+  if (!remote || typeof remote !== 'object') return null;
+  return clean({
+    actions: remote.actions,
+    actionDay: remote.action_day ?? remote.actionDay,
+    todayActions: remote.today_actions ?? remote.todayActions,
+    discoveries: [],
+    memories: []
+  });
+}
+
 export function createCompanionJournal(storage) {
   const fallback = new Map();
   const unsaved = new Set();
@@ -124,7 +136,7 @@ export function createCompanionJournal(storage) {
     observe(snapshot) {
       const key = keyFor(snapshot);
       if (!key) return companionProfile({});
-      const state = observeCompanion(load(key), snapshot);
+      const state = observeCompanion(remoteCompanionState(snapshot) || load(key), snapshot);
       save(key, state);
       return companionProfile(state);
     },
