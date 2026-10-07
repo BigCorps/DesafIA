@@ -31,7 +31,8 @@ export function createCloud(sb) {
       leagues:data.leagues || [],
       familyGoal:data.family_goal || {current:0,target:500},
       dailyBonusDay:data.player.daily_bonus_day || null,
-      adventure:{day:null,eligible:false,completed_today:false,today:null,discoveries:[]}
+      adventure:{day:null,eligible:false,completed_today:false,today:null,discoveries:[]},
+      companionJournal:{actions:{},action_day:null,today_actions:[],has_completed_day:false}
     };
   }
   return {
@@ -39,12 +40,14 @@ export function createCloud(sb) {
     notificationState:()=>call('device_notification_state'),
     notificationSubscription:(active)=>call('device_notification_subscription',{p_active:active}),
     async snapshot(){
-      const [base,adventure]=await Promise.all([
+      const [base,adventure,journal]=await Promise.all([
         call('kid_snapshot'),
-        call('adventure_state').catch(()=>null)
+        call('adventure_state').catch(()=>null),
+        call('companion_journal_state').catch(()=>null)
       ]);
       const snap=map(base);
       if(snap&&adventure)snap.adventure=adventure;
+      if(snap&&journal)snap.companionJournal=journal;
       return snap;
     },
     async pair(code){
@@ -61,6 +64,7 @@ export function createCloud(sb) {
     savePet:(name,look)=>call('update_my_pet',{p_pet_name:name,p_look:look}),
     adventureState:()=>call('adventure_state'),
     completeAdventure:(adventure,choice,discovery)=>call('complete_adventure',{p_adventure:adventure,p_choice:choice,p_discovery:discovery}),
+    recordCompanionAction:(action)=>call('record_companion_action',{p_action:action}),
     // Parque de minijogos
     playStatus:()=>call('play_status'),
     playStart:()=>call('play_start'),
