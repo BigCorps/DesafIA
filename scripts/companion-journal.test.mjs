@@ -88,3 +88,35 @@ test('reset QA remove memórias isoladas sem atingir diário real', async () => 
   assert.equal(journal.observe(await qa.api.snapshot()).memories.length, 0);
   assert.ok(normal.observe(a).memories.some((m) => m.id === 'level:3'));
 });
+
+
+test('estado remoto é autoritativo para interações e preserva memórias derivadas', () => {
+  const storage = memoryStorage();
+  const journal = createCompanionJournal(storage);
+  const synced = {
+    ...a,
+    xp: 0,
+    adventure: { discoveries: [] },
+    companionJournal: {
+      actions: { hug: 2 },
+      action_day: '2026-10-07',
+      today_actions: ['hug'],
+      has_completed_day: true
+    }
+  };
+  const profile = journal.observe(synced);
+  assert.ok(profile.likes.some((like) => like.id === 'company'));
+  assert.ok(profile.memories.some((memory) => memory.id === 'first_day'));
+
+  const authoritativeReset = journal.observe({
+    ...synced,
+    companionJournal: {
+      actions: { hug: 0 },
+      action_day: '2026-10-07',
+      today_actions: [],
+      has_completed_day: true
+    }
+  });
+  assert.ok(!authoritativeReset.likes.some((like) => like.id === 'company'));
+  assert.ok(authoritativeReset.memories.some((memory) => memory.id === 'first_day'));
+});
