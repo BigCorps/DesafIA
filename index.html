@@ -20,15 +20,16 @@
       <button class="sunmoon" id="skyBtn" aria-label="Mudar período do dia"></button>
       <div class="cloud c1" aria-hidden="true"></div><div class="cloud c2" aria-hidden="true"></div>
       <div class="hill back" aria-hidden="true"></div><div class="hill front" aria-hidden="true"></div>
-      <div class="scene-object tree" id="sceneTree" aria-hidden="true">🌳</div>
-      <div class="scene-object books" id="sceneBooks" aria-hidden="true">📚</div>
-      <div class="scene-object plant" id="scenePlant" aria-hidden="true">🪴</div>
-      <div class="scene-object telescope" id="sceneTelescope" aria-hidden="true">🔭</div>
+      <button class="scene-object tree" id="sceneTree" type="button" data-companion-action aria-label="Explorar a árvore" disabled>🌳</button>
+      <button class="scene-object books" id="sceneBooks" type="button" data-companion-action aria-label="Ver os livros" disabled>📚</button>
+      <button class="scene-object plant" id="scenePlant" type="button" data-companion-action aria-label="Cuidar da plantinha" disabled>🪴</button>
+      <button class="scene-object telescope" id="sceneTelescope" type="button" data-companion-action aria-label="Olhar pelo telescópio" disabled>🔭</button>
 
       <header class="hud">
         <div class="identity">
           <strong id="petNameTitle">Pipo</strong>
           <span id="lvlText">Nível 1</span>
+          <span class="mood-text" id="moodText">💜 Calmo</span>
           <div class="xpbar" role="progressbar" aria-label="Progresso do nível" aria-valuemin="0" aria-valuemax="100" id="xpBar"><i id="xpFill"></i></div>
         </div>
         <div class="wallet" aria-label="Estrelas disponíveis">⭐ <strong id="starCount">0</strong></div>
@@ -40,7 +41,7 @@
 
       <button class="adult-quick" id="adultsQuickBtn" aria-label="Abrir área dos pais">🔒 <span>Pais</span></button>
       <div class="speech" id="bubble" aria-live="polite"></div>
-      <button class="pet" id="pet" aria-label="Brincar com o personagem"><span id="petMount"></span></button>
+      <button class="pet" id="pet" aria-label="Brincar com o personagem. Toque, toque duas vezes ou segure."><span id="petMount"></span></button>
       <div class="fx" id="fx" aria-hidden="true"></div>
       <button class="arcade-float" id="arcadeBtn" data-arc="float" type="button" aria-label="Abrir o parque de jogos">🎮 Jogos</button>
     </main>
