@@ -109,7 +109,7 @@ export function createLocal({ storage = globalThis.localStorage, stateKey = KEY,
       started: p.startedDay === p.day,
       missions: { total, done, waiting, requires_approval: false, ok: total > 0 && done + waiting === total },
       unlocked: p.unlocked, new_games: p.startedDay === p.day ? p.newGames : [], featured: p.startedDay === p.day ? p.featured : null,
-      disabled: [], best: p.best
+      disabled: [], best: p.best, plus:true, catalog:GAME_IDS
     };
   }
   let state = normalize(load()); save(state);
@@ -181,7 +181,7 @@ export function createLocal({ storage = globalThis.localStorage, stateKey = KEY,
       return { remaining_seconds: Math.max(0,LOCAL_PLAY_MINUTES*60-p.used) };
     },
     async gameScore(game,score){
-      const p=playLoad();const before=Number(p.best[game]||0);
+      const p=playLoad();if(!p.unlocked.includes(game))throw new Error('GAME_LOCKED');const before=Number(p.best[game]||0);
       p.best[game]=Math.max(before,Number(score)||0);playSave(p);
       return { best:p.best[game], record:p.best[game]>before };
     },
