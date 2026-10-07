@@ -168,3 +168,44 @@
 
 /* Optional, explicitly consented push CTA; never shown in local/demo/QA. */
 .push-child-cta{position:fixed;z-index:90;bottom:max(8px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);width:min(420px,calc(100vw - 20px));padding:10px;border-radius:12px;background:#fff;color:#2a2350;box-shadow:0 3px 16px #0002;display:flex;flex-wrap:wrap;gap:6px;font:12px/1.4 system-ui,sans-serif}
+
+
+/* Companheiro Vivo — Aventuras e Descobertas */
+.adventure-float{position:absolute;left:14px;bottom:18px;z-index:7;border:0;border-radius:999px;padding:10px 14px;font-weight:900;font-size:14px;color:#fff;background:linear-gradient(135deg,#2fbf91,#7658f5);box-shadow:0 6px 0 #4d3cb3,0 10px 24px rgba(49,65,123,.28);display:inline-flex;align-items:center;gap:6px;cursor:pointer;animation:adventurePulse 2.4s ease-in-out infinite}
+.adventure-float[hidden]{display:none}
+.game-shell.panel-collapsed .adventure-float{bottom:calc(18px + var(--safe-bottom,0px))}
+@keyframes adventurePulse{0%,100%{transform:scale(1)}50%{transform:scale(1.055)}}
+
+.adventure-card{position:relative;text-align:center;background:linear-gradient(180deg,#fff 0%,#faf8ff 100%)}
+.adventure-pet{width:112px;height:112px;margin:-9px auto 2px}
+.adventure-kicker{display:inline-flex;align-items:center;gap:5px;padding:6px 10px;margin-bottom:9px;border-radius:999px;background:#eee9ff;color:#6048cc;font-size:11px;font-weight:950;text-transform:uppercase;letter-spacing:.04em}
+.adventure-card h2{font-size:24px}
+.adventure-card>div#:not-a-real-selector{display:none}
+.adventure-choices{display:grid;gap:10px;margin:17px 0 4px}
+.adventure-choice{width:100%;border:1px solid #e0d9fb;border-radius:18px;padding:13px 14px;background:#fff;color:#3e3562;text-align:left;box-shadow:0 5px 15px rgba(70,50,130,.07);cursor:pointer}
+.adventure-choice strong,.adventure-choice span{display:block}
+.adventure-choice strong{font:850 14px var(--display)}
+.adventure-choice span{margin-top:3px;color:#82799f;font-size:11px;font-weight:750}
+.adventure-choice:active{transform:scale(.985)}
+.adventure-choice:disabled{opacity:.55}
+.discovery-reveal{display:flex;align-items:center;gap:13px;text-align:left;margin:16px 0;padding:14px;border:1px solid #e5ddff;border-radius:20px;background:linear-gradient(135deg,#f3efff,#fff9e9)}
+.discovery-reveal>span{width:58px;height:58px;flex:0 0 58px;display:grid;place-items:center;border-radius:18px;background:#fff;font-size:34px;box-shadow:0 6px 17px rgba(62,48,115,.1)}
+.discovery-reveal strong,.discovery-reveal small{display:block}
+.discovery-reveal strong{font:900 15px var(--display)}
+.discovery-reveal small{margin-top:3px;color:#766e91;line-height:1.35}
+.adventure-note{font-size:12px!important}
+
+.discoveries{margin-top:20px;padding-top:17px;border-top:1px solid #ece7fb}
+.discoveries-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:11px}
+.discoveries-head h3{margin:0;font:850 17px var(--display)}
+.discoveries-head p{margin:3px 0 0;color:var(--muted);font-size:11px;line-height:1.35}
+.discoveries-head>strong{white-space:nowrap;padding:6px 9px;border-radius:999px;background:#eee9ff;color:#6048cc;font-size:11px}
+.discovery-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.discovery-card{min-height:125px;padding:12px;border-radius:18px;border:1px solid #e9e4ff;background:linear-gradient(145deg,#fff,#f8f5ff)}
+.discovery-card>span{display:block;font-size:30px;margin-bottom:4px}
+.discovery-card strong,.discovery-card small{display:block}
+.discovery-card strong{font-size:12px}
+.discovery-card small{margin-top:3px;color:var(--muted);font-size:10px;line-height:1.32}
+.discovery-card.locked{filter:grayscale(.65);opacity:.54;background:#f3f1f8}
+.discovery-card.locked>span{filter:grayscale(1)}
+@media(max-width:360px){.adventure-float{left:10px;padding:9px 11px;font-size:12px}.discovery-grid{grid-template-columns:1fr}}
