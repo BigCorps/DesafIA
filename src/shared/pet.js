@@ -47,6 +47,8 @@ export function petMarkup(prefix) {
   <g class="eyes-sleep" fill="none" stroke="#2A2350" stroke-width="4.5" stroke-linecap="round"><path d="M65 106 Q76 116 87 106"/><path d="M113 106 Q124 116 135 106"/></g>
   <ellipse class="cheek" cx="59" cy="127" rx="10" ry="6" fill="#FF5577" opacity=".45"/><ellipse class="cheek" cx="141" cy="127" rx="10" ry="6" fill="#FF5577" opacity=".45"/>
   <path class="mouth" d="M88 124 Q100 136 112 124" stroke="#2A2350" stroke-width="4.5" stroke-linecap="round" fill="none"/>
+  <ellipse class="sleep-mouth" cx="100" cy="128" rx="4" ry="3" fill="#2A2350"/>
+  <g class="sleep-sign" fill="#e8e0ff" stroke="#514775" stroke-width=".5" paint-order="stroke" font-family="Trebuchet MS, sans-serif" font-weight="bold"><text x="149" y="75" font-size="15">zZz</text></g>
   <g class="acc acc-oculos"><circle cx="76" cy="106" r="18" fill="rgba(255,255,255,.22)" stroke="#2A2350" stroke-width="4"/><circle cx="124" cy="106" r="18" fill="rgba(255,255,255,.22)" stroke="#2A2350" stroke-width="4"/><path d="M94 104 Q100 98 106 104" stroke="#2A2350" stroke-width="4" fill="none"/></g>
   <g class="acc acc-laco" transform="translate(60 60) rotate(-22)"><path d="M0 0 L-17 -11 L-15 11Z" fill="#FF5FA2"/><path d="M0 0 L17 -11 L15 11Z" fill="#FF5FA2"/><circle r="5.5" fill="#FF8CC0"/></g>
   <g class="acc acc-gravata"><path d="M100 168 L83 158 L83 178Z" fill="#7B61FF"/><path d="M100 168 L117 158 L117 178Z" fill="#7B61FF"/><circle cx="100" cy="168" r="5.5" fill="#9C88FF"/></g>

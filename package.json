@@ -11,7 +11,7 @@
     "check": "node scripts/check.mjs && npm run test:notifications && npm run test:companion && npm run test:adventures",
     "icons": "python3 brand/gerar_icones.py",
     "test:notifications": "node --test scripts/notifications.test.mjs",
-    "test:companion": "node --test scripts/companion.test.mjs",
+    "test:companion": "node --test scripts/companion*.test.mjs",
     "test:adventures": "node --test scripts/adventures.test.mjs"
   },
   "engines": {

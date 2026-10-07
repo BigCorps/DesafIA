@@ -14,6 +14,7 @@ export function createCloud(sb) {
     if (!data?.player) return null;
     return {
       connected:true,
+      playerId:data.player.id,
       familyName:data.family?.name || '',
       nickname:data.player.nickname,
       petName:data.player.pet_name,

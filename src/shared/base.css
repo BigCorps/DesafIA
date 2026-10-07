@@ -36,6 +36,7 @@ a{color:var(--accent2)}
 .modal.open{display:flex}.modal-card{width:100%;max-width:430px;max-height:90vh;overflow:auto;padding:23px;border-radius:28px;background:#fff;box-shadow:var(--shadow)}
 .modal-card h2{font-family:var(--display);margin:0 0 7px;font-size:25px}.modal-card p{margin:0 0 14px;color:var(--muted);line-height:1.45}
 .pet-svg{overflow:visible;width:100%;height:100%}.pet-svg .grow-part{opacity:0;transform:scale(0);transform-box:fill-box;transform-origin:50% 100%;transition:.5s}.pet-svg[data-stage="2"] .s2,.pet-svg[data-stage="3"] .s2,.pet-svg[data-stage="4"] .s2,.pet-svg[data-stage="3"] .s3,.pet-svg[data-stage="4"] .s3{opacity:1;transform:scale(1)}
+.pet-svg .sleep-mouth,.pet-svg .sleep-sign{display:none}
 .pet-svg .eyes-sleep{opacity:0}.pet-svg .hat,.pet-svg .acc{display:none}.pet-svg[data-hat="bone"] .hat-bone,.pet-svg[data-hat="coroa"] .hat-coroa,.pet-svg[data-hat="festa"] .hat-festa,.pet-svg[data-hat="gorro"] .hat-gorro,.pet-svg[data-hat="mago"] .hat-mago,.pet-svg[data-acc="oculos"] .acc-oculos,.pet-svg[data-acc="laco"] .acc-laco,.pet-svg[data-acc="gravata"] .acc-gravata{display:inline}
 @media(min-width:560px){.modal{align-items:center}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}

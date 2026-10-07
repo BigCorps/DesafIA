@@ -5,6 +5,7 @@ import { petMarkup, applyLook, COLORS, HATS, ACCS, PET_NAMES } from '../shared/p
 import { HOUSE_ITEMS, levelOf, levelProgress } from '../shared/progression.js';
 import { companionAmbientLine, companionMoodLabel, deriveCompanionMood, missionCompanionAction, worldCompanionAction } from '../shared/companion.js';
 import { DISCOVERIES, adventureForDay, collectedDiscoveries, discoveryById, findAdventureChoice } from '../shared/adventures.js';
+import { createCompanionJournal } from '../shared/companion-journal.js';
 import { createKidSupabase, supabaseReady, friendlyError } from '../lib/supabase.js';
 import { createCloud } from './cloud.js';
 import { createLocal } from './local.js';
@@ -18,6 +19,7 @@ const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const seenRewardKey='desafia-seen-rewards-v3';
 const seenDayKey='desafia-seen-day-v3';
 const panelStateKey='desafia-panel-collapsed-v1';
+const companionJournal=createCompanionJournal(uiStorage);
 const TIMES=['dia','tarde','noite'];
 const PERIOD={manha:'de manhã',tarde:'à tarde',noite:'à noite'};
 
@@ -106,7 +108,7 @@ function applyMoodFace(mood=companionMood){
     curious:'M93 127 Q100 132 107 127',
     excited:'M87 122 Q100 139 113 122',
     proud:'M86 121 Q100 140 114 121',
-    sleepy:'M92 128 Q100 124 108 128'
+    sleepy:'M92 125 Q100 132 108 125'
   };
   mouth?.setAttribute('d',shapes[mood]||shapes.calm);
 }
@@ -152,6 +154,7 @@ function petReaction(){
   const now=Date.now();
   if(now<reactionLockedUntil){tinyTap();return}
   reactionLockedUntil=now+(reduce?650:1050);
+  rememberInteraction('tap');
   const name=petName();
   const reactions=[
     ()=>{jump();burst(['💜','✨'],7);say('Uhuu! Olha o meu pulo! 😄',1350);haptic(18)},
@@ -169,10 +172,12 @@ function petReaction(){
   lastReaction=idx;reactions[idx]();
 }
 function petHug(){
+  rememberInteraction('hug');
   reactionLockedUntil=Date.now()+1100;
   motion('hug');burst(['💜','✨'],9);say('Abraço recebido! Eu gosto de ficar pertinho de você. 💜',1750);haptic([12,45,18]);
 }
 function petHighFive(){
+  rememberInteraction('highfive');
   reactionLockedUntil=Date.now()+950;
   motion('highfive');burst(['✋','⭐','✨'],9);say('Toca aqui! Mandamos muito bem! ✋',1500);haptic([14,30,14]);
 }
@@ -220,6 +225,18 @@ function discoveryAlbumView(){
     ? `<article class="discovery-card found"><span>${esc(item.icon)}</span><strong>${esc(item.name)}</strong><small>${esc(item.description)}</small></article>`
     : '<article class="discovery-card locked"><span>❔</span><strong>Descoberta secreta</strong><small>Continue completando seus dias para explorar.</small></article>').join('');
   return `<section class="discoveries"><div class="discoveries-head"><div><h3>Álbum de descobertas</h3><p>Pequenas lembranças das aventuras de ${esc(snap.petName)}.</p></div><strong>${found.length}/${DISCOVERIES.length}</strong></div><div class="discovery-grid">${cards}</div></section>`;
+}
+function rememberInteraction(action){
+  if(!snap)return;
+  companionJournal.action(snap,action);
+  if(tab==='casa')renderPanel();
+}
+function companionJournalView(){
+  const profile=companionJournal.observe(snap);
+  const traits=profile.traits.map((t)=>`<article class="companion-trait"><strong>${esc(t.icon)} ${esc(t.name)}</strong><small>${esc(t.expression)}</small><p>${esc(t.text)}</p></article>`).join('');
+  const likes=profile.likes.length?`<ul class="companion-likes">${profile.likes.map((l)=>`<li>${esc(l.icon)} ${esc(l.name)}</li>`).join('')}</ul>`:'<p class="hint">Os gostos aparecem aos pouquinhos, nas brincadeiras e descobertas.</p>';
+  const memories=profile.memories.length?`<ul class="companion-memories">${profile.memories.map((m)=>`<li><span aria-hidden="true">${esc(m.icon)}</span> ${esc(m.text)}</li>`).join('')}</ul>`:'<p class="hint">Nosso caderninho está pronto para guardar momentos juntos.</p>';
+  return `<section class="companion-journal" aria-labelledby="companionJournalTitle"><h3 id="companionJournalTitle">Jeitinho do ${esc(snap.petName)}</h3><p class="hint">Cada traço tem seu encanto. Eles podem florescer juntos, no nosso tempo.</p><div class="companion-traits">${traits}</div><h4>Coisas de que eu gosto</h4>${likes}<h4>Nossas memórias</h4>${memories}<small class="companion-storage-note">Este caderninho fica neste aparelho.</small></section>`;
 }
 function renderAdventureIntro(adventure){
   activeAdventure=adventure;
@@ -296,7 +313,7 @@ function rewardsView(){
   const rows=snap.rewards.map((r)=>{const can=snap.wallet>=r.cost;let act=r.pending?(parentMode?`<div><button class="btn btn-soft" data-act="deny" data-id="${r.id}">↩</button> <button class="btn btn-ok" data-act="deliver" data-id="${r.id}">✓</button></div>`:'<span class="badge badge-pending">Pedido feito</span>'):(can&&!parentMode?`<button class="btn btn-gold" data-act="redeem" data-id="${r.id}">Trocar</button>`:`<span class="badge badge-soft">${r.cost} ⭐</span>`);return `<li class="reward"><span class="item-icon">${esc(r.icon)}</span><span class="item-body"><strong>${esc(r.title)}</strong><small>${r.pending?'Esperando um adulto':can?'Você já tem estrelas suficientes':`Faltam ${Math.max(0,r.cost-snap.wallet)} estrelas`}</small></span>${act}</li>`;}).join('');
   return `<div class="panel-title"><h2>Prêmios combinados</h2><span class="badge badge-soft">${snap.wallet} ⭐</span></div><p class="hint">As estrelas viram experiências e combinados reais — nada é comprado dentro do jogo.</p><ul class="reward-list">${rows}</ul>`;
 }
-function houseView(){const level=levelOf(snap.xp);return `<div class="panel-title"><h2>Casa do ${esc(snap.petName)}</h2><span class="badge badge-soft">Nível ${level}</span></div><p class="hint">Sua rotina transforma o mundo do ${esc(snap.petName)}. Continue evoluindo para liberar novos cantinhos.</p><div class="house-grid">${HOUSE_ITEMS.map((it)=>`<article class="house-item ${level<it.level?'locked':''}"><span class="hi">${level<it.level?'🔒':it.icon}</span><strong>${esc(it.title)}</strong><small>${esc(it.text)}</small><em>${level<it.level?`Libera no nível ${it.level}`:'Desbloqueado ✓'}</em></article>`).join('')}</div>${discoveryAlbumView()}`;}
+function houseView(){const level=levelOf(snap.xp);return `<div class="panel-title"><h2>Casa do ${esc(snap.petName)}</h2><span class="badge badge-soft">Nível ${level}</span></div><p class="hint">Sua rotina transforma o mundo do ${esc(snap.petName)}. Continue evoluindo para liberar novos cantinhos.</p><div class="house-grid">${HOUSE_ITEMS.map((it)=>`<article class="house-item ${level<it.level?'locked':''}"><span class="hi">${level<it.level?'🔒':it.icon}</span><strong>${esc(it.title)}</strong><small>${esc(it.text)}</small><em>${level<it.level?`Libera no nível ${it.level}`:'Desbloqueado ✓'}</em></article>`).join('')}</div>${companionJournalView()}${discoveryAlbumView()}`;}
 function rankRows(items=[]){const max=Math.max(1,...items.map((i)=>Number(i.points)||0));return items.map((it,i)=>`<li class="${it.me||it.mine?'me':''}"><span class="rank-pos">${i+1}</span><span class="rank-avatar">${esc(it.avatar||'🌟')}</span><span><span class="rank-name">${esc(it.nickname||'Família')}</span><span class="rank-bar"><i style="width:${Math.round((Number(it.points)||0)/max*100)}%"></i></span></span><span class="rank-points">${Number(it.points)||0} ⭐</span></li>`).join('');}
 function familyView(){
   const goal=snap.familyGoal||{current:snap.weekPoints,target:500};let extra='';
@@ -313,7 +330,7 @@ function renderPanel(){
   $('panel').innerHTML=tab==='missoes'?missionsView():tab==='casa'?houseView():tab==='premios'?rewardsView():tab==='familia'?familyView():tab==='jogos'?arcade.view():visualView();
   if(tab==='visual'){const svg=$('visualPreview')?.querySelector('svg');applyLook(svg,snap.look,snap.xp);$('petNameInput')?.addEventListener('change',async(e)=>{await savePet(e.target.value,snap.look)});}
 }
-function renderAll(){renderStats();renderNext();renderPanel();}
+function renderAll(){companionJournal.observe(snap);renderStats();renderNext();renderPanel();}
 function missionReaction(m){performCompanionAction(missionCompanionAction(m));}
 function checkFresh(prev,next){
   if(prev){for(const m of next.missions||[]){const old=prev.missions?.find((x)=>x.id===m.id);if(old?.status==='pending'&&m.status==='done'){jump();burst(['⭐','✨',m.icon],14);missionReaction(m);}}}
@@ -373,6 +390,7 @@ petButton.addEventListener('click',()=>{
 petButton.addEventListener('dblclick',(e)=>{e.preventDefault();clearTimeout(petClickTimer);petHighFive();});
 document.querySelectorAll('[data-companion-action]').forEach((el)=>el.addEventListener('click',()=>{
   if(el.disabled)return;
+  rememberInteraction(el.id);
   performCompanionAction(worldCompanionAction(el.id,petName()));
 }));
 scheduleCompanionIdle();
