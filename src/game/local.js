@@ -1,5 +1,6 @@
 import { DEFAULT_LOOK } from '../shared/pet.js';
 import { GAME_IDS } from '../games/registry.js';
+import { findAdventureChoice } from '../shared/adventures.js';
 
 const PLAY_KEY = 'desafia-local-play-v1';
 const LOCAL_PLAY_MINUTES = 30;
@@ -36,6 +37,7 @@ function initial() {
     missions:MISSIONS.map(([id,icon,title,stars,xpReward,time])=>({id,icon,title,star_reward:stars,xp_reward:xpReward,time_of_day:time,status:'todo'})),
     rewards:REWARDS.map(([id,icon,title,cost])=>({id,icon,title,cost,pending:false})),
     recentRewards:[],dailyBonusDay:null,completedDays:[],familyGoal:500,
+    adventureDays:[],discoveries:[],
     nickname:'Você',familyName:'Minha família'
   };
 }
@@ -45,6 +47,8 @@ function loadState(storage, key) {
 function saveState(s, storage, key) { storage.setItem(key, JSON.stringify(s)); }
 function normalize(s) {
   const today = localDay(); const week = mondayKey();
+  s.adventureDays = Array.isArray(s.adventureDays) ? s.adventureDays : [];
+  s.discoveries = Array.isArray(s.discoveries) ? s.discoveries : [];
   if (s.week !== week) { s.week = week; s.weekPoints = 0; }
   if (s.day !== today) {
     s.day = today; s.missions = MISSIONS.map(([id,icon,title,stars,xpReward,time])=>({id,icon,title,star_reward:stars,xp_reward:xpReward,time_of_day:time,status:'todo'}));
@@ -64,11 +68,19 @@ function streak(days) {
   return n;
 }
 function snapshotFrom(s) {
+  const adventureToday=(s.adventureDays||[]).find((item)=>item.day===s.day)||null;
   return {
     connected:false,familyName:s.familyName,nickname:s.nickname,petName:s.petName,look:s.look,xp:s.xp,wallet:s.wallet,
     weekPoints:s.weekPoints,streak:streak(s.completedDays),missions:s.missions,rewards:s.rewards,recentRewards:s.recentRewards,
     ranking:[{nickname:s.nickname,avatar:'🌸',points:s.weekPoints,me:true}],challenges:[],leagues:[],
-    familyGoal:{current:s.weekPoints,target:s.familyGoal},dailyBonusDay:s.dailyBonusDay
+    familyGoal:{current:s.weekPoints,target:s.familyGoal},dailyBonusDay:s.dailyBonusDay,
+    adventure:{
+      day:s.day,
+      eligible:s.dailyBonusDay===s.day,
+      completed_today:Boolean(adventureToday),
+      today:adventureToday,
+      discoveries:s.discoveries||[]
+    }
   };
 }
 
@@ -130,6 +142,22 @@ export function createLocal({ storage = globalThis.localStorage, stateKey = KEY,
       state.recentRewards=state.recentRewards.slice(-8);return commit();
     },
     async savePet(name,look){ state.petName=(name||'Pipo').trim().slice(0,12)||'Pipo';state.look={...state.look,...look};return commit(); },
+    async adventureState(){ return snapshotFrom(state).adventure; },
+    async completeAdventure(adventureId,choiceId,discoveryId){
+      const choice=findAdventureChoice(adventureId,choiceId);
+      if(!choice||choice.discovery.id!==discoveryId)throw new Error('INVALID_ADVENTURE');
+      if(state.dailyBonusDay!==state.day)throw new Error('ADVENTURE_LOCKED');
+      const existing=(state.adventureDays||[]).find((item)=>item.day===state.day);
+      if(existing&&(existing.adventure_id!==adventureId||existing.choice_id!==choiceId||existing.discovery_id!==discoveryId))throw new Error('ADVENTURE_ALREADY_DONE');
+      if(!existing){
+        state.adventureDays.push({day:state.day,adventure_id:adventureId,choice_id:choiceId,discovery_id:discoveryId,created_at:new Date().toISOString()});
+        state.adventureDays=state.adventureDays.slice(-120);
+      }
+      if(!state.discoveries.some((item)=>item.id===discoveryId)){
+        state.discoveries.push({id:discoveryId,adventure_id:adventureId,choice_id:choiceId,first_day:state.day,first_found_at:new Date().toISOString()});
+      }
+      return commit().adventure;
+    },
     // Parque de minijogos (modo sem conexão: 30 min/dia; missões "esperando" contam,
     // porque neste modo não há adulto conectado para aprovar)
     async playStatus(){ return playState(); },
