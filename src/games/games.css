@@ -151,3 +151,28 @@
   .arcade-float.show,.cheer,.arc-roulette.spin{animation:none!important}
   .g-evo-tile,.g-fruit-tile,.g-card-in,.g-pop{transition-duration:.01ms!important}
 }
+
+
+/* ---------- Labirinto do Pipo ---------- */
+.g-maze{height:100%;display:flex;flex-direction:column;align-items:center;padding:12px;background:linear-gradient(#dff8eb,#f7fffb)}
+.g-maze-top,.g-stars-top,.g-rhythm-top{width:min(100%,430px);display:grid;grid-template-columns:72px 1fr 1fr;align-items:center;gap:10px;margin-bottom:10px}
+.g-maze-top>div:not(:first-child),.g-stars-top>div:not(:first-child),.g-rhythm-top>div:not(:first-child){background:#fff;border-radius:16px;padding:8px;text-align:center;box-shadow:0 5px 16px rgba(49,76,70,.08)}
+.g-maze-top small,.g-stars-top small,.g-rhythm-top small{display:block;color:#776f91;font-size:10px;font-weight:800}.g-maze-top strong,.g-stars-top strong,.g-rhythm-top strong{font:900 15px var(--display)}
+.g-maze-pet,.g-stars-pet,.g-rhythm-pet{width:68px;height:68px}
+.g-maze-pet.cheer,.g-stars-pet.cheer,.g-rhythm-pet.cheer{animation:gamePetCheer .65s ease}
+@keyframes gamePetCheer{0%,100%{transform:translateY(0) rotate(0)}35%{transform:translateY(-8px) rotate(-6deg)}65%{transform:translateY(-3px) rotate(6deg)}}
+.g-maze-board{width:min(86vw,390px);aspect-ratio:1;display:grid;grid-template-columns:repeat(7,1fr);grid-template-rows:repeat(7,1fr);background:#fff;border:5px solid #3f9276;border-radius:18px;overflow:hidden;box-shadow:0 12px 30px rgba(43,85,72,.13);touch-action:none}
+.g-maze-cell{display:grid;place-items:center;min-width:0;min-height:0;font-size:19px;border-color:#85cdb2;border-style:solid;border-width:0}.g-maze-cell.wt{border-top-width:2px}.g-maze-cell.wr{border-right-width:2px}.g-maze-cell.wb{border-bottom-width:2px}.g-maze-cell.wl{border-left-width:2px}.g-maze-you{display:grid;place-items:center;width:72%;height:72%;border-radius:50%;background:#e8fff5;font-size:18px;animation:mazeBob 1s ease-in-out infinite}@keyframes mazeBob{50%{transform:translateY(-2px)}}
+
+/* ---------- Constelações ---------- */
+.g-stars{height:100%;display:flex;flex-direction:column;align-items:center;padding:12px;background:linear-gradient(#17154d,#40338f);color:#fff}
+.g-stars-top>div:not(:first-child){background:rgba(255,255,255,.12);box-shadow:none}.g-stars-top small{color:#d8d2ff}
+.g-stars-sky{position:relative;width:min(92vw,430px);flex:1;min-height:330px;border-radius:26px;overflow:hidden;background:radial-gradient(circle at 20% 20%,rgba(255,255,255,.8) 0 1px,transparent 2px),radial-gradient(circle at 70% 30%,rgba(255,255,255,.7) 0 1px,transparent 2px),linear-gradient(#1f1b65,#352b7a);background-size:57px 57px,79px 79px,auto;box-shadow:inset 0 0 50px rgba(0,0,0,.25)}
+.g-stars-lines{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}.g-stars-lines line{stroke:#ffe28a;stroke-width:1.1;filter:drop-shadow(0 0 3px #ffd86b)}
+.g-stars-points{position:absolute;inset:0}.g-star-point{position:absolute;transform:translate(-50%,-50%);width:42px;height:42px;border:0;border-radius:50%;background:#fff6bd;color:#51421a;font-weight:950;box-shadow:0 0 0 5px rgba(255,226,116,.13),0 0 18px rgba(255,231,122,.65);cursor:pointer}.g-star-point.done{background:#ffd85f;transform:translate(-50%,-50%) scale(.86)}.g-stars .g-hint{color:#eeeaff}
+
+/* ---------- Ritmo das Estrelas ---------- */
+.g-rhythm{height:100%;display:flex;flex-direction:column;align-items:center;padding:12px;background:linear-gradient(#efe7ff,#fff7ff)}
+.g-rhythm-stage{flex:1;display:grid;place-items:center;width:100%;min-height:320px}
+.g-rhythm-star{--pulse-scale:1.6;--pulse-alpha:.5;position:relative;width:118px;height:118px;border:0;border-radius:50%;background:linear-gradient(145deg,#fff,#f7e8ff);box-shadow:0 15px 35px rgba(108,72,175,.2);font-size:58px;cursor:pointer;touch-action:manipulation}.g-rhythm-star span{position:relative;z-index:2}.g-rhythm-star i{position:absolute;inset:0;border:5px solid #8d68e9;border-radius:50%;transform:scale(var(--pulse-scale));opacity:var(--pulse-alpha);pointer-events:none}.g-rhythm-star:active{transform:scale(.95)}
+@media(prefers-reduced-motion:reduce){.g-maze-you,.g-maze-pet.cheer,.g-stars-pet.cheer,.g-rhythm-pet.cheer{animation:none!important}}
