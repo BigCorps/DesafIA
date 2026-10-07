@@ -3,7 +3,7 @@
 // - A cada dia completo sorteia um jogo novo para o álbum da criança.
 // - Conta o tempo que os pais liberaram (o servidor tem a palavra final).
 import './games.css';
-import { GAMES, gameById, medalOf, MEDAL_ICON } from './registry.js';
+import { GAMES, gameById, medalOf, MEDAL_ICON, parkTreasures } from './registry.js';
 import { sound, haptic, reducedMotion, sleep } from './kit.js';
 import { petMarkup, applyLook } from '../shared/pet.js';
 
@@ -84,6 +84,8 @@ export function createArcade({ getApi, getSnap, say, toast, onChange }) {
   function album() {
     const eligibleCount=status?.catalog?.length||GAMES.filter((g)=>g.tier!=='plus').length;
     const unlockedEligible=(status?.unlocked||[]).filter((id)=>status?.catalog?.includes(id)).length;
+    const treasures=parkTreasures(status?.best||{});
+    const treasureHtml=treasures.length?`<section class="park-treasures"><div class="park-treasures-head"><h3>Tesouros do Parque</h3><span class="badge badge-soft">${treasures.length}/3</span></div><div class="park-treasure-grid">${treasures.map((t)=>`<article><span>${esc(t.icon)}</span><div><strong>${esc(t.title)}</strong><small>${esc(t.text)}</small></div><em>${MEDAL_ICON[t.medal]}</em></article>`).join('')}</div></section>`:'';
     return `<h3>Álbum de jogos <small class="badge badge-soft">${unlockedEligible}/${eligibleCount}</small></h3><div class="arc-grid">${GAMES.map((g) => {
       const plusLocked=g.tier==='plus'&&!status?.plus;
       const has = status?.unlocked.includes(g.id) && !plusLocked;
@@ -97,7 +99,7 @@ export function createArcade({ getApi, getSnap, say, toast, onChange }) {
         ${g.tier==='plus'?'<span class="plus-mark">Plus ✦</span>':''}
         ${status.newGames.includes(g.id) ? '<span class="new">Novo!</span>' : medal ? `<span class="medal">${medal}</span>` : ''}
         <span class="ic">${g.icon}</span><b>${esc(g.title)}</b><small>${off ? 'Desligado pelos adultos' : best ? `Recorde: ${best}` : 'Novo no seu álbum'}</small></button>`;
-    }).join('')}</div>`;
+    }).join('')}</div>${treasureHtml}`;
   }
   function view() {
     const title = `<div class="panel-title"><h2>Parque de jogos</h2><span class="badge badge-soft">${status?.started ? `⏱ ${fmt(status.remaining)}` : '🎡'}</span></div>`;
