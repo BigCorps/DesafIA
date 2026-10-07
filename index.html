@@ -43,6 +43,7 @@
       <div class="speech" id="bubble" aria-live="polite"></div>
       <button class="pet" id="pet" aria-label="Brincar com o personagem. Toque, toque duas vezes ou segure."><span id="petMount"></span></button>
       <div class="fx" id="fx" aria-hidden="true"></div>
+      <button class="adventure-float" id="adventureBtn" type="button" aria-label="Abrir aventura do dia" hidden>🧭 Aventura</button>
       <button class="arcade-float" id="arcadeBtn" data-arc="float" type="button" aria-label="Abrir o parque de jogos">🎮 Jogos</button>
     </main>
 
@@ -111,7 +112,24 @@
   </div>
 
   <div class="modal celebration" id="celebrationModal" role="dialog" aria-modal="true">
-    <div class="modal-card celebration-card"><div class="big-celebration">🎉</div><h2>Dia completo!</h2><p><strong id="celebrationPetName">Seu companheiro</strong> teve um dia incrível graças a você.</p><div class="bonus">+25 ⭐ &nbsp; +15 XP</div><button class="btn btn-gold btn-block" id="celebrationClose">Obaaa!</button></div>
+    <div class="modal-card celebration-card">
+      <div class="big-celebration">🎉</div>
+      <h2>Dia completo!</h2>
+      <p><strong id="celebrationPetName">Seu companheiro</strong> teve um dia incrível graças a você.</p>
+      <div class="bonus">+25 ⭐ &nbsp; +15 XP</div>
+      <div class="stack">
+        <button class="btn btn-main btn-block" id="celebrationAdventure" hidden>🧭 Explorar a aventura de hoje</button>
+        <button class="btn btn-gold btn-block" id="celebrationClose">Obaaa!</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal adventure-modal" id="adventureModal" role="dialog" aria-modal="true" aria-labelledby="adventureTitle">
+    <div class="modal-card adventure-card">
+      <div class="adventure-pet" id="adventurePet"></div>
+      <div id="adventureBody"></div>
+      <button class="btn btn-ghost btn-block" id="adventureClose">Fechar</button>
+    </div>
   </div>
 
   <script type="module" src="/src/game/main.js"></script>

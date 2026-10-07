@@ -29,14 +29,23 @@ export function createCloud(sb) {
       challenges:data.challenges || [],
       leagues:data.leagues || [],
       familyGoal:data.family_goal || {current:0,target:500},
-      dailyBonusDay:data.player.daily_bonus_day || null
+      dailyBonusDay:data.player.daily_bonus_day || null,
+      adventure:{day:null,eligible:false,completed_today:false,today:null,discoveries:[]}
     };
   }
   return {
     kind:'cloud',
     notificationState:()=>call('device_notification_state'),
     notificationSubscription:(active)=>call('device_notification_subscription',{p_active:active}),
-    async snapshot(){ return map(await call('kid_snapshot')); },
+    async snapshot(){
+      const [base,adventure]=await Promise.all([
+        call('kid_snapshot'),
+        call('adventure_state').catch(()=>null)
+      ]);
+      const snap=map(base);
+      if(snap&&adventure)snap.adventure=adventure;
+      return snap;
+    },
     async pair(code){
       const { data, error } = await sb.rpc('pair_device', {
         p_code: code,
@@ -49,6 +58,8 @@ export function createCloud(sb) {
     markDone:(id)=>call('mark_mission_done',{p_mission:id}),
     requestReward:(id)=>call('request_reward',{p_reward:id}),
     savePet:(name,look)=>call('update_my_pet',{p_pet_name:name,p_look:look}),
+    adventureState:()=>call('adventure_state'),
+    completeAdventure:(adventure,choice,discovery)=>call('complete_adventure',{p_adventure:adventure,p_choice:choice,p_discovery:discovery}),
     // Parque de minijogos
     playStatus:()=>call('play_status'),
     playStart:()=>call('play_start'),
