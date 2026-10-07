@@ -2,7 +2,7 @@
 
 Classificação: **VERCEL_BUILD_REQUIRED** (alteração visual e funcional web).
 Sem mudanças no Ignored Build Step, Android, assinatura, versão, Auth, push,
-billing, Supabase ou workflows.
+billing ou workflows. O sync usa uma migration isolada no schema `desafia`.
 
 ## Sono e jeitinho
 
@@ -23,19 +23,25 @@ para reconhecer conquistas existentes; a data histórica exata não é inventada
 
 ## Persistência e privacidade
 
-Estado repo-local no frontend: `desafia-companion-v1:local` para demonstração,
-ou `desafia-companion-v1:player:<UUID>` para o jogador retornado pela RPC existente.
-QA usa o storage já isolado em sessionStorage; reset QA remove também o caderninho.
-O UUID existente serve apenas para separar jogadores no mesmo navegador, sem
-guardar device token, nomes, texto de missões ou dados pessoais novos no diário.
-Armazena IDs fechados de catálogo/memórias, contadores limitados e dia de interações.
-Não há IA, chat, fornecedor novo, telemetria, dependência ou chamada remota nova.
+No modo local/demonstração, o estado continua em `desafia-companion-v1:local`.
+No modo conectado, o navegador mantém apenas um espelho para resposta imediata;
+os contadores de interação que influenciam personalidade/gostos são sincronizados
+por `desafia.companion_journals`, identificado pelo `player_id` já existente.
 
-Limites: não sincroniza entre aparelhos e limpar dados do navegador apaga os
-registros locais. Se o storage estiver indisponível, funciona somente na sessão.
-Isolamento por jogador evita exibição cruzada na UI; localStorage não é uma
-fronteira de autorização. Dados decorativos locais nunca autorizam ações reais.
-Nenhuma migration foi criada ou aplicada. O Supabase compartilhado não foi alterado.
+O backend não duplica descobertas, XP ou textos de memória: essas informações
+continuam derivadas das fontes existentes. A tabela sincronizada guarda apenas
+contadores fechados por tipo de interação, o dia corrente e quais tipos já
+contribuíram naquele dia. Não guarda device token, nome da criança, nome do
+companheiro, texto de missão ou qualquer nova PII.
+
+As RPCs `companion_journal_state` e `record_companion_action` são
+`SECURITY DEFINER` intencionalmente expostas ao papel `anon`, como as demais
+RPCs do aparelho infantil, mas exigem o segredo local validado por
+`device_player`. A tabela não concede SELECT/INSERT/UPDATE/DELETE a `anon` ou
+`authenticated`, usa RLS e não possui policy permissiva.
+
+QA continua usando sessionStorage isolado; reset QA remove o caderninho de teste.
+Sem IA, chat, fornecedor novo, telemetria ou dependência nova.
 
 ## Verificação
 
