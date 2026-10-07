@@ -176,3 +176,17 @@
 .g-rhythm-stage{flex:1;display:grid;place-items:center;width:100%;min-height:320px}
 .g-rhythm-star{--pulse-scale:1.6;--pulse-alpha:.5;position:relative;width:118px;height:118px;border:0;border-radius:50%;background:linear-gradient(145deg,#fff,#f7e8ff);box-shadow:0 15px 35px rgba(108,72,175,.2);font-size:58px;cursor:pointer;touch-action:manipulation}.g-rhythm-star span{position:relative;z-index:2}.g-rhythm-star i{position:absolute;inset:0;border:5px solid #8d68e9;border-radius:50%;transform:scale(var(--pulse-scale));opacity:var(--pulse-alpha);pointer-events:none}.g-rhythm-star:active{transform:scale(.95)}
 @media(prefers-reduced-motion:reduce){.g-maze-you,.g-maze-pet.cheer,.g-stars-pet.cheer,.g-rhythm-pet.cheer{animation:none!important}}
+
+
+/* ---------- Plus e tesouros do Parque ---------- */
+.arc-card{position:relative}
+.arc-card .plus-mark{position:absolute;top:7px;left:7px;padding:3px 6px;border-radius:999px;background:#4f3ca8;color:#fff;font-size:9px;font-weight:950;letter-spacing:.02em;box-shadow:0 3px 8px rgba(61,45,130,.18)}
+.arc-card.plus-game{border-style:dashed;background:linear-gradient(145deg,#f8f5ff,#efeaff)}
+.arc-card.plus-game .ic{filter:none;opacity:.82}
+.park-treasures{margin-top:20px;padding-top:16px;border-top:1px solid #eee9fb}
+.park-treasures-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.park-treasures-head h3{margin:0}
+.park-treasure-grid{display:grid;gap:9px;margin-top:10px}
+.park-treasure-grid article{display:grid;grid-template-columns:48px minmax(0,1fr) auto;align-items:center;gap:10px;padding:11px;border-radius:17px;background:linear-gradient(135deg,#fff8df,#f5f0ff);border:1px solid #e8dff9}
+.park-treasure-grid article>span{width:48px;height:48px;display:grid;place-items:center;border-radius:14px;background:#fff;font-size:28px;box-shadow:0 5px 14px rgba(70,50,130,.08)}
+.park-treasure-grid article strong,.park-treasure-grid article small{display:block}.park-treasure-grid article small{margin-top:2px;color:#776f91;font-size:10px;line-height:1.35}.park-treasure-grid article em{font-style:normal;font-size:20px}
