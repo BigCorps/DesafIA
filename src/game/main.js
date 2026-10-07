@@ -3,6 +3,7 @@ import { createChildNotificationUI } from './notifications.js';
 import { qaEnabled, uiStorage } from '../shared/qa-environment.js';
 import { petMarkup, applyLook, COLORS, HATS, ACCS, PET_NAMES } from '../shared/pet.js';
 import { HOUSE_ITEMS, levelOf, levelProgress } from '../shared/progression.js';
+import { companionAmbientLine, companionMoodLabel, deriveCompanionMood, missionCompanionAction, worldCompanionAction } from '../shared/companion.js';
 import { createKidSupabase, supabaseReady, friendlyError } from '../lib/supabase.js';
 import { createCloud } from './cloud.js';
 import { createLocal } from './local.js';
@@ -20,6 +21,7 @@ const TIMES=['dia','tarde','noite'];
 const PERIOD={manha:'de manhã',tarde:'à tarde',noite:'à noite'};
 
 let api=null,snap=null,tab='missoes',parentMode=false,unsubscribe=()=>{},refreshing=false,lastReaction=-1,reactionLockedUntil=0;
+let companionMood='calm',petClickTimer=0,suppressPetClick=false,petHoldTimer=0,idleTimer=0;
 let qaController=null;
 const kidSb=qaEnabled?null:createKidSupabase();
 const childNotifications=createChildNotificationUI(kidSb);
@@ -81,7 +83,7 @@ const mouth=petSvg.querySelector('.mouth');
 
 let timeIdx=(()=>{const h=new Date().getHours();return h>=6&&h<17?0:h<19?1:2})();
 $('scene').dataset.time=TIMES[timeIdx];
-$('skyBtn').addEventListener('click',()=>{timeIdx=(timeIdx+1)%3;$('scene').dataset.time=TIMES[timeIdx];});
+$('skyBtn').addEventListener('click',()=>{timeIdx=(timeIdx+1)%3;$('scene').dataset.time=TIMES[timeIdx];refreshCompanionMood();});
 $('panelToggle').addEventListener('click',()=>setPanelCollapsed(!document.querySelector('.game-shell').classList.contains('panel-collapsed')));
 
 function openModal(id){$(id).classList.add('open');}
@@ -93,8 +95,28 @@ function say(text,ms=2200){
   clearTimeout(say.t);
   say.t=setTimeout(()=>{b.classList.remove('show');scene.classList.remove('speaking')},ms);
 }
-function happy(){mouth?.setAttribute('d','M86 121 Q100 146 114 121 Z');mouth?.setAttribute('fill','#2A2350');clearTimeout(happy.t);happy.t=setTimeout(()=>{mouth?.setAttribute('d','M88 124 Q100 136 112 124');mouth?.setAttribute('fill','none');},1100);}
-function clearPetMotions(){$('pet').classList.remove('jump','giggle','wiggle','twirl','squish','dance')}
+function applyMoodFace(mood=companionMood){
+  petSvg.dataset.mood=mood;
+  petSvg.classList.toggle('is-resting',mood==='sleepy');
+  mouth?.setAttribute('fill','none');
+  const shapes={
+    calm:'M88 124 Q100 136 112 124',
+    curious:'M93 127 Q100 132 107 127',
+    excited:'M87 122 Q100 139 113 122',
+    proud:'M86 121 Q100 140 114 121',
+    sleepy:'M92 128 Q100 124 108 128'
+  };
+  mouth?.setAttribute('d',shapes[mood]||shapes.calm);
+}
+function refreshCompanionMood(){
+  companionMood=deriveCompanionMood(snap,TIMES[timeIdx]);
+  $('scene').dataset.mood=companionMood;
+  $('pet').dataset.mood=companionMood;
+  if($('moodText'))$('moodText').textContent=companionMoodLabel(companionMood);
+  applyMoodFace(companionMood);
+}
+function happy(){mouth?.setAttribute('d','M86 121 Q100 146 114 121 Z');mouth?.setAttribute('fill','#2A2350');petSvg.classList.remove('is-resting');clearTimeout(happy.t);happy.t=setTimeout(()=>applyMoodFace(companionMood),1100);}
+function clearPetMotions(){$('pet').classList.remove('jump','giggle','wiggle','twirl','squish','dance','hug','highfive','proud','curious')}
 function motion(name){
   happy();
   if(reduce)return;
@@ -111,6 +133,19 @@ function tinyTap(){
   $('pet').animate([{filter:'brightness(1)'},{filter:'brightness(1.08)'},{filter:'brightness(1)'}],{duration:180});
 }
 function haptic(pattern=12){try{if(!reduce&&navigator.vibrate)navigator.vibrate(pattern)}catch{}}
+function pulseSceneObject(id){
+  const el=$(id);if(!el||!el.classList.contains('unlocked'))return;
+  el.classList.remove('companion-active');void el.offsetWidth;el.classList.add('companion-active');
+  setTimeout(()=>el.classList.remove('companion-active'),900);
+}
+function performCompanionAction(action,{haptics=true}={}){
+  if(!action)return;
+  if(action.motion==='curious')motion('curious');else motion(action.motion||'proud');
+  if(action.objectId)pulseSceneObject(action.objectId);
+  if(action.burst?.length)burst(action.burst,8);
+  if(action.text)say(action.text,1800);
+  if(haptics)haptic([10,30,10]);
+}
 function petReaction(){
   const now=Date.now();
   if(now<reactionLockedUntil){tinyTap();return}
@@ -123,11 +158,32 @@ function petReaction(){
     ()=>{motion('twirl');burst(['⭐','✨'],5);say('Uma voltinha!',1200);haptic([10,30,10])},
     ()=>{blink(650);motion('squish');say('Pisca-pisca! 👀',1250);haptic(9)},
     ()=>{motion('dance');burst(['🎵','💜'],6);say('Dancinha do dia! 🎵',1450);haptic([9,30,9,30,9])},
-    ()=>{blink(900);say(`Oi! Eu sou ${name}. Que bom que você veio! 💜`,1600);haptic(8)}
+    ()=>{blink(700);motion(companionMood==='sleepy'?'hug':'curious');say(companionAmbientLine(companionMood,name),1800);haptic(8)}
   ];
   let idx=Math.floor(Math.random()*reactions.length);
   if(reactions.length>1&&idx===lastReaction)idx=(idx+1+Math.floor(Math.random()*(reactions.length-1)))%reactions.length;
   lastReaction=idx;reactions[idx]();
+}
+function petHug(){
+  reactionLockedUntil=Date.now()+1100;
+  motion('hug');burst(['💜','✨'],9);say('Abraço recebido! Eu gosto de ficar pertinho de você. 💜',1750);haptic([12,45,18]);
+}
+function petHighFive(){
+  reactionLockedUntil=Date.now()+950;
+  motion('highfive');burst(['✋','⭐','✨'],9);say('Toca aqui! Mandamos muito bem! ✋',1500);haptic([14,30,14]);
+}
+function scheduleCompanionIdle(){
+  clearTimeout(idleTimer);
+  if(reduce)return;
+  idleTimer=setTimeout(()=>{
+    if(snap&&document.visibilityState==='visible'&&!$('scene').classList.contains('speaking')){
+      if(companionMood==='sleepy')blink(1100);
+      else if(companionMood==='proud')motion('proud');
+      else if(companionMood==='curious')motion('curious');
+      else blink(420);
+    }
+    scheduleCompanionIdle();
+  },18000+Math.random()*14000);
 }
 function burst(chars=['⭐','✨','💜'],n=12){
   if(reduce)n=Math.min(n,3);const rect=$('pet').getBoundingClientRect(),scene=$('scene').getBoundingClientRect();
@@ -140,7 +196,9 @@ function markSeen(key,id){const a=[...new Set([...seenList(key),id])].slice(-100
 function renderStats(){
   if(!snap)return;const p=levelProgress(snap.xp);$('starCount').textContent=snap.wallet;$('petNameTitle').textContent=snap.petName;$('lvlText').textContent=`Nível ${p.level} · ${p.remaining} XP para o próximo`;$('xpFill').style.width=`${p.pct}%`;$('xpBar').setAttribute('aria-valuenow',String(p.pct));applyLook(petSvg,snap.look,snap.xp);
   const goal=snap.familyGoal||{current:snap.weekPoints||0,target:500};$('familyGoalText').textContent=`${goal.current} / ${goal.target} ⭐`;$('familyGoalFill').style.width=`${Math.min(100,Math.round(goal.current/Math.max(1,goal.target)*100))}%`;
-  const level=p.level;$('sceneTree').classList.toggle('unlocked',level>=5);$('sceneBooks').classList.toggle('unlocked',level>=4);$('scenePlant').classList.toggle('unlocked',level>=3);$('sceneTelescope').classList.toggle('unlocked',level>=7);syncPetLabels();document.title=`DesafIA — ${snap.petName}`;
+  const level=p.level;
+  [['sceneTree',5],['sceneBooks',4],['scenePlant',3],['sceneTelescope',7]].forEach(([id,min])=>{const el=$(id),open=level>=min;el?.classList.toggle('unlocked',open);if(el){el.disabled=!open;el.setAttribute('aria-hidden',String(!open));}});
+  refreshCompanionMood();syncPetLabels();document.title=`DesafIA — ${snap.petName}`;
 }
 function nextMission(){return snap?.missions?.find((m)=>m.status==='todo'||m.status==='rejected')||null;}
 function renderNext(){
@@ -179,7 +237,7 @@ function renderPanel(){
   if(tab==='visual'){const svg=$('visualPreview')?.querySelector('svg');applyLook(svg,snap.look,snap.xp);$('petNameInput')?.addEventListener('change',async(e)=>{await savePet(e.target.value,snap.look)});}
 }
 function renderAll(){renderStats();renderNext();renderPanel();}
-function missionReaction(m){const map={'🪥':'Meu sorriso também ficou brilhando!','📚':'Histórias deixam meu mundo maior!','💧':'Ahhh, água faz bem!','🧸':'Tudo organizado. Que alívio!','✏️':'Missão inteligente concluída!','🛏️':'Que quarto gostoso!'};say(map[m?.icon]||'Você conseguiu! Estou crescendo com você!');}
+function missionReaction(m){performCompanionAction(missionCompanionAction(m));}
 function checkFresh(prev,next){
   if(prev){for(const m of next.missions||[]){const old=prev.missions?.find((x)=>x.id===m.id);if(old?.status==='pending'&&m.status==='done'){jump();burst(['⭐','✨',m.icon],14);missionReaction(m);}}}
   const seen=new Set(seenList(seenRewardKey));const fresh=(next.recentRewards||[]).filter((r)=>!seen.has(r.id));if(fresh.length){const r=fresh.at(-1);markSeen(seenRewardKey,r.id);if(r.status==='delivered'){jump();burst(['🎉','🎁','✨',r.icon],18);toast('Prêmio entregue!',r.title)}else{say('Esse prêmio ficou para depois. Suas estrelas voltaram!');}}
@@ -217,7 +275,25 @@ $('adultsQuickBtn').addEventListener('click',openAdults);
 $('adultsClose').addEventListener('click',()=>closeModal('adultsModal'));
 $('celebrationClose').addEventListener('click',()=>closeModal('celebrationModal'));
 $('familyGoalBtn').addEventListener('click',()=>{tab='familia';expandPanel();renderPanel();});
-$('pet').addEventListener('click',petReaction);
+const petButton=$('pet');
+petButton.addEventListener('pointerdown',()=>{
+  suppressPetClick=false;
+  clearTimeout(petHoldTimer);
+  petHoldTimer=setTimeout(()=>{suppressPetClick=true;petHug();},650);
+});
+['pointerup','pointercancel','pointerleave'].forEach((type)=>petButton.addEventListener(type,()=>clearTimeout(petHoldTimer)));
+petButton.addEventListener('contextmenu',(e)=>e.preventDefault());
+petButton.addEventListener('click',()=>{
+  if(suppressPetClick){suppressPetClick=false;return}
+  clearTimeout(petClickTimer);
+  petClickTimer=setTimeout(petReaction,230);
+});
+petButton.addEventListener('dblclick',(e)=>{e.preventDefault();clearTimeout(petClickTimer);petHighFive();});
+document.querySelectorAll('[data-companion-action]').forEach((el)=>el.addEventListener('click',()=>{
+  if(el.disabled)return;
+  performCompanionAction(worldCompanionAction(el.id,petName()));
+}));
+scheduleCompanionIdle();
 document.querySelector('.game-nav').addEventListener('click',(e)=>{const b=e.target.closest('[data-tab]');if(!b)return;tab=b.dataset.tab;renderPanel();});
 document.addEventListener('click',(e)=>{const b=e.target.closest('[data-tab-go]');if(!b)return;tab=b.dataset.tabGo;expandPanel();renderPanel();});
 
