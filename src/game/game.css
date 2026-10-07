@@ -28,6 +28,42 @@
 @keyframes petHighFive{0%,100%{transform:translate(-50%,var(--pet-y)) rotate(0)}38%{transform:translate(-50%,calc(var(--pet-y) - 34px)) rotate(8deg) scale(1.07)}58%{transform:translate(-50%,calc(var(--pet-y) - 20px)) rotate(-5deg) scale(1.03)}}
 @keyframes petProud{0%,100%{transform:translate(-50%,var(--pet-y)) scale(1)}35%{transform:translate(-50%,calc(var(--pet-y) - 18px)) scale(1.08)}55%{transform:translate(-50%,calc(var(--pet-y) - 5px)) scale(1.11,.96)}75%{transform:translate(-50%,calc(var(--pet-y) - 10px)) scale(1.04)}}
 @keyframes petCurious{0%,100%{transform:translate(-50%,var(--pet-y)) rotate(0)}28%{transform:translate(-50%,calc(var(--pet-y) - 3px)) rotate(-7deg)}56%{transform:translate(-50%,var(--pet-y)) rotate(6deg)}78%{transform:translate(-50%,calc(var(--pet-y) - 2px)) rotate(-3deg)}}
+
+.pet-arm,.pet-foot{transform-box:fill-box;transform-origin:center;will-change:transform}
+.pet.wave .pet-arm-right{animation:petShortWave .78s ease-in-out}
+.pet.highfive .pet-arm-right{animation:petShortHighFive .78s cubic-bezier(.2,.85,.25,1)}
+.pet.hug .pet-arm-left{animation:petShortHugLeft .9s cubic-bezier(.2,.8,.25,1)}
+.pet.hug .pet-arm-right{animation:petShortHugRight .9s cubic-bezier(.2,.8,.25,1)}
+.pet.proud .pet-arm-left{animation:petShortCelebrateLeft .85s cubic-bezier(.2,.8,.2,1)}
+.pet.proud .pet-arm-right{animation:petShortCelebrateRight .85s cubic-bezier(.2,.8,.2,1)}
+.pet.curious .pet-arm-right{animation:petShortCurious .9s ease-in-out}
+.pet.dance .pet-arm-left{animation:petShortDanceLeft .9s ease-in-out}
+.pet.dance .pet-arm-right{animation:petShortDanceRight .9s ease-in-out}
+.pet.dance .pet-foot-left,.pet.march .pet-foot-left{animation:petShortStepLeft .62s ease-in-out 2}
+.pet.dance .pet-foot-right,.pet.march .pet-foot-right{animation:petShortStepRight .62s ease-in-out 2}
+.pet.wiggle .pet-foot-left{animation:petShortShuffleLeft .78s ease-in-out}
+.pet.wiggle .pet-foot-right{animation:petShortShuffleRight .78s ease-in-out}
+.pet.giggle .pet-arm-left{animation:petShortGiggleLeft .75s ease-in-out}
+.pet.giggle .pet-arm-right{animation:petShortGiggleRight .75s ease-in-out}
+.pet.march{animation:petMarch .78s ease-in-out}
+.pet.wave{animation:petWaveBody .78s ease-in-out}
+@keyframes petShortWave{0%,100%{transform:translate(0,0) rotate(0)}22%{transform:translate(1px,-5px) rotate(-18deg)}45%{transform:translate(2px,-7px) rotate(16deg)}68%{transform:translate(1px,-5px) rotate(-16deg)}86%{transform:translate(1px,-3px) rotate(10deg)}}
+@keyframes petShortHighFive{0%,100%{transform:translate(0,0) rotate(0)}38%{transform:translate(2px,-13px) rotate(-28deg)}62%{transform:translate(3px,-15px) rotate(-34deg)}78%{transform:translate(1px,-7px) rotate(-12deg)}}
+@keyframes petShortHugLeft{0%,100%{transform:translate(0,0) rotate(0)}35%,68%{transform:translate(11px,5px) rotate(-26deg)}}
+@keyframes petShortHugRight{0%,100%{transform:translate(0,0) rotate(0)}35%,68%{transform:translate(-11px,5px) rotate(26deg)}}
+@keyframes petShortCelebrateLeft{0%,100%{transform:translate(0,0) rotate(0)}35%,62%{transform:translate(5px,-10px) rotate(30deg)}}
+@keyframes petShortCelebrateRight{0%,100%{transform:translate(0,0) rotate(0)}35%,62%{transform:translate(-5px,-10px) rotate(-30deg)}}
+@keyframes petShortCurious{0%,100%{transform:translate(0,0) rotate(0)}30%{transform:translate(-2px,-5px) rotate(-10deg)}58%{transform:translate(1px,-7px) rotate(12deg)}78%{transform:translate(0,-3px) rotate(-5deg)}}
+@keyframes petShortDanceLeft{0%,100%{transform:translate(0,0) rotate(0)}25%{transform:translate(3px,-4px) rotate(18deg)}55%{transform:translate(-1px,1px) rotate(-12deg)}78%{transform:translate(2px,-3px) rotate(12deg)}}
+@keyframes petShortDanceRight{0%,100%{transform:translate(0,0) rotate(0)}25%{transform:translate(-1px,1px) rotate(12deg)}55%{transform:translate(-3px,-4px) rotate(-18deg)}78%{transform:translate(-2px,-3px) rotate(-12deg)}}
+@keyframes petShortStepLeft{0%,100%{transform:translate(0,0) rotate(0)}50%{transform:translate(-3px,-5px) rotate(-6deg)}}
+@keyframes petShortStepRight{0%,100%{transform:translate(0,0) rotate(0)}50%{transform:translate(3px,-5px) rotate(6deg)}}
+@keyframes petShortShuffleLeft{0%,100%{transform:translate(0,0)}30%{transform:translate(-5px,-1px)}65%{transform:translate(3px,0)}}
+@keyframes petShortShuffleRight{0%,100%{transform:translate(0,0)}30%{transform:translate(5px,-1px)}65%{transform:translate(-3px,0)}}
+@keyframes petShortGiggleLeft{0%,100%{transform:translate(0,0) rotate(0)}30%{transform:translate(3px,-2px) rotate(9deg)}65%{transform:translate(-1px,1px) rotate(-7deg)}}
+@keyframes petShortGiggleRight{0%,100%{transform:translate(0,0) rotate(0)}30%{transform:translate(-3px,-2px) rotate(-9deg)}65%{transform:translate(1px,1px) rotate(7deg)}}
+@keyframes petMarch{0%,100%{transform:translate(-50%,var(--pet-y))}25%{transform:translate(-50%,calc(var(--pet-y) - 7px)) rotate(-2deg)}50%{transform:translate(-50%,var(--pet-y)) rotate(0)}75%{transform:translate(-50%,calc(var(--pet-y) - 7px)) rotate(2deg)}}
+@keyframes petWaveBody{0%,100%{transform:translate(-50%,var(--pet-y)) rotate(0)}35%{transform:translate(-50%,calc(var(--pet-y) - 3px)) rotate(-2deg)}65%{transform:translate(-50%,calc(var(--pet-y) - 2px)) rotate(2deg)}}
 .pet-svg.is-blinking .eyes,.pet-svg.is-resting .eyes{opacity:0}.pet-svg.is-blinking .eyes-sleep,.pet-svg.is-resting .eyes-sleep{opacity:1}
 
 .speech{position:absolute;z-index:8;left:50%;bottom:212px;transform:translate(-50%,8px);opacity:0;pointer-events:none;max-width:250px;padding:10px 13px;border-radius:16px 16px 16px 4px;background:#fff;color:#3d345e;font-weight:800;font-size:13px;box-shadow:0 8px 25px rgba(48,38,100,.15);transition:.2s}.speech.show{opacity:1;transform:translate(-50%,0)}
