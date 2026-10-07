@@ -29,7 +29,9 @@ function normalize(raw) {
     newGames: Array.isArray(raw.new_games) ? raw.new_games : [],
     featured: raw.featured || null,
     disabled: Array.isArray(raw.disabled) ? raw.disabled : [],
-    best: raw.best || {}
+    best: raw.best || {},
+    plus: Boolean(raw.plus),
+    catalog: Array.isArray(raw.catalog) ? raw.catalog : GAMES.filter((g)=>g.tier!=='plus').map((g)=>g.id)
   };
 }
 
@@ -42,7 +44,7 @@ export function createArcade({ getApi, getSnap, say, toast, onChange }) {
   const api = () => getApi();
   const petName = () => getSnap()?.petName || 'Pipo';
   const look = () => getSnap()?.look || {};
-  const available = () => GAMES.filter((g) => status?.unlocked.includes(g.id) && !status.disabled.includes(g.id));
+  const available = () => GAMES.filter((g) => status?.unlocked.includes(g.id) && status?.catalog.includes(g.id) && !status.disabled.includes(g.id));
 
   // ---------- estado ----------
   async function refresh() {
@@ -80,14 +82,19 @@ export function createArcade({ getApi, getSnap, say, toast, onChange }) {
 
   // ---------- aba ----------
   function album() {
-    return `<h3>Álbum de jogos <small class="badge badge-soft">${status?.unlocked.length || 0}/${GAMES.length}</small></h3><div class="arc-grid">${GAMES.map((g) => {
-      const has = status?.unlocked.includes(g.id);
+    const eligibleCount=status?.catalog?.length||GAMES.filter((g)=>g.tier!=='plus').length;
+    const unlockedEligible=(status?.unlocked||[]).filter((id)=>status?.catalog?.includes(id)).length;
+    return `<h3>Álbum de jogos <small class="badge badge-soft">${unlockedEligible}/${eligibleCount}</small></h3><div class="arc-grid">${GAMES.map((g) => {
+      const plusLocked=g.tier==='plus'&&!status?.plus;
+      const has = status?.unlocked.includes(g.id) && !plusLocked;
       const off = status?.disabled.includes(g.id);
+      if(plusLocked)return `<div class="arc-card locked plus-game" style="--gc:${g.color}"><span class="plus-mark">Plus ✦</span><span class="ic">${g.icon}</span><b>${esc(g.title)}</b><small>Mais variedade no DesafIA Plus</small></div>`;
       if (!has) return `<div class="arc-card locked"><span class="ic">?</span><b>Jogo surpresa</b><small>Complete um dia para descobrir</small></div>`;
       const best = Number(status.best[g.id] || 0);
       const medal = MEDAL_ICON[medalOf(g, best)];
       const canPlay = status.missionsOk && status.started && status.remaining > 0 && !off;
       return `<button class="arc-card ${status.featured === g.id ? 'featured' : ''}" style="--gc:${g.color}" data-arc="play" data-id="${g.id}" ${canPlay ? '' : 'disabled'}>
+        ${g.tier==='plus'?'<span class="plus-mark">Plus ✦</span>':''}
         ${status.newGames.includes(g.id) ? '<span class="new">Novo!</span>' : medal ? `<span class="medal">${medal}</span>` : ''}
         <span class="ic">${g.icon}</span><b>${esc(g.title)}</b><small>${off ? 'Desligado pelos adultos' : best ? `Recorde: ${best}` : 'Novo no seu álbum'}</small></button>`;
     }).join('')}</div>`;
@@ -235,6 +242,8 @@ export function createArcade({ getApi, getSnap, say, toast, onChange }) {
   async function choose(id) {
     const g = gameById(id);
     if (!g) return;
+    if (g.tier==='plus'&&!status?.plus) { toast?.('Jogo Plus','Este jogo faz parte da expansão Plus.'); return; }
+    if (!status?.catalog?.includes(g.id)) { toast?.('Jogo indisponível','Este jogo não está disponível no seu plano atual.'); return; }
     const p = ensurePlayer();
     p.root.hidden = false;
     p.game = g;
