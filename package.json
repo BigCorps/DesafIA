@@ -8,9 +8,10 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "check": "node scripts/check.mjs && npm run test:notifications",
+    "check": "node scripts/check.mjs && npm run test:notifications && npm run test:companion",
     "icons": "python3 brand/gerar_icones.py",
-    "test:notifications": "node --test scripts/notifications.test.mjs"
+    "test:notifications": "node --test scripts/notifications.test.mjs",
+    "test:companion": "node --test scripts/companion.test.mjs"
   },
   "engines": {
     "node": ">=22.12.0"
