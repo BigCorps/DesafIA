@@ -39,8 +39,8 @@ export function petMarkup(prefix) {
   <path d="M100 32 C88 21 75 24 70 31 C79 40 92 40 100 32Z" fill="#5CCB8A"/>
   <path class="grow-part s2" d="M100 25 C112 13 126 16 131 23 C123 33 108 33 100 25Z" fill="#76DDA0"/>
   <g class="grow-part s3"><circle cx="100" cy="7" r="6" fill="#FFD54A"/><circle cx="92" cy="13" r="6" fill="#FFD54A"/><circle cx="108" cy="13" r="6" fill="#FFD54A"/><circle cx="95" cy="21" r="6" fill="#FFD54A"/><circle cx="105" cy="21" r="6" fill="#FFD54A"/><circle cx="100" cy="15" r="5" fill="#FF8C42"/></g>
-  <ellipse class="foot" cx="72" cy="179" rx="17" ry="9" fill="#E35C7A"/><ellipse class="foot" cx="128" cy="179" rx="17" ry="9" fill="#E35C7A"/>
-  <ellipse class="limb" cx="29" cy="134" rx="10" ry="17" fill="#F27A93" transform="rotate(22 29 134)"/><ellipse class="limb" cx="171" cy="134" rx="10" ry="17" fill="#F27A93" transform="rotate(-22 171 134)"/>
+  <g class="pet-foot pet-foot-left"><ellipse class="foot" cx="72" cy="179" rx="17" ry="9" fill="#E35C7A"/></g><g class="pet-foot pet-foot-right"><ellipse class="foot" cx="128" cy="179" rx="17" ry="9" fill="#E35C7A"/></g>
+  <g class="pet-arm pet-arm-left"><ellipse class="limb" cx="29" cy="134" rx="10" ry="17" fill="#F27A93" transform="rotate(22 29 134)"/></g><g class="pet-arm pet-arm-right"><ellipse class="limb" cx="171" cy="134" rx="10" ry="17" fill="#F27A93" transform="rotate(-22 171 134)"/></g>
   <path d="M100 44 C150 44 176 84 176 124 C176 162 146 182 100 182 C54 182 24 162 24 124 C24 84 50 44 100 44Z" fill="url(#${p}-body)"/>
   <ellipse class="belly" cx="100" cy="148" rx="46" ry="30" fill="#FFE4EA"/>
   <g class="eyes"><ellipse cx="76" cy="106" rx="10" ry="13" fill="#2A2350"/><circle cx="79.5" cy="101" r="4.2" fill="#fff"/><circle cx="73" cy="111.5" r="1.8" fill="#fff"/><ellipse cx="124" cy="106" rx="10" ry="13" fill="#2A2350"/><circle cx="127.5" cy="101" r="4.2" fill="#fff"/><circle cx="121" cy="111.5" r="1.8" fill="#fff"/></g>
