@@ -12,8 +12,9 @@ consulte os contratos reais do repositório antes de implementar.
 
 - Vite/JavaScript/PWA, não React/Next.js: criança em `/`, responsável em `/pais/`.
 - Android é TWA/Bubblewrap, package `com.app.desafia`.
-- Supabase compartilhado com outros produtos BigCorps: objetos do app ficam
-  em `desafia`; não altere objetos de outros produtos sem pedido explícito.
+- Supabase compartilhado com outros produtos BigCorps: não crie novo projeto
+  Supabase para o DesafIA. Objetos do app ficam no schema `desafia`; não altere
+  objetos de outros produtos sem pedido explícito.
 - DDL via nova migration; não edite migrations históricas já aplicadas.
 - Browser sem acesso direto desnecessário a tabelas. Revise RLS, grants,
   security definer e search_path seguro, preservando validação de identidade.
@@ -24,12 +25,20 @@ consulte os contratos reais do repositório antes de implementar.
 
 - OneSignal isolado; secrets próprios server-side usam `DESAFIA_`.
   REST API Key nunca vai para frontend, Vercel ou GitHub.
-- Worker OneSignal separado do worker PWA; sem prompt automático de push.
-  Criança requer consentimento parental; não envie PII infantil ao fornecedor.
+- Worker OneSignal permanece separado do worker PWA em
+  `/onesignal/OneSignalSDKWorker.js`. Não altere `public/sw.js` para integrar
+  OneSignal sem necessidade comprovada; sem prompt automático de push.
+- Criança requer consentimento parental e ativação explícita no aparelho;
+  não envie PII infantil ao fornecedor.
+- O job `desafia-notifications` do pg_cron autentica com `cron_automations`
+  via `SUPABASE_SECRET_KEYS`/Vault. Não coloque service role no pg_cron.
 - Em tarefas web/backend, não altere Android/TWA/AAB/assetlinks/assinatura
   sem necessidade técnica. Build Android somente com impacto Android/TWA.
 - Nunca gere nova assinatura/keystore nem substitua fingerprints do Play
   pelos da upload key.
+- A distribuição Google Play é consumption-only: pode reconhecer Plus já ativo,
+  mas não deve exibir PIX, botão/link de compra externa ou checkout externo
+  dentro da versão Play.
 
 ## Git, deploy e verificação
 
