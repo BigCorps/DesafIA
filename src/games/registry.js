@@ -54,11 +54,39 @@ export const GAMES = [
     id: 'cores', title: 'Siga as Cores', icon: '🎵', color: '#7B61FF', ages: '4+',
     how: 'Olhe e escute a sequência de cores. Depois toque na mesma ordem. A cada rodada, uma cor a mais!',
     medals: [5, 9, 14], load: () => import('./cores.js')
+  },
+  {
+    id: 'labirinto', title: 'Labirinto do Pipo', icon: '🧭', color: '#51B78F', ages: '5+', tier: 'plus',
+    how: 'Deslize para encontrar a saída. Cada fase muda de caminho e recompensa movimentos mais espertos.',
+    medals: [300, 700, 1200],
+    collectible: { icon: '🗺️', title: 'Mapa Secreto', text: 'Um mapa dobradinho encontrado depois de vencer o primeiro labirinto.' },
+    load: () => import('./labirinto.js')
+  },
+  {
+    id: 'constelacoes', title: 'Constelações', icon: '🌌', color: '#5E72D8', ages: '5+', tier: 'plus',
+    how: 'Toque nas estrelas na ordem dos números para desenhar constelações no céu.',
+    medals: [500, 1000, 1800],
+    collectible: { icon: '🔭', title: 'Carta Celeste', text: 'Uma pequena carta do céu com as constelações que vocês encontraram.' },
+    load: () => import('./constelacoes.js')
+  },
+  {
+    id: 'ritmo', title: 'Ritmo das Estrelas', icon: '🥁', color: '#A66CF2', ages: '5+', tier: 'plus',
+    how: 'Toque na estrela quando o pulso chegar ao centro. Acerte o ritmo e monte uma sequência musical.',
+    medals: [600, 1300, 2200],
+    collectible: { icon: '🎵', title: 'Sino de Estrelas', text: 'Um sininho que parece tocar baixinho quando o céu está tranquilo.' },
+    load: () => import('./ritmo.js')
   }
 ];
 
 export const GAME_IDS = GAMES.map((g) => g.id);
+export const FREE_GAME_IDS = GAMES.filter((g) => g.tier !== 'plus').map((g) => g.id);
+export const PLUS_GAME_IDS = GAMES.filter((g) => g.tier === 'plus').map((g) => g.id);
 export const gameById = (id) => GAMES.find((g) => g.id === id) || null;
+export const gameRequiresPlus = (id) => gameById(id)?.tier === 'plus';
+export function parkTreasures(best = {}) {
+  return GAMES.filter((g) => g.collectible && medalOf(g, Number(best[g.id] || 0)) > 0)
+    .map((g) => ({ gameId:g.id, ...g.collectible, medal:medalOf(g, Number(best[g.id] || 0)) }));
+}
 
 /** 0 = sem medalha, 1 bronze, 2 prata, 3 ouro */
 export function medalOf(game, score) {
