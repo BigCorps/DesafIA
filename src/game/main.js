@@ -230,13 +230,22 @@ function rememberInteraction(action){
   if(!snap)return;
   companionJournal.action(snap,action);
   if(tab==='casa')renderPanel();
+  if(api?.kind==='cloud'&&typeof api.recordCompanionAction==='function'){
+    api.recordCompanionAction(action).then((remote)=>{
+      if(!snap||!remote)return;
+      snap.companionJournal=remote;
+      companionJournal.observe(snap);
+      if(tab==='casa')renderPanel();
+    }).catch((err)=>console.warn('companion sync',err));
+  }
 }
 function companionJournalView(){
   const profile=companionJournal.observe(snap);
   const traits=profile.traits.map((t)=>`<article class="companion-trait"><strong>${esc(t.icon)} ${esc(t.name)}</strong><small>${esc(t.expression)}</small><p>${esc(t.text)}</p></article>`).join('');
   const likes=profile.likes.length?`<ul class="companion-likes">${profile.likes.map((l)=>`<li>${esc(l.icon)} ${esc(l.name)}</li>`).join('')}</ul>`:'<p class="hint">Os gostos aparecem aos pouquinhos, nas brincadeiras e descobertas.</p>';
   const memories=profile.memories.length?`<ul class="companion-memories">${profile.memories.map((m)=>`<li><span aria-hidden="true">${esc(m.icon)}</span> ${esc(m.text)}</li>`).join('')}</ul>`:'<p class="hint">Nosso caderninho está pronto para guardar momentos juntos.</p>';
-  return `<section class="companion-journal" aria-labelledby="companionJournalTitle"><h3 id="companionJournalTitle">Jeitinho do ${esc(snap.petName)}</h3><p class="hint">Cada traço tem seu encanto. Eles podem florescer juntos, no nosso tempo.</p><div class="companion-traits">${traits}</div><h4>Coisas de que eu gosto</h4>${likes}<h4>Nossas memórias</h4>${memories}<small class="companion-storage-note">Este caderninho fica neste aparelho.</small></section>`;
+  const storageNote=snap.connected?'Sincronizado com este companheiro nos aparelhos conectados.':'Neste modo, o caderninho fica somente neste aparelho.';
+  return `<section class="companion-journal" aria-labelledby="companionJournalTitle"><h3 id="companionJournalTitle">Jeitinho do ${esc(snap.petName)}</h3><p class="hint">Cada traço tem seu encanto. Eles podem florescer juntos, no nosso tempo.</p><div class="companion-traits">${traits}</div><h4>Coisas de que eu gosto</h4>${likes}<h4>Nossas memórias</h4>${memories}<small class="companion-storage-note">${esc(storageNote)}</small></section>`;
 }
 function renderAdventureIntro(adventure){
   activeAdventure=adventure;
