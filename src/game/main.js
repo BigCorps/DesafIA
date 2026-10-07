@@ -4,6 +4,7 @@ import { qaEnabled, uiStorage } from '../shared/qa-environment.js';
 import { petMarkup, applyLook, COLORS, HATS, ACCS, PET_NAMES } from '../shared/pet.js';
 import { HOUSE_ITEMS, levelOf, levelProgress } from '../shared/progression.js';
 import { companionAmbientLine, companionMoodLabel, deriveCompanionMood, missionCompanionAction, worldCompanionAction } from '../shared/companion.js';
+import { DISCOVERIES, adventureForDay, collectedDiscoveries, discoveryById, findAdventureChoice } from '../shared/adventures.js';
 import { createKidSupabase, supabaseReady, friendlyError } from '../lib/supabase.js';
 import { createCloud } from './cloud.js';
 import { createLocal } from './local.js';
@@ -22,6 +23,7 @@ const PERIOD={manha:'de manhã',tarde:'à tarde',noite:'à noite'};
 
 let api=null,snap=null,tab='missoes',parentMode=false,unsubscribe=()=>{},refreshing=false,lastReaction=-1,reactionLockedUntil=0;
 let companionMood='calm',petClickTimer=0,suppressPetClick=false,petHoldTimer=0,idleTimer=0;
+let activeAdventure=null,adventureBusy=false;
 let qaController=null;
 const kidSb=qaEnabled?null:createKidSupabase();
 const childNotifications=createChildNotificationUI(kidSb);
@@ -197,12 +199,83 @@ function burst(chars=['⭐','✨','💜'],n=12){
 function seenList(key){try{return JSON.parse(uiStorage.getItem(key)||'[]')}catch{return[]}}
 function markSeen(key,id){const a=[...new Set([...seenList(key),id])].slice(-100);uiStorage.setItem(key,JSON.stringify(a));}
 
+function adventureState(){
+  return snap?.adventure||{day:null,eligible:false,completed_today:false,today:null,discoveries:[]};
+}
+function syncAdventureUI(){
+  const state=adventureState(),available=Boolean(state.eligible&&!state.completed_today);
+  if($('adventureBtn'))$('adventureBtn').hidden=!available;
+  if($('celebrationAdventure'))$('celebrationAdventure').hidden=!available;
+}
+function adventurePetPreview(){
+  const mount=$('adventurePet');
+  if(!mount)return;
+  mount.innerHTML=petMarkup('adventure');
+  applyLook(mount.querySelector('svg'),snap?.look,snap?.xp);
+}
+function discoveryAlbumView(){
+  const state=adventureState(),found=collectedDiscoveries(state.discoveries||[]);
+  const foundIds=new Set(found.map((item)=>item.id));
+  const cards=DISCOVERIES.map((item)=>foundIds.has(item.id)
+    ? `<article class="discovery-card found"><span>${esc(item.icon)}</span><strong>${esc(item.name)}</strong><small>${esc(item.description)}</small></article>`
+    : '<article class="discovery-card locked"><span>❔</span><strong>Descoberta secreta</strong><small>Continue completando seus dias para explorar.</small></article>').join('');
+  return `<section class="discoveries"><div class="discoveries-head"><div><h3>Álbum de descobertas</h3><p>Pequenas lembranças das aventuras de ${esc(snap.petName)}.</p></div><strong>${found.length}/${DISCOVERIES.length}</strong></div><div class="discovery-grid">${cards}</div></section>`;
+}
+function renderAdventureIntro(adventure){
+  activeAdventure=adventure;
+  adventurePetPreview();
+  $('adventureBody').innerHTML=`<div class="adventure-kicker">🧭 Aventura do dia</div><h2 id="adventureTitle">${esc(adventure.icon)} ${esc(adventure.title)}</h2><p>${esc(adventure.intro)}</p><div class="adventure-choices">${adventure.choices.map((choice)=>`<button class="adventure-choice" data-adventure-choice="${esc(choice.id)}"><strong>${esc(choice.label)}</strong><span>Escolher este caminho</span></button>`).join('')}</div>`;
+}
+function renderAdventureResult(adventure,choice){
+  const d=choice.discovery;
+  adventurePetPreview();
+  $('adventureBody').innerHTML=`<div class="adventure-kicker">✨ Nova descoberta!</div><h2 id="adventureTitle">${esc(d.icon)} ${esc(d.name)}</h2><p>${esc(choice.result)}</p><article class="discovery-reveal"><span>${esc(d.icon)}</span><div><strong>${esc(d.name)}</strong><small>${esc(d.description)}</small></div></article><p class="adventure-note">Ela foi guardada no Álbum de Descobertas da Casa.</p>`;
+}
+function openAdventure(){
+  if(!snap||!api)return;
+  const state=adventureState();
+  if(!state.eligible){toast('A aventura ainda está escondida','Complete as missões do dia para explorar com seu companheiro.');return}
+  if(state.completed_today){
+    const d=discoveryById(state.today?.discovery_id);
+    if(d){
+      adventurePetPreview();
+      $('adventureBody').innerHTML=`<div class="adventure-kicker">🧭 Aventura concluída</div><h2 id="adventureTitle">${esc(d.icon)} ${esc(d.name)}</h2><p>Esta foi a descoberta de hoje. Amanhã pode aparecer um novo caminho.</p><article class="discovery-reveal"><span>${esc(d.icon)}</span><div><strong>${esc(d.name)}</strong><small>${esc(d.description)}</small></div></article>`;
+      openModal('adventureModal');
+    }
+    return;
+  }
+  const adventure=adventureForDay(state.day,state.discoveries||[]);
+  renderAdventureIntro(adventure);
+  motion('curious');
+  openModal('adventureModal');
+}
+async function chooseAdventure(choiceId,button){
+  if(adventureBusy||!activeAdventure||!api)return;
+  const choice=findAdventureChoice(activeAdventure.id,choiceId);
+  if(!choice)return;
+  adventureBusy=true;button?.setAttribute('disabled','');
+  try{
+    const state=await api.completeAdventure(activeAdventure.id,choice.id,choice.discovery.id);
+    snap.adventure=state;
+    performCompanionAction({motion:choice.motion,burst:[choice.discovery.icon,'✨','💜'],text:`Encontramos ${choice.discovery.name}! ✨`});
+    renderAdventureResult(activeAdventure,choice);
+    syncAdventureUI();
+    if(tab==='casa')renderPanel();
+  }catch(err){
+    const code=String(err?.message||err);
+    const msg=code.includes('ADVENTURE_ALREADY_DONE')?'A aventura de hoje já foi concluída.':code.includes('ADVENTURE_LOCKED')?'Complete as missões do dia antes de explorar.':friendlyError(err);
+    toast('Não foi possível explorar',msg);
+  }finally{
+    adventureBusy=false;button?.removeAttribute('disabled');
+  }
+}
+
 function renderStats(){
   if(!snap)return;const p=levelProgress(snap.xp);$('starCount').textContent=snap.wallet;$('petNameTitle').textContent=snap.petName;$('lvlText').textContent=`Nível ${p.level} · ${p.remaining} XP para o próximo`;$('xpFill').style.width=`${p.pct}%`;$('xpBar').setAttribute('aria-valuenow',String(p.pct));applyLook(petSvg,snap.look,snap.xp);
   const goal=snap.familyGoal||{current:snap.weekPoints||0,target:500};$('familyGoalText').textContent=`${goal.current} / ${goal.target} ⭐`;$('familyGoalFill').style.width=`${Math.min(100,Math.round(goal.current/Math.max(1,goal.target)*100))}%`;
   const level=p.level;
   [['sceneTree',5],['sceneBooks',4],['scenePlant',3],['sceneTelescope',7]].forEach(([id,min])=>{const el=$(id),open=level>=min;el?.classList.toggle('unlocked',open);if(el){el.disabled=!open;el.setAttribute('aria-hidden',String(!open));}});
-  refreshCompanionMood();syncPetLabels();document.title=`DesafIA — ${snap.petName}`;
+  refreshCompanionMood();syncAdventureUI();syncPetLabels();document.title=`DesafIA — ${snap.petName}`;
 }
 function nextMission(){return snap?.missions?.find((m)=>m.status==='todo'||m.status==='rejected')||null;}
 function renderNext(){
@@ -223,7 +296,7 @@ function rewardsView(){
   const rows=snap.rewards.map((r)=>{const can=snap.wallet>=r.cost;let act=r.pending?(parentMode?`<div><button class="btn btn-soft" data-act="deny" data-id="${r.id}">↩</button> <button class="btn btn-ok" data-act="deliver" data-id="${r.id}">✓</button></div>`:'<span class="badge badge-pending">Pedido feito</span>'):(can&&!parentMode?`<button class="btn btn-gold" data-act="redeem" data-id="${r.id}">Trocar</button>`:`<span class="badge badge-soft">${r.cost} ⭐</span>`);return `<li class="reward"><span class="item-icon">${esc(r.icon)}</span><span class="item-body"><strong>${esc(r.title)}</strong><small>${r.pending?'Esperando um adulto':can?'Você já tem estrelas suficientes':`Faltam ${Math.max(0,r.cost-snap.wallet)} estrelas`}</small></span>${act}</li>`;}).join('');
   return `<div class="panel-title"><h2>Prêmios combinados</h2><span class="badge badge-soft">${snap.wallet} ⭐</span></div><p class="hint">As estrelas viram experiências e combinados reais — nada é comprado dentro do jogo.</p><ul class="reward-list">${rows}</ul>`;
 }
-function houseView(){const level=levelOf(snap.xp);return `<div class="panel-title"><h2>Casa do ${esc(snap.petName)}</h2><span class="badge badge-soft">Nível ${level}</span></div><p class="hint">Sua rotina transforma o mundo do ${esc(snap.petName)}. Continue evoluindo para liberar novos cantinhos.</p><div class="house-grid">${HOUSE_ITEMS.map((it)=>`<article class="house-item ${level<it.level?'locked':''}"><span class="hi">${level<it.level?'🔒':it.icon}</span><strong>${esc(it.title)}</strong><small>${esc(it.text)}</small><em>${level<it.level?`Libera no nível ${it.level}`:'Desbloqueado ✓'}</em></article>`).join('')}</div>`;}
+function houseView(){const level=levelOf(snap.xp);return `<div class="panel-title"><h2>Casa do ${esc(snap.petName)}</h2><span class="badge badge-soft">Nível ${level}</span></div><p class="hint">Sua rotina transforma o mundo do ${esc(snap.petName)}. Continue evoluindo para liberar novos cantinhos.</p><div class="house-grid">${HOUSE_ITEMS.map((it)=>`<article class="house-item ${level<it.level?'locked':''}"><span class="hi">${level<it.level?'🔒':it.icon}</span><strong>${esc(it.title)}</strong><small>${esc(it.text)}</small><em>${level<it.level?`Libera no nível ${it.level}`:'Desbloqueado ✓'}</em></article>`).join('')}</div>${discoveryAlbumView()}`;}
 function rankRows(items=[]){const max=Math.max(1,...items.map((i)=>Number(i.points)||0));return items.map((it,i)=>`<li class="${it.me||it.mine?'me':''}"><span class="rank-pos">${i+1}</span><span class="rank-avatar">${esc(it.avatar||'🌟')}</span><span><span class="rank-name">${esc(it.nickname||'Família')}</span><span class="rank-bar"><i style="width:${Math.round((Number(it.points)||0)/max*100)}%"></i></span></span><span class="rank-points">${Number(it.points)||0} ⭐</span></li>`).join('');}
 function familyView(){
   const goal=snap.familyGoal||{current:snap.weekPoints,target:500};let extra='';
@@ -278,6 +351,11 @@ $('adultsBtn').addEventListener('click',openAdults);
 $('adultsQuickBtn').addEventListener('click',openAdults);
 $('adultsClose').addEventListener('click',()=>closeModal('adultsModal'));
 $('celebrationClose').addEventListener('click',()=>closeModal('celebrationModal'));
+$('celebrationAdventure').addEventListener('click',()=>{closeModal('celebrationModal');openAdventure();});
+$('adventureBtn').addEventListener('click',openAdventure);
+$('adventureClose').addEventListener('click',()=>closeModal('adventureModal'));
+$('adventureModal').addEventListener('click',(e)=>{if(e.target===$('adventureModal'))closeModal('adventureModal');});
+$('adventureBody').addEventListener('click',(e)=>{const b=e.target.closest('[data-adventure-choice]');if(b)chooseAdventure(b.dataset.adventureChoice,b);});
 $('familyGoalBtn').addEventListener('click',()=>{tab='familia';expandPanel();renderPanel();});
 const petButton=$('pet');
 petButton.addEventListener('pointerdown',()=>{
