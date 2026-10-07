@@ -172,6 +172,7 @@ async function statusPayload(db: any, access: any) {
         'Prêmios personalizados',
         'Desafios em família',
         'Ligas entre famílias',
+        '3 jogos extras e Tesouros do Parque',
       ],
     },
     family: {
