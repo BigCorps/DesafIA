@@ -229,3 +229,76 @@
 .companion-memories{list-style:none;margin:0;padding:0;display:grid;gap:7px}
 .companion-memories li{padding:10px 12px;border-radius:14px;background:#fff9eb;font-size:12px;line-height:1.4}
 .companion-storage-note{display:block;margin-top:12px;font-size:10px;color:var(--muted)}
+
+
+/* 0.6.1 — HUD responsivo: identidade/meta em fluxo real, sem sobreposição. */
+.hud-left{
+  display:grid;
+  gap:8px;
+  min-width:0;
+  flex:1 1 auto;
+  max-width:calc(100% - 76px);
+}
+.hud-left .identity{
+  width:100%;
+  min-width:0;
+  box-sizing:border-box;
+}
+.hud-left .family-goal{
+  position:relative;
+  inset:auto;
+  width:min(100%,185px);
+  box-sizing:border-box;
+  align-self:start;
+}
+.hud .wallet{flex:0 0 auto}
+.game-shell.panel-collapsed .identity,
+.game-shell.panel-collapsed .family-goal,
+.game-shell.panel-collapsed .wallet{
+  opacity:1;
+  transform:none;
+  pointer-events:auto;
+}
+.game-shell.panel-collapsed .hud{
+  top:calc(12px + var(--safe-top));
+}
+.game-shell.panel-collapsed .hud-left{gap:6px}
+.game-shell.panel-collapsed .identity{
+  padding:8px 10px;
+  border-radius:15px;
+}
+.game-shell.panel-collapsed .identity strong{font-size:17px}
+.game-shell.panel-collapsed .identity>span{font-size:10px}
+.game-shell.panel-collapsed .identity .mood-text{font-size:9px}
+.game-shell.panel-collapsed .identity .xpbar{height:5px;margin-top:4px}
+.game-shell.panel-collapsed .family-goal{
+  max-width:170px;
+  padding:7px 9px;
+  border-radius:14px;
+}
+.game-shell.panel-collapsed .family-goal span,
+.game-shell.panel-collapsed .family-goal strong{font-size:9px}
+.game-shell.panel-collapsed .family-goal i{height:4px;margin-top:4px}
+.game-shell.panel-collapsed .wallet{
+  padding:8px 10px;
+  font-size:15px;
+}
+@media(max-width:360px){
+  .hud{left:calc(10px + var(--safe-left));right:calc(10px + var(--safe-right));gap:8px}
+  .hud-left{max-width:calc(100% - 64px);gap:6px}
+  .identity{padding:8px 10px}
+  .identity strong{font-size:18px}
+  .identity>span{font-size:10px}
+  .identity .mood-text{font-size:9px}
+  .family-goal{padding:7px 9px}
+  .family-goal span,.family-goal strong{font-size:9px}
+  .wallet{padding:8px 9px;font-size:15px}
+}
+@media(max-height:720px){
+  .hud-left{gap:5px}
+  .identity{padding:7px 9px}
+  .identity .mood-text{display:none}
+  .family-goal{padding:6px 8px}
+  .family-goal span,.family-goal strong{font-size:9px}
+  .game-shell.panel-collapsed .identity .mood-text{display:block}
+}
