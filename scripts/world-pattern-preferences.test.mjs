@@ -20,7 +20,7 @@ test('Leitura pode preferir lembranças em vez de invenção',()=>{
 });
 
 test('empate não inventa preferência',()=>{
-  const preference=patternPreference({id:'garden-keeper',placeId:'jardim'},{profile:{traits:traits(),actions:{scenePlant:1,sceneTree:2},memories:[]}});
+  const preference=patternPreference({id:'garden-keeper',placeId:'jardim'},{profile:{traits:traits(),actions:{scenePlant:1,sceneTree:1},memories:[]}});
   assert.equal(preference,null);
 });
 
