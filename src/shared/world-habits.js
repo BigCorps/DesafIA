@@ -65,7 +65,20 @@ const HABITS=[
   }
 ];
 
-export function habitCandidates({xp=0,period='dia',profile={},favorite=null,treasures=[],currentPlace='colina'}={}){
+const PREFERENCE_HABITS={
+  'plant-carer':['cuidar-planta'],
+  'tree-explorer':['olhar-arvore'],
+  'story-inventor':['folhear-livros'],
+  'memory-reader':['aconchegar-almofada','folhear-livros'],
+  'achievement-collector':['rever-tesouro'],
+  'treasure-storyteller':['rever-tesouro'],
+  'cozy-home':['descansar-colina'],
+  'home-decorator':['arrumar-cantinho'],
+  'comet-chaser':['olhar-ceu'],
+  'star-seeker':['olhar-ceu']
+};
+
+export function habitCandidates({xp=0,period='dia',profile={},favorite=null,preference=null,treasures=[],currentPlace='colina'}={}){
   const level=levelOf(xp),trait=dominantTrait(profile);
   return HABITS
     .filter((h)=>h.placeId===currentPlace&&level>=h.minLevel&&h.periods.includes(period)&&(!h.needsTreasure||treasures.length))
@@ -74,6 +87,7 @@ export function habitCandidates({xp=0,period='dia',profile={},favorite=null,trea
       score:
         (h.traits.includes(trait)?3:0)+
         (favorite?.id===h.placeId?2:0)+
+        (PREFERENCE_HABITS[preference?.id]?.includes(h.id)?4:0)+
         (h.needsTreasure&&treasures.length?1:0)
     }))
     .sort((a,b)=>b.score-a.score||a.id.localeCompare(b.id));
