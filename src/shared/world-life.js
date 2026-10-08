@@ -1,4 +1,5 @@
 import { levelOf } from './progression.js';
+import { preferredRoutineIds } from './world-behavior-personalization.js';
 
 export const WORLD_DETAILS = [
   { id:'sceneRug', level:1, kind:'rug' },
@@ -65,6 +66,13 @@ export function chooseWorldRoutine(input, index = 0) {
   const list = worldRoutineCandidates(input);
   if (!list.length) return null;
   const safe = Math.abs(Number(index)||0);
+  const preferenceIds = preferredRoutineIds(input?.preference);
+  const preferredByPreference = preferenceIds.length
+    ? list.filter((item) => preferenceIds.includes(item.id))
+    : [];
+  if(preferredByPreference.length && safe % 5 !== 0){
+    return preferredByPreference[safe % preferredByPreference.length];
+  }
   const trait = dominantTrait(input?.profile);
   const favored = trait ? list.filter((item) => item.traits?.includes(trait)) : [];
   const pool = favored.length && safe % 4 !== 0 ? favored : list;
