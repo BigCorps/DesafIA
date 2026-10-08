@@ -20,6 +20,7 @@ import { placeDailyEvent, placeDayKey, shouldAutoShowPlaceEvent } from '../share
 import { createWorldVisualMemory } from '../shared/world-visual.js';
 import { memoryWorldAction, visibleMemoryFor } from '../shared/world-memory.js';
 import { favoritePlaceLine, favoriteWorldPlace } from '../shared/world-favorite.js';
+import { favoriteSuggestion, shouldSuggestFavorite } from '../shared/favorite-suggestion.js';
 import { worldObjectTarget } from '../shared/world-walk.js';
 
 const $=(id)=>document.getElementById(id);
@@ -30,13 +31,14 @@ const seenDayKey='desafia-seen-day-v3';
 const panelStateKey='desafia-panel-collapsed-v1';
 const worldPlaceKey='desafia-world-place-v1';
 const placeEventSeenKey='desafia-place-event-seen-v1';
+const favoriteSuggestionSeenKey='desafia-favorite-suggestion-seen-v1';
 const worldVisualMemory=createWorldVisualMemory(uiStorage);
 const companionJournal=createCompanionJournal(uiStorage);
 const TIMES=['dia','tarde','noite'];
 const PERIOD={manha:'de manhã',tarde:'à tarde',noite:'à noite'};
 
 let api=null,snap=null,tab='missoes',parentMode=false,unsubscribe=()=>{},refreshing=false,lastReaction=-1,reactionLockedUntil=0;
-let companionMood='calm',petClickTimer=0,suppressPetClick=false,petHoldTimer=0,idleTimer=0,worldRoutineTimer=0,lastWorldRoutine='',petTravelTimer=0,worldTravelTimer=0,worldVisitTimer=0,worldVisitReturnTimer=0,worldVisitBusy=false,placeEventTimer=0;
+let companionMood='calm',petClickTimer=0,suppressPetClick=false,petHoldTimer=0,idleTimer=0,worldRoutineTimer=0,lastWorldRoutine='',petTravelTimer=0,worldTravelTimer=0,worldVisitTimer=0,worldVisitReturnTimer=0,worldVisitBusy=false,placeEventTimer=0,favoriteSuggestionTimer=0;
 let worldPlace=(()=>{try{return uiStorage.getItem(worldPlaceKey)||'colina'}catch{return'colina'}})();
 let placeActionIndex=0;
 let companionProfileState={traits:[],likes:[],memories:[]};
@@ -108,7 +110,7 @@ syncViewport();
 window.addEventListener('pageshow',restoreGameLayout);
 window.addEventListener('resize',syncViewport,{passive:true});
 window.visualViewport?.addEventListener('resize',syncViewport,{passive:true});
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){restoreGameLayout();if(!qaEnabled)childNotifications.refresh(api,{visible:true});}});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){restoreGameLayout();scheduleFavoriteSuggestion(18000);if(!qaEnabled)childNotifications.refresh(api,{visible:true});}});
 
 $('petMount').innerHTML=petMarkup('main');
 $('connectPet').innerHTML=petMarkup('connect');
@@ -380,6 +382,35 @@ function worldMomentView(){
   return `<section class="world-moment"><span>${esc(moment.icon)}</span><div><small>Mundo de hoje</small><strong>${esc(moment.title)}</strong><p>${esc(moment.text)}</p></div></section>`;
 }
 function currentFavoritePlace(){return favoriteWorldPlace({xp:snap?.xp||0,profile:companionProfileState,treasures:currentParkTreasures()})}
+function favoriteSuggestionSeen(day=placeDayKey(snap||{})){return seenList(favoriteSuggestionSeenKey).includes(day)}
+function runFavoriteSuggestion(){
+  if(!snap||!canRunWorldRoutine())return false;
+  const favorite=currentFavoritePlace(),day=placeDayKey(snap||{});
+  if(!favorite||favoriteSuggestionSeen(day)||!shouldSuggestFavorite({favorite,day}))return false;
+  const suggestion=favoriteSuggestion({favorite,currentPlace:worldPlace,petName:petName(),day});
+  if(!suggestion)return false;
+  markSeen(favoriteSuggestionSeenKey,day);
+  motion(suggestion.motion);
+  say(suggestion.text,2600);
+  if(!suggestion.samePlace){
+    const map=$('worldMapBtn');
+    map?.classList.remove('favorite-nudge');
+    void map?.offsetWidth;
+    map?.classList.add('favorite-nudge');
+    setTimeout(()=>map?.classList.remove('favorite-nudge'),1800);
+  }
+  return true;
+}
+function scheduleFavoriteSuggestion(delay=65000){
+  clearTimeout(favoriteSuggestionTimer);
+  if(reduce||!snap)return;
+  const favorite=currentFavoritePlace(),day=placeDayKey(snap||{});
+  if(!favorite||favoriteSuggestionSeen(day)||!shouldSuggestFavorite({favorite,day}))return;
+  favoriteSuggestionTimer=setTimeout(()=>{
+    if(runFavoriteSuggestion())return;
+    scheduleFavoriteSuggestion(22000);
+  },delay);
+}
 function favoritePlaceView(){
   const favorite=currentFavoritePlace();
   if(!favorite)return '';
@@ -619,7 +650,7 @@ function renderPanel(){
   $('panel').innerHTML=tab==='missoes'?missionsView():tab==='casa'?houseView():tab==='premios'?rewardsView():tab==='familia'?familyView():tab==='jogos'?arcade.view():visualView();
   if(tab==='visual'){const svg=$('visualPreview')?.querySelector('svg');applyLook(svg,snap.look,snap.xp);$('petNameInput')?.addEventListener('change',async(e)=>{await savePet(e.target.value,snap.look)});}
 }
-function renderAll(){companionProfileState=companionJournal.observe(snap);renderStats();syncWorldLife();renderNext();renderPanel();scheduleCurrentPlaceEvent(3800);}
+function renderAll(){companionProfileState=companionJournal.observe(snap);renderStats();syncWorldLife();renderNext();renderPanel();scheduleCurrentPlaceEvent(3800);scheduleFavoriteSuggestion();}
 function missionReaction(m){performCompanionAction(missionCompanionAction(m));}
 function checkFresh(prev,next){
   if(prev){for(const m of next.missions||[]){const old=prev.missions?.find((x)=>x.id===m.id);if(old?.status==='pending'&&m.status==='done'){jump();burst(['⭐','✨',m.icon],14);missionReaction(m);}}}
