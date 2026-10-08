@@ -58,6 +58,7 @@ if(!game.includes("window.location.assign('/pais/')"))fail('área dos pais não 
 const gameCss=readFileSync(join(root,'src/game/game.css'),'utf8');
 if(!gameCss.includes('--pet-expanded-y')||!gameCss.includes('--pet-full-y')||!gameCss.includes('--stage-ground-y')||!game.includes("dataset.petHome=collapsed?'center':'rug'"))fail('palco responsivo do Pipo ausente');else ok('Pipo usa centro em tela cheia e tapete com painel');
 if(!gameCss.includes('.hud{z-index:5}')||!gameCss.includes('z-index:11')||!gameCss.includes('.game-shell.panel-collapsed .scene-object.tree'))fail('camadas/palco do mundo podem voltar a desalinhamento');else ok('cards ficam atrás do Pipo e mundo acompanha o palco');
+if(!game.includes('worldObjectTarget')||!game.includes('visitWorldObject')||!gameCss.includes('.pet.world-walking'))fail('Pipo não circula responsivamente entre objetos');else ok('Pipo circula entre objetos e retorna ao palco');
 if(!gameCss.includes('height:100dvh;overflow:hidden'))fail('viewport mobile ainda pode rolar externamente');else ok('viewport mobile fixa e painel rolável');
 const gameHtml=readFileSync(join(root,'index.html'),'utf8');
 const hudStart=gameHtml.indexOf('<header class="hud">'), hudEnd=gameHtml.indexOf('</header>',hudStart);
