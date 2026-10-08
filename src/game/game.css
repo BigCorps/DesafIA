@@ -634,3 +634,31 @@
 .scene[data-place="parque"] .scene-treasure{left:12%}
 @media(max-width:360px){.world-place-grid{grid-template-columns:1fr}.world-map-btn{top:190px;padding:7px 8px}.world-map-btn span{display:none}}
 @media(prefers-reduced-motion:reduce){.scene.world-traveling .scene-object,.scene.world-traveling .scene-detail,.scene.world-traveling .scene-treasure{transform:none!important}}
+
+
+/* Mundo 2.1 — Pipo circula até os objetos */
+.pet.world-walking,
+.pet.world-returning{
+  transition:left .52s cubic-bezier(.2,.8,.2,1),filter .25s ease!important;
+  filter:drop-shadow(0 16px 15px rgba(30,72,70,.16));
+}
+.pet.world-walking .pet-foot-left,
+.pet.world-returning .pet-foot-left{animation:petVisitStepLeft .32s ease-in-out infinite}
+.pet.world-walking .pet-foot-right,
+.pet.world-returning .pet-foot-right{animation:petVisitStepRight .32s ease-in-out infinite}
+.pet.world-visiting{z-index:12}
+@keyframes petVisitStepLeft{
+  0%,100%{transform:translate(0,0) rotate(0)}
+  50%{transform:translate(-3px,-6px) rotate(-7deg)}
+}
+@keyframes petVisitStepRight{
+  0%,100%{transform:translate(0,0) rotate(0)}
+  50%{transform:translate(3px,-6px) rotate(7deg)}
+}
+.speech{transition:opacity .2s,transform .2s,left .52s cubic-bezier(.2,.8,.2,1)}
+@media(prefers-reduced-motion:reduce){
+  .pet.world-walking,.pet.world-returning{transition:none!important}
+  .pet.world-walking .pet-foot-left,.pet.world-walking .pet-foot-right,
+  .pet.world-returning .pet-foot-left,.pet.world-returning .pet-foot-right{animation:none!important}
+  .speech{transition:none!important}
+}
