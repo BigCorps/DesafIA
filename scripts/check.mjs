@@ -69,6 +69,7 @@ if(!game.includes('favoriteSuggestion')||!game.includes('scheduleFavoriteSuggest
 if(!game.includes('dailyHabit')||!game.includes('scheduleWorldHabit')||!game.includes('habitSeenId'))fail('hábitos próprios do Pipo ausentes');else ok('Pipo mantém hábitos por horário/lugar sem nova missão');
 if(!game.includes('worldPatterns')||!game.includes('worldPatternsView')||!game.includes('patternedHabitText')||!gameCss.includes('.world-patterns-note'))fail('padrões pessoais do Pipo ausentes');else ok('hábitos, memórias e personalidade formam padrões sem novo progresso');
 if(!game.includes('patternReaction')||!game.includes('reaction||{'))fail('reações específicas dos padrões ausentes');else ok('padrões reconhecidos têm reações próprias sem recompensa');
+if(!game.includes('patternPreference')||!game.includes('preferredPatternReaction')||!gameCss.includes('.world-pattern-preference'))fail('preferências emergentes dos padrões ausentes');else ok('padrões podem ter preferências próprias sem novo progresso');
 if(!gameCss.includes('height:100dvh;overflow:hidden'))fail('viewport mobile ainda pode rolar externamente');else ok('viewport mobile fixa e painel rolável');
 const hudStart=gameHtml.indexOf('<header class="hud">'), hudEnd=gameHtml.indexOf('</header>',hudStart);
 const hudHtml=hudStart>=0&&hudEnd>hudStart?gameHtml.slice(hudStart,hudEnd):'';
