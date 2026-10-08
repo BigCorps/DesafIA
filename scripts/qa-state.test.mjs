@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createLocal } from '../src/game/local.js';
 import { createQAState } from '../src/game/qa-state.js';
-import { isQAEnabled, scopedQAStorage } from '../src/shared/qa-environment.js';
+import { isQAEnabled, isQAAllEnabled, scopedQAStorage } from '../src/shared/qa-environment.js';
 import { levelOf, levelProgress, stageOf, unlockedHouseItems, LEVEL_THRESHOLDS } from '../src/shared/progression.js';
 import { GAME_IDS } from '../src/games/registry.js';
 import config from '../vite.config.js';
@@ -18,6 +18,9 @@ test('QA requires an allowed build and the exact URL opt-in', () => {
   for (const search of ['', '?qa=0', '?qa=true', '?other=1']) assert.equal(isQAEnabled(true, search), false);
   assert.equal(isQAEnabled(true, '?qa=1'), true);
   assert.equal(isQAEnabled(false, '?qa=1'), false);
+  assert.equal(isQAAllEnabled(true, '?qa=1&all=1'), true);
+  assert.equal(isQAAllEnabled(true, '?qa=1'), false);
+  assert.equal(isQAAllEnabled(false, '?qa=1&all=1'), false);
 });
 test('build gate fails closed for production and unknown builds', () => {
   const previous = process.env.VERCEL_ENV;
@@ -69,6 +72,22 @@ test('unlock uses the existing catalogue and starts a playable local park', asyn
   await qa.api.gameScore(GAME_IDS[0], 250);
   assert.equal((await qa.api.playStatus()).best[GAME_IDS[0]], 250);
 });
+test('QA tudo liberado abre gates sem tocar em Supabase', async () => {
+  const { qa } = fixture();
+  const snap = await qa.unlockEverything();
+  const play = await qa.api.playStatus();
+  assert.equal(snap.wallet, 5000);
+  assert.equal(levelOf(snap.xp), LEVEL_THRESHOLDS.length);
+  assert.ok(snap.missions.every((m) => m.status === 'done'));
+  assert.equal(snap.dailyBonusDay, snap.adventure.day);
+  assert.equal(snap.completedDays.length, 7);
+  assert.deepEqual(play.unlocked, GAME_IDS);
+  assert.equal(play.plus, true);
+  assert.equal(play.catalog.length, GAME_IDS.length);
+  assert.equal(play.started, true);
+  assert.equal(play.remaining_seconds, 1800);
+});
+
 test('progress presets reuse level and house unlock rules', async () => {
   const { qa } = fixture();
   for (const [preset, level, stage] of [['low',1,1],['medium',6,3],['high',12,4]]) {
