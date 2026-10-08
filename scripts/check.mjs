@@ -63,6 +63,7 @@ const gameHtml=readFileSync(join(root,'index.html'),'utf8');
 if(!game.includes('placeActionFor')||!game.includes('runPlaceAction')||!gameCss.includes('.world-action-btn')||!gameHtml.includes('id="worldActionBtn"'))fail('ações próprias dos lugares ausentes');else ok('lugares possuem ação contextual própria');
 if(!game.includes('sceneEffect(action.sceneEffect')||!gameCss.includes('.place-effect')||!gameCss.includes('@keyframes placeShootingStar'))fail('reações visuais dos lugares ausentes');else ok('ambiente reage às ações do Pipo');
 if(!game.includes('placeDailyEvent')||!game.includes('scheduleCurrentPlaceEvent')||!gameCss.includes('.world-map-btn.has-event::after'))fail('acontecimentos diários dos lugares ausentes');else ok('lugares têm acontecimentos diários sem recompensa');
+if(!game.includes('visibleMemoryFor')||!game.includes('memoryWorldAction')||!gameHtml.includes('id="worldMemoryToken"')||!gameCss.includes('.world-memory-token'))fail('memórias visíveis do Pipo ausentes');else ok('memórias aparecem no cenário sem nova recompensa');
 if(!gameCss.includes('height:100dvh;overflow:hidden'))fail('viewport mobile ainda pode rolar externamente');else ok('viewport mobile fixa e painel rolável');
 const hudStart=gameHtml.indexOf('<header class="hud">'), hudEnd=gameHtml.indexOf('</header>',hudStart);
 const hudHtml=hudStart>=0&&hudEnd>hudStart?gameHtml.slice(hudStart,hudEnd):'';
