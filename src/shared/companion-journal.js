@@ -97,6 +97,7 @@ export function companionProfile(raw) {
   for (const d of found) for (const trait of CATEGORY_TRAITS[d.category] || []) points[trait] += 2;
   for (const [action, trait] of Object.entries(ACTION_TRAITS)) points[trait] += state.actions[action];
   return {
+    actions: { ...state.actions },
     traits: TRAITS.map((t) => ({ ...t, points: points[t.id], expression: points[t.id] >= 6 ? 'Florescendo' : points[t.id] > 0 ? 'Aparecendo' : 'Uma sementinha' })),
     likes: LIKES.filter((like) => found.some((d) => like.categories.includes(d.category)) || state.actions[like.action] >= 2),
     memories: state.memories.map((id) => MEMORIES.find((m) => m.id === id))

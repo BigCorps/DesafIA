@@ -17,6 +17,7 @@ import { chooseWorldRoutine, unlockedWorldDetails, worldMoment, worldRoutineCand
 import { WORLD_PLACES, normalizeWorldPlace, placeShowsObject, worldPlaceById } from '../shared/world-places.js';
 import { placeActionFor } from '../shared/place-actions.js';
 import { placeDailyEvent, placeDayKey, shouldAutoShowPlaceEvent } from '../shared/place-events.js';
+import { createWorldVisualMemory } from '../shared/world-visual.js';
 import { worldObjectTarget } from '../shared/world-walk.js';
 
 const $=(id)=>document.getElementById(id);
@@ -27,6 +28,7 @@ const seenDayKey='desafia-seen-day-v3';
 const panelStateKey='desafia-panel-collapsed-v1';
 const worldPlaceKey='desafia-world-place-v1';
 const placeEventSeenKey='desafia-place-event-seen-v1';
+const worldVisualMemory=createWorldVisualMemory(uiStorage);
 const companionJournal=createCompanionJournal(uiStorage);
 const TIMES=['dia','tarde','noite'];
 const PERIOD={manha:'de manhã',tarde:'à tarde',noite:'à noite'};
@@ -325,7 +327,7 @@ function worldContext(){
     period:TIMES[timeIdx],
     profile:companionProfileState,
     treasures:currentParkTreasures(),
-    actions:snap?.companionJournal?.actions||{},
+    actions:companionProfileState?.actions||snap?.companionJournal?.actions||{},
     memories:companionProfileState?.memories||[],
     day:placeDayKey(snap||{})
   };
@@ -337,6 +339,8 @@ function syncWorldLife(){
   const place=worldPlaceById(worldPlace);
   scene.dataset.worldStage=worldStage(snap.xp);
   scene.dataset.place=place.id;
+  const visual=worldVisualMemory.observe(snap,{...worldContext(),xp:snap.xp});
+  scene.dataset.visualStage=String(visual.stages[place.id]);
   if($('worldPlaceLabel'))$('worldPlaceLabel').textContent=place.title.replace(' do Pipo','');
   const placeAction=placeActionFor(place.id,{...worldContext(),index:placeActionIndex});
   if($('worldActionIcon'))$('worldActionIcon').textContent=placeAction.icon;
@@ -353,6 +357,8 @@ function syncWorldLife(){
     const latest=treasures.at(-1),open=Boolean(latest)&&placeShowsObject(place.id,'sceneTreasure');
     treasure.hidden=!open;treasure.disabled=!open;treasure.classList.toggle('unlocked',open);
     if(latest){$('sceneTreasureIcon').textContent=latest.icon;treasure.dataset.treasureTitle=latest.title;treasure.setAttribute('aria-label',`Ver ${latest.title}, Tesouro do Parque`);}
+    const shelf=$('worldTreasureShelf');
+    if(shelf){shelf.hidden=place.id!=='parque'||treasures.length<2;shelf.innerHTML=treasures.slice(-3).map((t)=>`<span title="${esc(t.title)}">${esc(t.icon)}</span>`).join('');}
   }
 }
 function worldMomentView(){
@@ -381,6 +387,8 @@ function showCurrentPlaceEvent({force=false}={}){
   const event=currentPlaceEvent();
   if(!event||(!force&&isPlaceEventSeen(event)))return false;
   markSeen(placeEventStorageKey(),`${worldPlace}:${event.id}`);
+  worldVisualMemory.observe(snap,{...worldContext(),xp:snap.xp},[event.id]);
+  syncWorldLife();
   syncPlaceEventIndicator();
   const action={
     id:event.id,

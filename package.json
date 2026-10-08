@@ -15,7 +15,7 @@
     "test:adventures": "node --test scripts/adventures.test.mjs",
     "test:games": "node --test scripts/games-plus.test.mjs",
     "test:qa": "node --test scripts/qa-state.test.mjs",
-    "test:world": "node --test scripts/world-life.test.mjs",
+    "test:world": "node --test scripts/world-life.test.mjs scripts/world-visual.test.mjs",
     "test:places": "node --test scripts/world-places.test.mjs",
     "test:walk": "node --test scripts/world-walk.test.mjs",
     "test:place-actions": "node --test scripts/place-actions.test.mjs",

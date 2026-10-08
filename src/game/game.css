@@ -832,15 +832,21 @@
 
 /* Mundo 2.4 — indicador discreto de acontecimento do dia */
 .world-map-btn.has-event::after{
-  content:'';
+  content:'★';
   position:absolute;
-  width:9px;
-  height:9px;
-  right:5px;
-  top:5px;
+  width:18px;
+  height:18px;
+  left:-9px;
+  top:-8px;
   border-radius:50%;
-  background:#ffca4b;
-  box-shadow:0 0 0 3px rgba(255,255,255,.9),0 0 10px rgba(255,202,75,.75);
+  display:grid;
+  place-items:center;
+  font-size:15px;
+  line-height:1;
+  color:#a65e00;
+  background:#fff3c1;
+  pointer-events:none;
+  box-shadow:0 1px 5px #0002;
 }
 @media(prefers-reduced-motion:no-preference){
   .world-map-btn.has-event::after{animation:placeEventPing 2.2s ease-in-out infinite}
@@ -849,3 +855,24 @@
   0%,100%{transform:scale(.9);opacity:.8}
   50%{transform:scale(1.15);opacity:1}
 }
+
+/* Mundo 2.5: detalhes decorativos dentro dos alvos laterais existentes. */
+.game-shell.panel-collapsed .scene[data-visual-stage="1"]{--world-detail-opacity:.45}
+.game-shell.panel-collapsed .scene[data-visual-stage="2"]{--world-detail-opacity:.75}
+.game-shell.panel-collapsed .scene[data-visual-stage="3"]{--world-detail-opacity:1}
+.game-shell.panel-collapsed .scene:not([data-visual-stage="0"]) :is(.plant,.books,.telescope,.little-house)::after{
+  position:absolute;bottom:0;left:0;font-size:12px;line-height:1;pointer-events:none;opacity:var(--world-detail-opacity);
+}
+.game-shell.panel-collapsed .scene[data-place="jardim"]:not([data-visual-stage="0"]) .plant::after{content:'🌼'}
+.game-shell.panel-collapsed .scene[data-place="jardim"][data-visual-stage="2"] .plant::after{content:'🌼🌱'}
+.game-shell.panel-collapsed .scene[data-place="jardim"][data-visual-stage="3"] .plant::after{content:'🌼🌷🌱'}
+.game-shell.panel-collapsed .scene[data-place="leitura"]:not([data-visual-stage="0"]) .books::after{content:'🔖'}
+.game-shell.panel-collapsed .scene[data-place="leitura"][data-visual-stage="3"] .books::after{content:'🔖✦'}
+.game-shell.panel-collapsed .scene[data-place="observatorio"]:not([data-visual-stage="0"]) .telescope::after{content:'✦'}
+.game-shell.panel-collapsed .scene[data-place="observatorio"][data-visual-stage="2"] .telescope::after{content:'✦ · ✦'}
+.game-shell.panel-collapsed .scene[data-place="observatorio"][data-visual-stage="3"] .telescope::after{content:'✦—✦—✦'}
+.game-shell.panel-collapsed .scene[data-place="colina"]:not([data-visual-stage="0"]) .rug{box-shadow:inset 0 0 0 4px #fff6,0 8px 20px #8d78e755}
+.game-shell.panel-collapsed .scene[data-place="colina"]:not([data-visual-stage="0"]) .little-house::after{content:'💜'}
+.world-treasure-shelf{display:none;position:absolute;left:var(--world-edge);top:var(--world-near-y);width:clamp(44px,12vw,56px);height:44px;align-items:center;justify-content:center;gap:2px;flex-wrap:wrap;font-size:16px;border-radius:12px;background:#fff4;pointer-events:none;z-index:3}
+.game-shell.panel-collapsed .world-treasure-shelf:not([hidden]){display:flex}
+@media(max-height:660px){.world-treasure-shelf{left:4%}}
