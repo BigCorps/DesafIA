@@ -244,8 +244,9 @@ function runWorldRoutine(forObject=null){
   });
   if(!candidates.length)return;
   if(candidates.length>1){const fresh=candidates.filter((item)=>item.id!==lastWorldRoutine);if(fresh.length)candidates=fresh;}
-  const chosen=forObject?candidates[0]:candidates[Math.floor(Math.random()*candidates.length)]||chooseWorldRoutine(ctx,0);
-  const action=chosen;
+  const seed=Math.floor(Math.random()*1000);
+  const preferred=forObject?candidates[0]:chooseWorldRoutine(ctx,seed);
+  const action=(preferred&&candidates.find((item)=>item.id===preferred.id))||candidates[seed%candidates.length];
   if(!action)return;
   lastWorldRoutine=action.id;
   const burstChars=action.treasure?[action.treasure.icon,'✨','💜']:['✨','💜'];
