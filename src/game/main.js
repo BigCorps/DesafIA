@@ -22,6 +22,7 @@ import { memoryWorldAction, visibleMemoryFor } from '../shared/world-memory.js';
 import { favoritePlaceLine, favoriteWorldPlace } from '../shared/world-favorite.js';
 import { favoriteSuggestion, shouldSuggestFavorite } from '../shared/favorite-suggestion.js';
 import { dailyHabit, habitSeenId } from '../shared/world-habits.js';
+import { patternForHabit, patternedHabitText, worldPatterns } from '../shared/world-patterns.js';
 import { worldObjectTarget } from '../shared/world-walk.js';
 
 const $=(id)=>document.getElementById(id);
@@ -433,8 +434,11 @@ function runWorldHabit(){
   if(habit.objectId&&(!target||target.offsetParent===null))return false;
   const seenId=habitSeenId(placeDayKey(snap||{}),TIMES[timeIdx],habit);
   if(seenId)markSeen(worldHabitSeenKey,seenId);
+  const patterns=currentWorldPatterns();
+  const pattern=patternForHabit(habit,patterns);
   visitWorldObject({
     ...habit,
+    text:patternedHabitText(habit,pattern,petName()),
     burst:habit.sceneEffect?.chars||['✨','💜']
   },{haptics:false});
   return true;
@@ -447,6 +451,12 @@ function scheduleWorldHabit(delay=88000,{reset=false}={}){
     if(runWorldHabit())return;
     scheduleWorldHabit(26000);
   },delay);
+}
+function currentWorldPatterns(){return worldPatterns({profile:companionProfileState,treasures:currentParkTreasures()})}
+function worldPatternsView(){
+  const patterns=currentWorldPatterns();
+  if(!patterns.length)return '';
+  return `<section class="world-patterns-note"><div class="world-patterns-head"><div><small>Jeitos que estão virando costume</small><strong>O mundo está ganhando a cara do ${esc(petName())}</strong></div><span>✨</span></div><div class="world-pattern-list">${patterns.map((pattern)=>`<article><span>${esc(pattern.icon)}</span><div><strong>${esc(pattern.title)}</strong><p>${esc(pattern.text)}</p></div></article>`).join('')}</div></section>`;
 }
 function favoritePlaceView(){
   const favorite=currentFavoritePlace();
@@ -671,7 +681,7 @@ function rewardsView(){
   const rows=snap.rewards.map((r)=>{const can=snap.wallet>=r.cost;let act=r.pending?(parentMode?`<div><button class="btn btn-soft" data-act="deny" data-id="${r.id}">↩</button> <button class="btn btn-ok" data-act="deliver" data-id="${r.id}">✓</button></div>`:'<span class="badge badge-pending">Pedido feito</span>'):(can&&!parentMode?`<button class="btn btn-gold" data-act="redeem" data-id="${r.id}">Trocar</button>`:`<span class="badge badge-soft">${r.cost} ⭐</span>`);return `<li class="reward"><span class="item-icon">${esc(r.icon)}</span><span class="item-body"><strong>${esc(r.title)}</strong><small>${r.pending?'Esperando um adulto':can?'Você já tem estrelas suficientes':`Faltam ${Math.max(0,r.cost-snap.wallet)} estrelas`}</small></span>${act}</li>`;}).join('');
   return `<div class="panel-title"><h2>Prêmios combinados</h2><span class="badge badge-soft">${snap.wallet} ⭐</span></div><p class="hint">As estrelas viram experiências e combinados reais — nada é comprado dentro do jogo.</p><ul class="reward-list">${rows}</ul>`;
 }
-function houseView(){const level=levelOf(snap.xp);return `<div class="panel-title"><h2>Casa do ${esc(snap.petName)}</h2><span class="badge badge-soft">Nível ${level}</span></div><p class="hint">Sua rotina transforma o mundo do ${esc(snap.petName)}. Continue evoluindo para liberar novos cantinhos.</p>${worldMomentView()}${favoritePlaceView()}<section class="world-places-panel"><div class="world-places-title"><h3>Lugares do Pipo</h3><small>Toque para visitar</small></div><div class="world-place-grid compact">${worldPlacesMarkup()}</div></section><div class="house-grid">${HOUSE_ITEMS.map((it)=>`<article class="house-item ${level<it.level?'locked':''}"><span class="hi">${level<it.level?'🔒':it.icon}</span><strong>${esc(it.title)}</strong><small>${esc(it.text)}</small><em>${level<it.level?`Libera no nível ${it.level}`:'Desbloqueado ✓'}</em></article>`).join('')}</div>${companionJournalView()}${discoveryAlbumView()}`;}
+function houseView(){const level=levelOf(snap.xp);return `<div class="panel-title"><h2>Casa do ${esc(snap.petName)}</h2><span class="badge badge-soft">Nível ${level}</span></div><p class="hint">Sua rotina transforma o mundo do ${esc(snap.petName)}. Continue evoluindo para liberar novos cantinhos.</p>${worldMomentView()}${favoritePlaceView()}${worldPatternsView()}<section class="world-places-panel"><div class="world-places-title"><h3>Lugares do Pipo</h3><small>Toque para visitar</small></div><div class="world-place-grid compact">${worldPlacesMarkup()}</div></section><div class="house-grid">${HOUSE_ITEMS.map((it)=>`<article class="house-item ${level<it.level?'locked':''}"><span class="hi">${level<it.level?'🔒':it.icon}</span><strong>${esc(it.title)}</strong><small>${esc(it.text)}</small><em>${level<it.level?`Libera no nível ${it.level}`:'Desbloqueado ✓'}</em></article>`).join('')}</div>${companionJournalView()}${discoveryAlbumView()}`;}
 function rankRows(items=[]){const max=Math.max(1,...items.map((i)=>Number(i.points)||0));return items.map((it,i)=>`<li class="${it.me||it.mine?'me':''}"><span class="rank-pos">${i+1}</span><span class="rank-avatar">${esc(it.avatar||'🌟')}</span><span><span class="rank-name">${esc(it.nickname||'Família')}</span><span class="rank-bar"><i style="width:${Math.round((Number(it.points)||0)/max*100)}%"></i></span></span><span class="rank-points">${Number(it.points)||0} ⭐</span></li>`).join('');}
 function familyView(){
   const goal=snap.familyGoal||{current:snap.weekPoints,target:500};let extra='';
