@@ -876,3 +876,59 @@
 .world-treasure-shelf{display:none;position:absolute;left:var(--world-edge);top:var(--world-near-y);width:clamp(44px,12vw,56px);height:44px;align-items:center;justify-content:center;gap:2px;flex-wrap:wrap;font-size:16px;border-radius:12px;background:#fff4;pointer-events:none;z-index:3}
 .game-shell.panel-collapsed .world-treasure-shelf:not([hidden]){display:flex}
 @media(max-height:660px){.world-treasure-shelf{left:4%}}
+
+
+/* Mundo 2.6 — uma lembrança visível por vez, sempre fora da zona central. */
+.world-memory-token{
+  display:none;
+  position:absolute;
+  z-index:7;
+  width:52px;
+  min-width:52px;
+  min-height:52px;
+  border:0;
+  border-radius:18px;
+  padding:5px 4px 4px;
+  background:rgba(255,255,255,.84);
+  color:#5b5279;
+  box-shadow:0 8px 20px rgba(43,45,100,.14);
+  backdrop-filter:blur(7px);
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  gap:1px;
+  pointer-events:none;
+}
+.world-memory-token>span{font-size:24px;line-height:1}
+.world-memory-token>small{font:850 8px/1 var(--display)}
+.game-shell.panel-collapsed .world-memory-token.unlocked:not([hidden]){
+  display:flex;
+  pointer-events:auto;
+  top:calc(var(--pet-full-y) - var(--pet-full-size)/2 + 26px);
+  left:var(--world-edge);
+}
+.game-shell.panel-collapsed .scene[data-place="jardim"] .world-memory-token,
+.game-shell.panel-collapsed .scene[data-place="colina"] .world-memory-token{
+  left:auto;
+  right:var(--world-edge);
+}
+.game-shell:not(.panel-collapsed) .world-memory-token{display:none!important;pointer-events:none}
+.world-memory-token:focus-visible{outline:3px solid rgba(118,88,245,.4);outline-offset:3px}
+.world-memory-token.companion-active{animation:memoryTokenHello .8s ease}
+@keyframes memoryTokenHello{
+  0%,100%{transform:scale(1)}
+  40%{transform:scale(1.13) rotate(-4deg)}
+  70%{transform:scale(1.06) rotate(3deg)}
+}
+.place-effect.memory-glow{animation-name:placeEffectGlow;filter:drop-shadow(0 0 6px rgba(255,255,255,.75))}
+@media(max-height:660px){
+  .game-shell.panel-collapsed .world-memory-token.unlocked:not([hidden]){
+    width:44px;min-width:44px;min-height:44px;border-radius:14px;
+    top:calc(var(--pet-full-y) - var(--pet-full-size)/2 + 12px);
+  }
+  .world-memory-token>span{font-size:20px}
+  .world-memory-token>small{display:none}
+}
+@media(prefers-reduced-motion:reduce){
+  .world-memory-token.companion-active{animation:none!important}
+}
