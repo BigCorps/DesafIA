@@ -23,6 +23,7 @@ import { favoritePlaceLine, favoriteWorldPlace } from '../shared/world-favorite.
 import { favoriteSuggestion, shouldSuggestFavorite } from '../shared/favorite-suggestion.js';
 import { dailyHabit, habitSeenId } from '../shared/world-habits.js';
 import { patternForHabit, patternedHabitText, worldPatterns } from '../shared/world-patterns.js';
+import { patternReaction } from '../shared/world-pattern-reactions.js';
 import { worldObjectTarget } from '../shared/world-walk.js';
 
 const $=(id)=>document.getElementById(id);
@@ -436,7 +437,8 @@ function runWorldHabit(){
   if(seenId)markSeen(worldHabitSeenKey,seenId);
   const patterns=currentWorldPatterns();
   const pattern=patternForHabit(habit,patterns);
-  visitWorldObject({
+  const reaction=patternReaction(pattern,habit,petName());
+  visitWorldObject(reaction||{
     ...habit,
     text:patternedHabitText(habit,pattern,petName()),
     burst:habit.sceneEffect?.chars||['✨','💜']
