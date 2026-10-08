@@ -1,13 +1,14 @@
 import { createQAState } from './qa-state.js';
 import './qa.css';
 
-export function mountQA({ storage, beforeChange, onChange, onboarding, games }) {
+export function mountQA({ storage, beforeChange, onChange, onboarding, games, allMode = false }) {
   const state = createQAState(storage);
   const panel = document.createElement('details');
   panel.id = 'qa-panel';
-  panel.open = true;
-  panel.innerHTML = `<summary>QA · somente teste local</summary>
+  panel.open = !allMode;
+  panel.innerHTML = `<summary>QA · ${allMode ? 'tudo liberado' : 'somente teste local'}</summary>
     <p>Estado isolado nesta aba. Não envia dados ao Supabase.</p>
+    <button data-qa="all">Liberar tudo</button>
     <button data-qa="onboard">Concluir / pular onboarding</button>
     <button data-qa="onboard-show">Reabrir onboarding</button>
     <button data-qa="games">Desbloquear e ver todos os jogos</button>
@@ -49,12 +50,14 @@ export function mountQA({ storage, beforeChange, onChange, onboarding, games }) 
     run(async () => {
       if (action === 'onboard' || action === 'onboard-show') {
         state.onboarding(action === 'onboard'); onboarding(action === 'onboard-show');
+      } else if (action === 'all') {
+        await state.unlockEverything(); onboarding(false);
       } else if (action === 'games') {
         state.onboarding(true); onboarding(false); await state.unlockGames();
       } else if (['todo', 'pending', 'done'].includes(action)) await state.missions(action);
       else if (action === 'reset') { state.reset(); onboarding(true); }
       else state.progress(action);
-    }).then(() => { if (action === 'games') games(); });
+    }).then(() => { if (action === 'games' || action === 'all') games(); });
   });
   panel.querySelector('form').addEventListener('submit', (event) => {
     event.preventDefault();
