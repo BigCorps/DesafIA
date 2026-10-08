@@ -37,3 +37,15 @@ test('Tesouros do Parque e memórias alimentam o mundo sem nova persistência', 
   const moment=worldMoment({xp:5000,period:'dia',profile:{traits:[],memories:[]},treasures:[treasure]});
   assert.match(moment.text,/Mapa Secreto/);
 });
+
+
+test('personalidade favorece rotinas compatíveis sem torná-las exclusivas', () => {
+  const profile={traits:[
+    {id:'caring',points:9},
+    {id:'curious',points:1}
+  ]};
+  const picks=Array.from({length:12},(_,i)=>chooseWorldRoutine({xp:1400,period:'dia',profile,treasures:[]},i));
+  const favored=picks.filter((item)=>item?.traits?.includes('caring')).length;
+  assert.ok(favored >= 8);
+  assert.ok(picks.some((item)=>!item?.traits?.includes('caring')));
+});
