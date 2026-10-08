@@ -8,7 +8,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "check": "node scripts/check.mjs && npm run test:notifications && npm run test:companion && npm run test:adventures && npm run test:games && npm run test:qa && npm run test:world && npm run test:places && npm run test:walk && npm run test:place-actions && npm run test:place-events && npm run test:memory && npm run test:favorite && npm run test:favorite-suggestion && npm run test:habits && npm run test:patterns && npm run test:pattern-reactions && npm run test:pattern-preferences && npm run test:microchoices && npm run test:personalization && npm run test:place-personalization && npm run test:behavior-personalization && npm run test:memory-preferences && npm run test:treasure-personalization",
+    "check": "node scripts/check.mjs && npm run test:notifications && npm run test:companion && npm run test:adventures && npm run test:games && npm run test:qa && npm run test:world && npm run test:places && npm run test:walk && npm run test:place-actions && npm run test:place-events && npm run test:memory && npm run test:favorite && npm run test:favorite-suggestion && npm run test:habits && npm run test:patterns && npm run test:pattern-reactions && npm run test:pattern-preferences && npm run test:microchoices && npm run test:personalization && npm run test:place-personalization && npm run test:behavior-personalization && npm run test:memory-preferences && npm run test:treasure-personalization && npm run test:adventure-personalization && npm run test:world-continuity",
     "icons": "python3 brand/gerar_icones.py",
     "test:notifications": "node --test scripts/notifications.test.mjs",
     "test:companion": "node --test scripts/companion*.test.mjs",
@@ -32,7 +32,9 @@
     "test:place-personalization": "node --test scripts/world-place-personalization.test.mjs",
     "test:behavior-personalization": "node --test scripts/world-behavior-personalization.test.mjs",
     "test:memory-preferences": "node --test scripts/world-memory-preferences.test.mjs",
-    "test:treasure-personalization": "node --test scripts/world-treasure-personalization.test.mjs"
+    "test:treasure-personalization": "node --test scripts/world-treasure-personalization.test.mjs",
+    "test:adventure-personalization": "node --test scripts/adventure-personalization.test.mjs",
+    "test:world-continuity": "node --test scripts/world-continuity.test.mjs"
   },
   "engines": {
     "node": ">=22.12.0"
