@@ -48,6 +48,7 @@
       </header>
 
       <button class="adult-quick" id="adultsQuickBtn" aria-label="Abrir área dos pais">🔒 <span>Pais</span></button>
+      <button class="world-map-btn" id="worldMapBtn" type="button" aria-label="Abrir lugares do Pipo">🗺️ <span id="worldPlaceLabel">Colina</span></button>
       <div class="speech" id="bubble" aria-live="polite"></div>
       <button class="pet" id="pet" aria-label="Brincar com o personagem. Toque, toque duas vezes ou segure."><span id="petMount"></span></button>
       <div class="fx" id="fx" aria-hidden="true"></div>
@@ -137,6 +138,14 @@
       <div class="adventure-pet" id="adventurePet"></div>
       <div id="adventureBody"></div>
       <button class="btn btn-ghost btn-block" id="adventureClose">Fechar</button>
+    </div>
+  </div>
+
+  <div class="modal world-map-modal" id="worldMapModal" role="dialog" aria-modal="true" aria-labelledby="worldMapTitle">
+    <div class="modal-card world-map-card">
+      <div class="world-map-head"><span>🗺️</span><div><h2 id="worldMapTitle">Lugares do Pipo</h2><p>Escolha um cantinho para visitar.</p></div></div>
+      <div class="world-place-grid" id="worldPlaceGrid"></div>
+      <button class="btn btn-ghost btn-block" id="worldMapClose">Fechar</button>
     </div>
   </div>
 
