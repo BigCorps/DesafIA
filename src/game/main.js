@@ -32,7 +32,7 @@ let activeAdventure=null,adventureBusy=false;
 let qaController=null;
 const kidSb=qaEnabled?null:createKidSupabase();
 const childNotifications=createChildNotificationUI(kidSb);
-const arcade=createArcade({getApi:()=>api,getSnap:()=>snap,say:(t,ms)=>say(t,ms),toast:(a,b)=>toast(a,b),onChange:(goTab)=>{syncWorldLife();if(goTab){tab=goTab;expandPanel();renderPanel();return}if(tab==='jogos')renderPanel();}});
+const arcade=createArcade({getApi:()=>api,getSnap:()=>snap,say:(t,ms)=>say(t,ms),toast:(a,b)=>toast(a,b),onChange:(goTab)=>{syncWorldLife();if(goTab){tab=goTab;expandPanel();renderPanel();return}if(tab==='jogos'||tab==='casa')renderPanel();}});
 if(!qaEnabled)initDistribution();
 
 function petName(){return String(snap?.petName||$('onboardName')?.value||'Pipo').trim().slice(0,12)||'Pipo'}
