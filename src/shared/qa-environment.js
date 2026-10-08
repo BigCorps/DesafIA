@@ -2,6 +2,11 @@ export function isQAEnabled(allowed, search) {
   return allowed === true && new URLSearchParams(search).get('qa') === '1';
 }
 
+export function isQAAllEnabled(allowed, search) {
+  const params = new URLSearchParams(search);
+  return isQAEnabled(allowed, search) && params.get('all') === '1';
+}
+
 export function scopedQAStorage(storage) {
   const prefix = 'desafia-qa-v1:';
   return {
@@ -19,4 +24,6 @@ export function scopedQAStorage(storage) {
 
 export const qaEnabled = typeof __DESAFIA_QA_ALLOWED__ !== 'undefined'
   && isQAEnabled(__DESAFIA_QA_ALLOWED__, globalThis.location?.search || '');
+export const qaAllEnabled = typeof __DESAFIA_QA_ALLOWED__ !== 'undefined'
+  && isQAAllEnabled(__DESAFIA_QA_ALLOWED__, globalThis.location?.search || '');
 export const uiStorage = qaEnabled ? scopedQAStorage(sessionStorage) : globalThis.localStorage;
