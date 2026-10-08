@@ -14,6 +14,10 @@ export function worldObjectTarget({
   const center=scene/2;
   const obj=clamp(Number(objectCenterX)||center,0,scene);
   const standOff=pet*standOffRatio;
+  const centerTolerance=Math.max(18,pet*.16);
+  if(Math.abs(obj-center)<=centerTolerance){
+    return {x:center,direction:'center',distance:0};
+  }
   const raw=obj<center?obj+standOff:obj-standOff;
   const half=pet/2;
   const min=edgePadding+half*.72;
