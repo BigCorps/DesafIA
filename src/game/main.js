@@ -28,6 +28,7 @@ import { patternPreference, preferredPatternReaction } from '../shared/world-pat
 import { personalizedWorldMoment, preferredPlaceAction } from '../shared/world-personalization.js';
 import { personalizedPlaceArrival, personalizedPlaceShort } from '../shared/world-place-personalization.js';
 import { personalizedPlaceEvent } from '../shared/world-behavior-personalization.js';
+import { featuredParkTreasure, treasureMemoryLine } from '../shared/world-treasure-personalization.js';
 import { worldObjectTarget } from '../shared/world-walk.js';
 
 const $=(id)=>document.getElementById(id);
@@ -370,13 +371,14 @@ function syncWorldLife(){
   }
   const treasures=currentParkTreasures(),treasure=$('sceneTreasure');
   if(treasure){
-    const latest=treasures.at(-1),open=Boolean(latest)&&placeShowsObject(place.id,'sceneTreasure');
+    const featured=featuredParkTreasure(treasures,{preference:activePreference,day:placeDayKey(snap||{})});
+    const open=Boolean(featured)&&placeShowsObject(place.id,'sceneTreasure');
     treasure.hidden=!open;treasure.disabled=!open;treasure.classList.toggle('unlocked',open);
-    if(latest){$('sceneTreasureIcon').textContent=latest.icon;treasure.dataset.treasureTitle=latest.title;treasure.setAttribute('aria-label',`Ver ${latest.title}, Tesouro do Parque`);}
+    if(featured){$('sceneTreasureIcon').textContent=featured.icon;treasure.dataset.treasureTitle=featured.title;treasure.dataset.treasureGameId=featured.gameId||'';treasure.setAttribute('aria-label',`Ver ${featured.title}, Tesouro do Parque`);}
     const shelf=$('worldTreasureShelf');
     if(shelf){shelf.hidden=place.id!=='parque'||treasures.length<2;shelf.innerHTML=treasures.slice(-3).map((t)=>`<span title="${esc(t.title)}">${esc(t.icon)}</span>`).join('');}
   }
-  const memory=visibleMemoryFor(place.id,{memories:companionProfileState?.memories||[],day:placeDayKey(snap||{})});
+  const memory=visibleMemoryFor(place.id,{memories:companionProfileState?.memories||[],day:placeDayKey(snap||{}),preference:activePreference});
   const token=$('worldMemoryToken');
   if(token){
     token.hidden=!memory;
@@ -803,10 +805,24 @@ document.querySelectorAll('[data-companion-action]').forEach((el)=>el.addEventLi
   visitWorldObject(worldCompanionAction(el.id,petName()),{haptics:true});
 }));
 document.querySelectorAll('[data-world-detail]').forEach((el)=>el.addEventListener('click',()=>{if(!el.disabled)runWorldRoutine(el.id);}));
-$('sceneTreasure').addEventListener('click',()=>{if(!$('sceneTreasure').disabled)runWorldRoutine('sceneTreasure');});
+$('sceneTreasure').addEventListener('click',()=>{
+  if($('sceneTreasure').disabled)return;
+  const {preference}=currentPatternState('parque');
+  const treasure=featuredParkTreasure(currentParkTreasures(),{preference,day:placeDayKey(snap||{})});
+  if(!treasure)return;
+  visitWorldObject({
+    id:`treasure:${treasure.gameId||treasure.title}`,
+    objectId:'sceneTreasure',
+    motion:'proud',
+    text:treasureMemoryLine(treasure,preference,petName()),
+    burst:[treasure.icon||'🏆','✨','💜'],
+    sceneEffect:{kind:'treasure-glow',chars:[treasure.icon||'🏆','⭐','✨'],count:9}
+  },{haptics:true});
+});
 $('worldMemoryToken').addEventListener('click',()=>{
-  const memory=visibleMemoryFor(worldPlace,{memories:companionProfileState?.memories||[],day:placeDayKey(snap||{})});
-  const action=memoryWorldAction(memory,worldPlace);
+  const {preference}=currentPatternState(worldPlace);
+  const memory=visibleMemoryFor(worldPlace,{memories:companionProfileState?.memories||[],day:placeDayKey(snap||{}),preference});
+  const action=memoryWorldAction(memory,worldPlace,preference,petName());
   if(action)visitWorldObject(action,{haptics:true});
 });
 scheduleCompanionIdle();
