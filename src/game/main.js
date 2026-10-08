@@ -29,6 +29,8 @@ import { personalizedWorldMoment, preferredPlaceAction } from '../shared/world-p
 import { personalizedPlaceArrival, personalizedPlaceShort } from '../shared/world-place-personalization.js';
 import { personalizedPlaceEvent } from '../shared/world-behavior-personalization.js';
 import { featuredParkTreasure, treasureMemoryLine } from '../shared/world-treasure-personalization.js';
+import { adventurePreference, personalizedAdventureIntro, personalizedAdventureResult } from '../shared/adventure-personalization.js';
+import { worldContinuityLine } from '../shared/world-continuity.js';
 import { worldObjectTarget } from '../shared/world-walk.js';
 
 const $=(id)=>document.getElementById(id);
@@ -49,6 +51,7 @@ const PERIOD={manha:'de manhã',tarde:'à tarde',noite:'à noite'};
 let api=null,snap=null,tab='missoes',parentMode=false,unsubscribe=()=>{},refreshing=false,lastReaction=-1,reactionLockedUntil=0;
 let companionMood='calm',petClickTimer=0,suppressPetClick=false,petHoldTimer=0,idleTimer=0,worldRoutineTimer=0,lastWorldRoutine='',petTravelTimer=0,worldTravelTimer=0,worldVisitTimer=0,worldVisitReturnTimer=0,worldVisitBusy=false,placeEventTimer=0,favoriteSuggestionTimer=0,worldHabitTimer=0;
 let worldPlace=(()=>{try{return uiStorage.getItem(worldPlaceKey)||'colina'}catch{return'colina'}})();
+let lastWorldPlace=null;
 let placeActionIndex=0;
 let companionProfileState={traits:[],likes:[],memories:[]};
 let activeAdventure=null,adventureBusy=false;
@@ -475,6 +478,9 @@ function scheduleWorldHabit(delay=88000,{reset=false}={}){
   },delay);
 }
 function currentWorldPatterns(){return worldPatterns({profile:companionProfileState,treasures:currentParkTreasures()})}
+function currentAdventurePreference(){
+  return adventurePreference(currentWorldPatterns(),(pattern)=>patternPreference(pattern,{profile:companionProfileState,treasures:currentParkTreasures()}));
+}
 function worldPatternsView(){
   const patterns=currentWorldPatterns();
   if(!patterns.length)return '';
@@ -560,10 +566,12 @@ function visitWorldPlace(id){
   const scene=$('scene'),pet=$('pet');clearTimeout(worldTravelTimer);
   scene.classList.add('world-traveling');pet.classList.add('march');
   worldTravelTimer=setTimeout(()=>{
-    worldPlace=next;try{uiStorage.setItem(worldPlaceKey,next)}catch{}
+    const previousPlace=worldPlace;
+    worldPlace=next;lastWorldPlace=previousPlace;try{uiStorage.setItem(worldPlaceKey,next)}catch{}
     syncWorldLife();renderWorldMap();if(tab==='casa')renderPanel();
     const nextPlace=worldPlaceById(next),{preference}=currentPatternState(next);
-    say(personalizedPlaceArrival(nextPlace,preference,petName()),1800);
+    const continuity=worldContinuityLine(lastWorldPlace,next,{preference,petName:petName()});
+    say(continuity||personalizedPlaceArrival(nextPlace,preference,petName()),continuity?2400:1800);
     scheduleCurrentPlaceEvent(2600);
     scheduleWorldHabit(32000,{reset:true});
     setTimeout(()=>{scene.classList.remove('world-traveling');pet.classList.remove('march')},260);
@@ -647,12 +655,16 @@ function companionJournalView(){
 function renderAdventureIntro(adventure){
   activeAdventure=adventure;
   adventurePetPreview();
-  $('adventureBody').innerHTML=`<div class="adventure-kicker">🧭 Aventura do dia</div><h2 id="adventureTitle">${esc(adventure.icon)} ${esc(adventure.title)}</h2><p>${esc(adventure.intro)}</p><div class="adventure-choices">${adventure.choices.map((choice)=>`<button class="adventure-choice" data-adventure-choice="${esc(choice.id)}"><strong>${esc(choice.label)}</strong><span>Escolher este caminho</span></button>`).join('')}</div>`;
+  const {preference}=currentAdventurePreference();
+  const intro=personalizedAdventureIntro(adventure,{preference,petName:petName()});
+  $('adventureBody').innerHTML=`<div class="adventure-kicker">🧭 Aventura do dia</div><h2 id="adventureTitle">${esc(adventure.icon)} ${esc(adventure.title)}</h2><p>${esc(intro)}</p><div class="adventure-choices">${adventure.choices.map((choice)=>`<button class="adventure-choice" data-adventure-choice="${esc(choice.id)}"><strong>${esc(choice.label)}</strong><span>Escolher este caminho</span></button>`).join('')}</div>`;
 }
 function renderAdventureResult(adventure,choice){
   const d=choice.discovery;
   adventurePetPreview();
-  $('adventureBody').innerHTML=`<div class="adventure-kicker">✨ Nova descoberta!</div><h2 id="adventureTitle">${esc(d.icon)} ${esc(d.name)}</h2><p>${esc(choice.result)}</p><article class="discovery-reveal"><span>${esc(d.icon)}</span><div><strong>${esc(d.name)}</strong><small>${esc(d.description)}</small></div></article><p class="adventure-note">Ela foi guardada no Álbum de Descobertas da Casa.</p>`;
+  const {preference}=currentAdventurePreference();
+  const result=personalizedAdventureResult(choice,{preference,petName:petName()});
+  $('adventureBody').innerHTML=`<div class="adventure-kicker">✨ Nova descoberta!</div><h2 id="adventureTitle">${esc(d.icon)} ${esc(d.name)}</h2><p>${esc(result)}</p><article class="discovery-reveal"><span>${esc(d.icon)}</span><div><strong>${esc(d.name)}</strong><small>${esc(d.description)}</small></div></article><p class="adventure-note">Ela foi guardada no Álbum de Descobertas da Casa.</p>`;
 }
 function openAdventure(){
   if(!snap||!api)return;
