@@ -25,6 +25,7 @@ import { dailyHabit, habitSeenId } from '../shared/world-habits.js';
 import { patternForHabit, patternedHabitText, worldPatterns } from '../shared/world-patterns.js';
 import { patternReaction } from '../shared/world-pattern-reactions.js';
 import { patternPreference, preferredPatternReaction } from '../shared/world-pattern-preferences.js';
+import { personalizedWorldMoment, preferredPlaceAction } from '../shared/world-personalization.js';
 import { worldObjectTarget } from '../shared/world-walk.js';
 
 const $=(id)=>document.getElementById(id);
@@ -353,10 +354,9 @@ function syncWorldLife(){
   if($('worldPlaceLabel'))$('worldPlaceLabel').textContent=place.title.replace(' do Pipo','');
   const favorite=currentFavoritePlace();
   scene.classList.toggle('favorite-place',favorite?.id===place.id);
-  const activePattern=currentWorldPatterns().find((item)=>item.placeId===place.id)||null;
-  const activePreference=patternPreference(activePattern,{profile:companionProfileState,treasures:currentParkTreasures()});
+  const {preference:activePreference}=currentPatternState(place.id);
   if(activePreference)scene.dataset.preference=activePreference.id;else delete scene.dataset.preference;
-  const placeAction=placeActionFor(place.id,{...worldContext(),index:placeActionIndex});
+  const placeAction=currentPlaceAction();
   if($('worldActionIcon'))$('worldActionIcon').textContent=placeAction.icon;
   if($('worldActionLabel'))$('worldActionLabel').textContent=placeAction.label;
   if($('worldActionBtn'))$('worldActionBtn').setAttribute('aria-label',`${placeAction.label} em ${place.title}`);
@@ -385,8 +385,16 @@ function syncWorldLife(){
     token.setAttribute('aria-label',memory?`Relembrar: ${memory.text}`:'Relembrar um momento');
   }
 }
+function currentPatternState(placeId=worldPlace){
+  const pattern=currentWorldPatterns().find((item)=>item.placeId===placeId)||null;
+  const preference=patternPreference(pattern,{profile:companionProfileState,treasures:currentParkTreasures()});
+  return {pattern,preference};
+}
 function worldMomentView(){
-  const moment=worldMoment(worldContext());
+  const base=worldMoment(worldContext());
+  const pattern=currentWorldPatterns()[0]||null;
+  const preference=patternPreference(pattern,{profile:companionProfileState,treasures:currentParkTreasures()});
+  const moment=personalizedWorldMoment(base,{pattern,preference,petName:petName()});
   return `<section class="world-moment"><span>${esc(moment.icon)}</span><div><small>Mundo de hoje</small><strong>${esc(moment.title)}</strong><p>${esc(moment.text)}</p></div></section>`;
 }
 function currentFavoritePlace(){return favoriteWorldPlace({xp:snap?.xp||0,profile:companionProfileState,treasures:currentParkTreasures()})}
@@ -420,9 +428,7 @@ function scheduleFavoriteSuggestion(delay=65000){
   },delay);
 }
 function currentWorldHabit(){
-  const patterns=currentWorldPatterns();
-  const pattern=patterns.find((item)=>item.placeId===worldPlace)||null;
-  const preference=patternPreference(pattern,{profile:companionProfileState,treasures:currentParkTreasures()});
+  const {preference}=currentPatternState(worldPlace);
   return dailyHabit({
     ...worldContext(),
     currentPlace:worldPlace,
@@ -488,7 +494,11 @@ function worldPlacesMarkup(){
   }).join('');
 }
 function renderWorldMap(){if($('worldPlaceGrid'))$('worldPlaceGrid').innerHTML=worldPlacesMarkup()}
-function currentPlaceAction(){return placeActionFor(worldPlace,{...worldContext(),index:placeActionIndex})}
+function currentPlaceAction(){
+  const base=placeActionFor(worldPlace,{...worldContext(),index:placeActionIndex});
+  const {preference}=currentPatternState(worldPlace);
+  return preferredPlaceAction(base,preference,petName());
+}
 function currentPlaceEvent(){return placeDailyEvent(worldPlace,worldContext())}
 function placeEventStorageKey(){return `${placeEventSeenKey}:${placeDayKey(snap||{})}`}
 function isPlaceEventSeen(event=currentPlaceEvent()){return seenList(placeEventStorageKey()).includes(`${worldPlace}:${event.id}`)}
