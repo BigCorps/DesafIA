@@ -721,3 +721,39 @@
 @media(max-height:560px){
   .game-shell.panel-collapsed{--pet-full-size:clamp(140px,38vh,190px)}
 }
+
+
+/* Mundo 2.2 — ação própria de cada lugar */
+.world-action-btn{
+  display:none;
+  position:absolute;
+  z-index:7;
+  left:0;
+  top:202px;
+  min-height:44px;
+  max-width:min(48%,190px);
+  border:0;
+  border-radius:0 16px 16px 0;
+  padding:8px 11px 8px 10px;
+  background:rgba(255,255,255,.9);
+  color:#5b5279;
+  box-shadow:0 6px 16px rgba(43,45,100,.1);
+  backdrop-filter:blur(7px);
+  font-size:10px;
+  align-items:center;
+  gap:6px;
+  text-align:left;
+}
+.world-action-btn>span{font-size:20px;line-height:1}
+.world-action-btn>strong{font:850 10px/1.15 var(--display)}
+.game-shell.panel-collapsed .world-action-btn{display:flex}
+.game-shell:not(.panel-collapsed) .world-action-btn{display:none!important;pointer-events:none}
+.world-action-btn:active{transform:scale(.97)}
+.world-action-btn:focus-visible{outline:3px solid rgba(118,88,245,.38);outline-offset:2px}
+@media(max-width:360px){
+  .world-action-btn{top:190px;max-width:46%;padding:7px 8px}
+  .world-action-btn>strong{font-size:9px}
+}
+@media(max-height:560px){
+  .world-action-btn{top:166px}
+}
