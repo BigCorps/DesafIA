@@ -103,5 +103,5 @@ export function dailyHabit(input={}){
 }
 
 export function habitSeenId(day='',period='dia',habit=null){
-  return habit?.id?`${day}:${period}:${habit.id}`:'';
+  return habit?.id?`${day}:${period}`:'';
 }
