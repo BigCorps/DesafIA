@@ -453,3 +453,80 @@
   .world-glow,.scene-detail,.scene-treasure{transition:none!important}
   .scene-detail.companion-active,.scene-treasure.companion-active,.scene-detail.rug.companion-active{animation:none!important}
 }
+
+
+/* Pipo troca de base conforme o painel:
+   expandido = montanha; minimizado = tapete.
+   Ambos usam bottom como referência para não depender da altura da viewport. */
+.game-shell{
+  --pet-rug-size:min(58vw,255px);
+  --pet-rug-bottom:calc(54px + var(--safe-bottom));
+  --pet-hill-bottom:clamp(72px,10dvh,96px);
+}
+.pet{
+  top:auto;
+  bottom:var(--pet-hill-bottom);
+  --pet-y:0%;
+  transition:
+    bottom .52s cubic-bezier(.2,.8,.2,1),
+    width .52s cubic-bezier(.2,.8,.2,1),
+    height .52s cubic-bezier(.2,.8,.2,1),
+    filter .28s ease,
+    transform .3s;
+}
+.game-shell.panel-collapsed .pet{
+  top:auto;
+  bottom:var(--pet-rug-bottom);
+  --pet-y:0%;
+  width:var(--pet-rug-size);
+  height:var(--pet-rug-size);
+}
+.game-shell.panel-collapsed .scene-detail.rug{
+  bottom:45px;
+  width:min(62vw,270px);
+}
+.scene-detail.rug{
+  transition:
+    opacity .45s ease,
+    transform .45s cubic-bezier(.2,.9,.3,1.25),
+    width .52s cubic-bezier(.2,.8,.2,1),
+    bottom .52s cubic-bezier(.2,.8,.2,1);
+}
+.pet.pet-traveling{
+  filter:drop-shadow(0 16px 15px rgba(30,72,70,.16));
+}
+.pet.pet-traveling .pet-foot-left{animation:petTravelStepLeft .34s ease-in-out 2}
+.pet.pet-traveling .pet-foot-right{animation:petTravelStepRight .34s ease-in-out 2}
+@keyframes petTravelStepLeft{
+  0%,100%{transform:translate(0,0) rotate(0)}
+  50%{transform:translate(-3px,-6px) rotate(-7deg)}
+}
+@keyframes petTravelStepRight{
+  0%,100%{transform:translate(0,0) rotate(0)}
+  50%{transform:translate(3px,-6px) rotate(7deg)}
+}
+
+/* Balão sempre acompanha a nova posição do Pipo no tapete. */
+.game-shell.panel-collapsed .speech{
+  bottom:calc(var(--pet-rug-bottom) + var(--pet-rug-size) + 12px);
+}
+
+/* Em telas mais baixas o Pipo continua chegando ao tapete,
+   apenas com escala menor para preservar espaço. */
+@media(max-height:720px){
+  .game-shell{
+    --pet-rug-size:200px;
+    --pet-rug-bottom:calc(46px + var(--safe-bottom));
+    --pet-hill-bottom:62px;
+  }
+  .game-shell.panel-collapsed .speech{
+    bottom:calc(var(--pet-rug-bottom) + var(--pet-rug-size) + 10px);
+  }
+}
+@media(max-width:360px){
+  .game-shell{--pet-rug-size:220px}
+}
+@media(prefers-reduced-motion:reduce){
+  .pet,.scene-detail.rug{transition:none!important}
+  .pet.pet-traveling .pet-foot-left,.pet.pet-traveling .pet-foot-right{animation:none!important}
+}
