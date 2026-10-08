@@ -122,7 +122,7 @@ syncViewport();
 window.addEventListener('pageshow',restoreGameLayout);
 window.addEventListener('resize',syncViewport,{passive:true});
 window.visualViewport?.addEventListener('resize',syncViewport,{passive:true});
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){restoreGameLayout();scheduleFavoriteSuggestion(18000);scheduleWorldHabit(30000,{reset:true});if(!qaEnabled)childNotifications.refresh(api,{visible:true});}});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){restoreGameLayout();scheduleFavoriteSuggestion(18000,{reset:true});scheduleWorldHabit(30000,{reset:true});if(!qaEnabled)childNotifications.refresh(api,{visible:true});}});
 
 $('petMount').innerHTML=petMarkup('main');
 $('connectPet').innerHTML=petMarkup('connect');
@@ -424,12 +424,13 @@ function runFavoriteSuggestion(){
   }
   return true;
 }
-function scheduleFavoriteSuggestion(delay=65000){
-  clearTimeout(favoriteSuggestionTimer);
-  if(reduce||!snap)return;
+function scheduleFavoriteSuggestion(delay=65000,{reset=false}={}){
+  if(reset){clearTimeout(favoriteSuggestionTimer);favoriteSuggestionTimer=0}
+  if(reduce||!snap||favoriteSuggestionTimer)return;
   const favorite=currentFavoritePlace(),day=placeDayKey(snap||{});
   if(!favorite||favoriteSuggestionSeen(day)||!shouldSuggestFavorite({favorite,day}))return;
   favoriteSuggestionTimer=setTimeout(()=>{
+    favoriteSuggestionTimer=0;
     if(runFavoriteSuggestion())return;
     scheduleFavoriteSuggestion(22000);
   },delay);
@@ -455,18 +456,18 @@ function runWorldHabit(){
   const target=habit.objectId?$(habit.objectId):null;
   if(habit.objectId&&(!target||target.offsetParent===null))return false;
   const seenId=habitSeenId(placeDayKey(snap||{}),TIMES[timeIdx],habit);
-  if(seenId)markSeen(worldHabitSeenKey,seenId);
   const patterns=currentWorldPatterns();
   const pattern=patternForHabit(habit,patterns);
   const reaction=patternReaction(pattern,habit,petName());
   const preference=patternPreference(pattern,{profile:companionProfileState,treasures:currentParkTreasures()});
   const preferredReaction=preferredPatternReaction(reaction,preference,petName());
-  visitWorldObject(preferredReaction||{
+  const started=visitWorldObject(preferredReaction||{
     ...habit,
     text:patternedHabitText(habit,pattern,petName()),
     burst:habit.sceneEffect?.chars||['✨','💜']
   },{haptics:false});
-  return true;
+  if(started&&seenId)markSeen(worldHabitSeenKey,seenId);
+  return Boolean(started);
 }
 function scheduleWorldHabit(delay=88000,{reset=false}={}){
   if(reset){clearTimeout(worldHabitTimer);worldHabitTimer=0}
@@ -579,7 +580,8 @@ function visitWorldPlace(id){
   closeModal('worldMapModal');
 }
 function canRunWorldRoutine(){
-  return Boolean(snap&&!worldVisitBusy&&document.visibilityState==='visible'&&!$('scene').classList.contains('speaking')&&!document.querySelector('.modal.open')&&!document.querySelector('.arcade-player:not([hidden])'));
+  const immersive=document.querySelector('.game-shell')?.classList.contains('panel-collapsed');
+  return Boolean(snap&&immersive&&!worldVisitBusy&&document.visibilityState==='visible'&&!$('scene').classList.contains('speaking')&&!document.querySelector('.modal.open')&&!document.querySelector('.arcade-player:not([hidden])'));
 }
 function runWorldRoutine(forObject=null){
   if(!canRunWorldRoutine())return;
