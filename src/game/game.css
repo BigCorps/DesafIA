@@ -662,3 +662,62 @@
   .pet.world-returning .pet-foot-left,.pet.world-returning .pet-foot-right{animation:none!important}
   .speech{transition:none!important}
 }
+
+/* Objetos só no modo imersivo. O tapete é parte não interativa do palco. */
+.game-shell:not(.panel-collapsed) .scene-object,
+.game-shell:not(.panel-collapsed) .scene-detail:not(.rug),
+.game-shell:not(.panel-collapsed) .scene-treasure{
+  display:none!important;
+  pointer-events:none;
+}
+
+/* Zona central = caixa do Pipo + respiro; faixa inferior reservada às ações.
+   Os alvos ficam abaixo dessa caixa, nas laterais, sem depender de um viewport. */
+.game-shell.panel-collapsed .scene{
+  --world-target-size:clamp(44px,12vw,56px);
+  --world-edge:clamp(10px,3%,18px);
+  --world-gap:clamp(12px,2vh,20px);
+  --world-near-y:calc(var(--pet-full-y) + var(--pet-full-size)/2 + var(--world-gap));
+  --world-far-y:calc(var(--world-near-y) + var(--world-target-size) + var(--world-gap));
+}
+.game-shell.panel-collapsed :is(.scene-object,.scene-detail:not(.rug),.scene-treasure){
+  top:var(--world-near-y);
+  bottom:auto;
+  left:auto;
+  right:var(--world-edge);
+  width:var(--world-target-size);
+  height:var(--world-target-size);
+  min-width:0;
+  padding:0;
+  font-size:clamp(30px,10vw,44px);
+  align-items:center;
+  justify-content:center;
+  z-index:6;
+  cursor:pointer;
+}
+.game-shell.panel-collapsed :is(.scene-object,.scene-detail:not(.rug),.scene-treasure).unlocked:not([hidden]){
+  display:flex!important;
+  pointer-events:auto;
+}
+.game-shell.panel-collapsed :is(.scene-object.tree,.scene-detail.lamp,.scene-detail.cushion,.scene-detail.flowers){left:var(--world-edge);right:auto}
+.game-shell.panel-collapsed :is(.scene-detail.cushion,.scene-detail.flowers,.scene-treasure){top:var(--world-far-y)}
+.game-shell.panel-collapsed .scene-detail.flowers span{font-size:.65em}
+.game-shell.panel-collapsed .scene-treasure{flex-direction:column}
+.game-shell.panel-collapsed .scene :is(.adventure-float,.arcade-float){
+  top:auto;
+  bottom:calc(clamp(16px,3vh,24px) + var(--safe-bottom));
+  z-index:8;
+}
+
+/* Em Android baixo, uma única fileira deixa espaço para Pipo e os dois CTAs. */
+@media(max-height:660px){
+  .game-shell.panel-collapsed .scene{--world-target-size:44px;--world-gap:12px}
+  .game-shell.panel-collapsed :is(.scene-object,.scene-detail:not(.rug),.scene-treasure){top:var(--world-near-y)}
+  .game-shell.panel-collapsed :is(.scene-object.tree,.scene-detail.lamp){left:4%;right:auto}
+  .game-shell.panel-collapsed :is(.scene-detail.cushion,.scene-detail.flowers){left:28%;right:auto}
+  .game-shell.panel-collapsed .scene .scene-treasure{left:52%;right:auto}
+  .game-shell.panel-collapsed :is(.scene-object.books,.scene-object.plant,.scene-object.telescope,.scene-detail.little-house){left:auto;right:4%}
+}
+@media(max-height:560px){
+  .game-shell.panel-collapsed{--pet-full-size:clamp(140px,38vh,190px)}
+}
