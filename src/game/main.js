@@ -175,6 +175,7 @@ function performCompanionAction(action,{haptics=true}={}){
   if(action.motion==='curious')motion('curious');else motion(action.motion||'proud');
   if(action.objectId)pulseSceneObject(action.objectId);
   if(action.burst?.length)burst(action.burst,8);
+  if(action.sceneEffect)sceneEffect(action.sceneEffect,action.objectId);
   if(action.text)say(action.text,1800);
   if(haptics)haptic([10,30,10]);
 }
@@ -279,6 +280,38 @@ function burst(chars=['⭐','✨','💜'],n=12){
   if(reduce)n=Math.min(n,3);const rect=$('pet').getBoundingClientRect(),scene=$('scene').getBoundingClientRect();
   const x=rect.left-scene.left+rect.width/2,y=rect.top-scene.top+rect.height/2;
   for(let i=0;i<n;i+=1){const e=document.createElement('span');e.className='particle';e.textContent=chars[i%chars.length];e.style.left=`${x}px`;e.style.top=`${y}px`;$('fx').appendChild(e);const a=Math.random()*Math.PI*2,d=55+Math.random()*85,dx=Math.cos(a)*d,dy=Math.sin(a)*d-45;e.animate([{transform:'translate(-50%,-50%) scale(.4)',opacity:1},{transform:`translate(calc(-50% + ${dx}px),calc(-50% + ${dy}px)) scale(1.2)`,opacity:1,offset:.62},{transform:`translate(calc(-50% + ${dx}px),calc(-50% + ${dy+34}px)) scale(.75)`,opacity:0}],{duration:reduce?20:800+Math.random()*400,easing:'cubic-bezier(.2,.8,.3,1)'}).onfinish=()=>e.remove();}
+}
+function sceneEffect(effect,anchorId=null){
+  if(!effect?.kind)return;
+  const fx=$('fx'),scene=$('scene');if(!fx||!scene)return;
+  const chars=Array.isArray(effect.chars)&&effect.chars.length?effect.chars:['✨'];
+  const count=reduce?Math.min(2,Number(effect.count)||1):Math.min(14,Math.max(1,Number(effect.count)||6));
+  const sceneRect=scene.getBoundingClientRect();
+  const anchor=anchorId?$(anchorId):null;
+  const anchorRect=anchor?.offsetParent!==null?anchor?.getBoundingClientRect():null;
+  if(effect.kind==='shooting-star'){
+    const star=document.createElement('span');
+    star.className='place-effect shooting-star';
+    star.textContent=chars[0]||'🌟';
+    fx.appendChild(star);
+    setTimeout(()=>star.remove(),reduce?450:1450);
+    return;
+  }
+  const baseX=anchorRect?anchorRect.left-sceneRect.left+anchorRect.width/2:sceneRect.width/2;
+  const baseY=anchorRect?anchorRect.top-sceneRect.top+anchorRect.height/2:sceneRect.height*.62;
+  for(let i=0;i<count;i+=1){
+    const el=document.createElement('span');
+    el.className=`place-effect ${effect.kind}`;
+    el.textContent=chars[i%chars.length];
+    const spreadX=reduce?18:55,spreadY=reduce?12:38;
+    el.style.left=`${baseX+(Math.random()-.5)*spreadX}px`;
+    el.style.top=`${baseY+(Math.random()-.5)*spreadY}px`;
+    el.style.setProperty('--fx-x',`${(Math.random()-.5)*(effect.kind==='fireflies'?110:70)}px`);
+    el.style.setProperty('--fx-y',`${-(22+Math.random()*(effect.kind==='garden-bloom'?72:54))}px`);
+    el.style.setProperty('--fx-delay',`${reduce?0:Math.round(Math.random()*220)}ms`);
+    fx.appendChild(el);
+    setTimeout(()=>el.remove(),reduce?520:1800);
+  }
 }
 function seenList(key){try{return JSON.parse(uiStorage.getItem(key)||'[]')}catch{return[]}}
 function markSeen(key,id){const a=[...new Set([...seenList(key),id])].slice(-100);uiStorage.setItem(key,JSON.stringify(a));}
