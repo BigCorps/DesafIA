@@ -610,3 +610,27 @@
   .pet,.scene-detail.rug{transition:none!important}
   .pet.pet-traveling .pet-foot-left,.pet.pet-traveling .pet-foot-right{animation:none!important}
 }
+
+
+/* Mundo 2.0 — lugares navegáveis */
+.world-map-btn{position:absolute;z-index:6;right:0;top:202px;border:0;border-radius:16px 0 0 16px;padding:8px 10px;background:rgba(255,255,255,.86);color:#655d80;font-size:11px;font-weight:900;box-shadow:0 6px 16px rgba(43,45,100,.1);backdrop-filter:blur(7px)}
+.world-map-btn span{margin-left:3px}
+.world-map-head{display:flex;gap:12px;align-items:center;margin-bottom:14px}.world-map-head>span{font-size:38px}.world-map-head h2,.world-map-head p{margin:0}
+.world-place-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-bottom:15px}.world-place-grid.compact{margin:8px 0 14px}
+.world-place-card{min-height:110px;border:1px solid #e6e0f8;border-radius:18px;padding:12px;background:linear-gradient(145deg,#fff,#f8f5ff);text-align:left;color:#443b66}.world-place-card>span{display:block;font-size:28px}.world-place-card strong,.world-place-card small{display:block}.world-place-card strong{margin-top:4px;font:850 12px var(--display)}.world-place-card small{margin-top:3px;color:#7b7393;font-size:10px;line-height:1.3}.world-place-card.active{border-color:#7658f5;box-shadow:0 0 0 3px rgba(118,88,245,.12)}.world-place-card.locked{opacity:.5;filter:grayscale(.45)}
+.world-places-title{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:18px}.world-places-title h3{margin:0}.world-places-title small{color:var(--muted)}
+.scene.world-traveling .scene-object,.scene.world-traveling .scene-detail,.scene.world-traveling .scene-treasure{opacity:.12!important;transform:scale(.9)}
+.scene.world-traveling{filter:saturate(.94)}
+.scene[data-place="jardim"][data-time="dia"]{background:linear-gradient(#79d7c1 0%,#d9f6cf 72%)}.scene[data-place="jardim"][data-time="tarde"]{background:linear-gradient(#ffad7e 0%,#dff0b3 72%)}.scene[data-place="jardim"][data-time="noite"]{background:linear-gradient(#173d45 0%,#315f59 72%)}
+.scene[data-place="jardim"] .hill.back{background:#6fcf72}.scene[data-place="jardim"] .hill.front{background:#45a95d}
+.scene[data-place="leitura"][data-time="dia"]{background:linear-gradient(#f7d8b0 0%,#fff1d8 72%)}.scene[data-place="leitura"][data-time="tarde"]{background:linear-gradient(#e6b78d 0%,#f7d7bb 72%)}.scene[data-place="leitura"][data-time="noite"]{background:linear-gradient(#2f244c 0%,#66517a 72%)}
+.scene[data-place="leitura"] .hill.back{background:#b88c6c}.scene[data-place="leitura"] .hill.front{background:#8b6957}
+.scene[data-place="observatorio"]{background:linear-gradient(#171444 0%,#40348d 72%)!important}.scene[data-place="observatorio"] .sky-stars{opacity:.95}.scene[data-place="observatorio"] .cloud{opacity:.12}.scene[data-place="observatorio"] .hill.back{background:#394c6b}.scene[data-place="observatorio"] .hill.front{background:#283b56}
+.scene[data-place="parque"][data-time="dia"]{background:linear-gradient(#7dcdfb 0%,#d9f6ff 72%)}.scene[data-place="parque"][data-time="tarde"]{background:linear-gradient(#ffa574 0%,#ffe1b7 72%)}.scene[data-place="parque"][data-time="noite"]{background:linear-gradient(#201952 0%,#5142a2 72%)}
+.scene[data-place="parque"] .hill.back{background:#79cfa7}.scene[data-place="parque"] .hill.front{background:#4eaf82}
+.scene[data-place="jardim"] .tree{left:12%;font-size:78px}.scene[data-place="jardim"] .plant{right:18%;font-size:42px}.scene[data-place="jardim"] .flowers{left:40%;font-size:32px}
+.scene[data-place="leitura"] .books{right:14%;font-size:52px}.scene[data-place="leitura"] .cushion{left:18%;right:auto;font-size:40px}.scene[data-place="leitura"] .lamp{left:10%;font-size:40px}
+.scene[data-place="observatorio"] .telescope{right:14%;font-size:62px}.scene[data-place="observatorio"] .lamp{left:12%}
+.scene[data-place="parque"] .scene-treasure{left:12%}
+@media(max-width:360px){.world-place-grid{grid-template-columns:1fr}.world-map-btn{top:190px;padding:7px 8px}.world-map-btn span{display:none}}
+@media(prefers-reduced-motion:reduce){.scene.world-traveling .scene-object,.scene.world-traveling .scene-detail,.scene.world-traveling .scene-treasure{transform:none!important}}
