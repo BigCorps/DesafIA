@@ -237,7 +237,11 @@ function canRunWorldRoutine(){
 function runWorldRoutine(forObject=null){
   if(!canRunWorldRoutine())return;
   const ctx=worldContext();
-  let candidates=worldRoutineCandidates(ctx).filter((item)=>!forObject||item.objectId===forObject);
+  let candidates=worldRoutineCandidates(ctx).filter((item)=>{
+    if(forObject&&item.objectId!==forObject)return false;
+    const target=item.objectId?$(item.objectId):null;
+    return !target||target.offsetParent!==null;
+  });
   if(!candidates.length)return;
   if(candidates.length>1){const fresh=candidates.filter((item)=>item.id!==lastWorldRoutine);if(fresh.length)candidates=fresh;}
   const chosen=forObject?candidates[0]:candidates[Math.floor(Math.random()*candidates.length)]||chooseWorldRoutine(ctx,0);
