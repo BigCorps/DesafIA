@@ -85,7 +85,7 @@ export function createArcade({ getApi, getSnap, say, toast, onChange }) {
     const eligibleCount=status?.catalog?.length||GAMES.filter((g)=>g.tier!=='plus').length;
     const unlockedEligible=(status?.unlocked||[]).filter((id)=>status?.catalog?.includes(id)).length;
     const treasures=parkTreasures(status?.best||{});
-    const treasureHtml=treasures.length?`<section class="park-treasures"><div class="park-treasures-head"><h3>Tesouros do Parque</h3><span class="badge badge-soft">${treasures.length}/3</span></div><div class="park-treasure-grid">${treasures.map((t)=>`<article><span>${esc(t.icon)}</span><div><strong>${esc(t.title)}</strong><small>${esc(t.text)}</small></div><em>${MEDAL_ICON[t.medal]}</em></article>`).join('')}</div></section>`:'';
+    const treasureHtml=treasures.length?`<section class="park-treasures"><div class="park-treasures-head"><h3>Tesouros do Parque</h3><span class="badge badge-soft">${treasures.length}/${GAMES.filter((g)=>g.collectible).length}</span></div><div class="park-treasure-grid">${treasures.map((t)=>`<article><span>${esc(t.icon)}</span><div><strong>${esc(t.title)}</strong><small>${esc(t.text)}</small></div><em>${MEDAL_ICON[t.medal]}</em></article>`).join('')}</div></section>`:'';
     return `<h3>Álbum de jogos <small class="badge badge-soft">${unlockedEligible}/${eligibleCount}</small></h3><div class="arc-grid">${GAMES.map((g) => {
       const plusLocked=g.tier==='plus'&&!status?.plus;
       const has = status?.unlocked.includes(g.id) && !plusLocked;
