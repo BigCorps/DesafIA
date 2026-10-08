@@ -72,6 +72,7 @@ if(!game.includes('patternReaction')||!game.includes('preferredReaction||{'))fai
 if(!game.includes('patternPreference')||!game.includes('preferredPatternReaction')||!gameCss.includes('.world-pattern-preference'))fail('preferências emergentes dos padrões ausentes');else ok('padrões podem ter preferências próprias sem novo progresso');
 if(!game.includes('preference')||!game.includes('scene.dataset.preference')||!gameCss.includes('scene[data-preference='))fail('microdecisões/assinaturas das preferências ausentes');else ok('preferências influenciam escolhas e cenário sem nova progressão');
 if(!game.includes('preferredPlaceAction')||!game.includes('personalizedWorldMoment')||!game.includes('currentPatternState'))fail('ações/momento personalizados ausentes');else ok('preferências personalizam ação contextual e Mundo de hoje');
+if(!game.includes('personalizedPlaceArrival')||!game.includes('personalizedPlaceShort'))fail('chegada/mapa personalizados ausentes');else ok('preferências personalizam chegada e subtítulo dos lugares');
 if(!gameCss.includes('height:100dvh;overflow:hidden'))fail('viewport mobile ainda pode rolar externamente');else ok('viewport mobile fixa e painel rolável');
 const hudStart=gameHtml.indexOf('<header class="hud">'), hudEnd=gameHtml.indexOf('</header>',hudStart);
 const hudHtml=hudStart>=0&&hudEnd>hudStart?gameHtml.slice(hudStart,hudEnd):'';
