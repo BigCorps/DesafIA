@@ -62,6 +62,30 @@ export function createQAState(storage) {
       const play = JSON.parse(storage.getItem('play'));
       Object.assign(play, { unlocked: [...GAME_IDS], newGames: [], featured: GAME_IDS[0], used: 0 });
       storage.setItem('play', JSON.stringify(play));
+      reload();
+    },
+    async unlockEverything() {
+      this.onboarding(true);
+      await this.unlockGames();
+      edit((s) => {
+        const maxXp = LEVEL_THRESHOLDS.at(-1) + 5000;
+        const anchor = new Date(`${s.day}T12:00:00Z`);
+        const days = Array.from({ length: 7 }, (_, i) => {
+          const d = new Date(anchor);
+          d.setUTCDate(d.getUTCDate() - (6 - i));
+          return d.toISOString().slice(0, 10);
+        });
+        s.wallet = 5000;
+        s.xp = maxXp;
+        s.weekPoints = Math.max(Number(s.familyGoal || 500), 500);
+        s.dailyBonusDay = s.day;
+        s.completedDays = days;
+      });
+      const play = JSON.parse(storage.getItem('play'));
+      Object.assign(play, { unlocked:[...GAME_IDS], newGames:[], featured:GAME_IDS[0], used:0 });
+      storage.setItem('play', JSON.stringify(play));
+      reload();
+      return api.snapshot();
     },
     reset() { storage.clear(); reload(); }
   };
