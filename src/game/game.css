@@ -1057,3 +1057,39 @@
   color:#5f50a3;
   font-weight:850;
 }
+
+
+/* Mundo 3.3 + 3.4 — microdecisões e assinatura visual das preferências */
+.game-shell.panel-collapsed .scene[data-preference="plant-carer"] .plant{
+  filter:drop-shadow(0 0 8px rgba(135,220,120,.72));
+}
+.game-shell.panel-collapsed .scene[data-preference="tree-explorer"] .tree{
+  filter:drop-shadow(0 0 9px rgba(118,205,132,.62));
+}
+.game-shell.panel-collapsed .scene[data-preference="story-inventor"] .books{
+  filter:drop-shadow(0 0 8px rgba(255,211,111,.66));
+}
+.game-shell.panel-collapsed .scene[data-preference="memory-reader"] .world-memory-token{
+  box-shadow:0 8px 20px rgba(43,45,100,.14),0 0 0 3px rgba(255,221,137,.34);
+}
+.game-shell.panel-collapsed .scene[data-preference="comet-chaser"] .sky-stars{
+  filter:drop-shadow(0 0 5px rgba(255,255,255,.58));
+}
+.game-shell.panel-collapsed .scene[data-preference="star-seeker"] .telescope{
+  filter:drop-shadow(0 0 8px rgba(203,196,255,.72));
+}
+.game-shell.panel-collapsed .scene[data-preference="achievement-collector"] .world-treasure-shelf{
+  box-shadow:0 0 0 3px rgba(255,214,94,.2),0 6px 14px rgba(77,62,111,.1);
+}
+.game-shell.panel-collapsed .scene[data-preference="treasure-storyteller"] .scene-treasure{
+  filter:drop-shadow(0 0 8px rgba(255,221,139,.66));
+}
+.game-shell.panel-collapsed .scene[data-preference="cozy-home"] .rug{
+  box-shadow:inset 0 0 0 4px rgba(255,255,255,.42),0 9px 23px rgba(141,120,231,.32);
+}
+.game-shell.panel-collapsed .scene[data-preference="home-decorator"] .little-house{
+  filter:drop-shadow(0 0 8px rgba(255,220,170,.62));
+}
+@media(prefers-reduced-motion:reduce){
+  .scene[data-preference] :is(.plant,.tree,.books,.telescope,.scene-treasure,.little-house,.sky-stars){transition:none!important}
+}
