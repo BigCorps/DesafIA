@@ -26,18 +26,19 @@
       <button class="scene-object telescope" id="sceneTelescope" type="button" data-companion-action aria-label="Olhar pelo telescópio" disabled>🔭</button>
 
       <header class="hud">
-        <div class="identity">
-          <strong id="petNameTitle">Pipo</strong>
-          <span id="lvlText">Nível 1</span>
-          <span class="mood-text" id="moodText">💜 Calmo</span>
-          <div class="xpbar" role="progressbar" aria-label="Progresso do nível" aria-valuemin="0" aria-valuemax="100" id="xpBar"><i id="xpFill"></i></div>
+        <div class="hud-left">
+          <div class="identity">
+            <strong id="petNameTitle">Pipo</strong>
+            <span id="lvlText">Nível 1</span>
+            <span class="mood-text" id="moodText">💜 Calmo</span>
+            <div class="xpbar" role="progressbar" aria-label="Progresso do nível" aria-valuemin="0" aria-valuemax="100" id="xpBar"><i id="xpFill"></i></div>
+          </div>
+          <button class="family-goal" id="familyGoalBtn" aria-label="Meta da família">
+            <span>🏡 Meta da família</span><strong id="familyGoalText">0 / 500 ⭐</strong><i><b id="familyGoalFill"></b></i>
+          </button>
         </div>
         <div class="wallet" aria-label="Estrelas disponíveis">⭐ <strong id="starCount">0</strong></div>
       </header>
-
-      <button class="family-goal" id="familyGoalBtn" aria-label="Meta da família">
-        <span>🏡 Meta da família</span><strong id="familyGoalText">0 / 500 ⭐</strong><i><b id="familyGoalFill"></b></i>
-      </button>
 
       <button class="adult-quick" id="adultsQuickBtn" aria-label="Abrir área dos pais">🔒 <span>Pais</span></button>
       <div class="speech" id="bubble" aria-live="polite"></div>
