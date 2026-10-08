@@ -26,7 +26,7 @@ const TIMES=['dia','tarde','noite'];
 const PERIOD={manha:'de manhã',tarde:'à tarde',noite:'à noite'};
 
 let api=null,snap=null,tab='missoes',parentMode=false,unsubscribe=()=>{},refreshing=false,lastReaction=-1,reactionLockedUntil=0;
-let companionMood='calm',petClickTimer=0,suppressPetClick=false,petHoldTimer=0,idleTimer=0,worldRoutineTimer=0,lastWorldRoutine='';
+let companionMood='calm',petClickTimer=0,suppressPetClick=false,petHoldTimer=0,idleTimer=0,worldRoutineTimer=0,lastWorldRoutine='',petTravelTimer=0;
 let companionProfileState={traits:[],likes:[],memories:[]};
 let activeAdventure=null,adventureBusy=false;
 let qaController=null;
@@ -63,18 +63,33 @@ function syncPetLabels(){
   $('scene').setAttribute('aria-label',`Mundo de ${name}`);
   if($('celebrationPetName'))$('celebrationPetName').textContent=name;
 }
-function setPanelCollapsed(collapsed,{persist=true}={}){
+function animatePetTravel(collapsed){
+  if(reduce)return;
+  const pet=$('pet');if(!pet)return;
+  clearTimeout(petTravelTimer);
+  pet.classList.remove('pet-traveling','to-rug','to-hill','march');
+  void pet.offsetWidth;
+  pet.classList.add('pet-traveling',collapsed?'to-rug':'to-hill','march');
+  petTravelTimer=setTimeout(()=>pet.classList.remove('pet-traveling','to-rug','to-hill','march'),720);
+}
+function setPanelCollapsed(collapsed,{persist=true,animate=false}={}){
   const shell=document.querySelector('.game-shell');
   if(!shell)return;
+  const changed=shell.classList.contains('panel-collapsed')!==collapsed;
   const scroller=$('panel');
   if(scroller)scroller.scrollTop=0;
   shell.classList.toggle('panel-collapsed',collapsed);
+  $('scene').dataset.petHome=collapsed?'rug':'hill';
   $('panelToggle').setAttribute('aria-expanded',String(!collapsed));
   $('panelToggleHint').textContent=collapsed?'toque para ver missões, casa e prêmios':'toque para esconder missões e menus';
   syncPetLabels();
+  if(animate&&changed)requestAnimationFrame(()=>animatePetTravel(collapsed));
   if(persist){try{uiStorage.setItem(panelStateKey,collapsed?'1':'0')}catch{}}
 }
-function expandPanel(){setPanelCollapsed(false)}
+function expandPanel(){
+  const shell=document.querySelector('.game-shell');
+  setPanelCollapsed(false,{animate:Boolean(shell?.classList.contains('panel-collapsed'))});
+}
 setPanelCollapsed(readPanelState(),{persist:false});
 syncViewport();
 window.addEventListener('pageshow',restoreGameLayout);
@@ -91,7 +106,10 @@ const mouth=petSvg.querySelector('.mouth');
 let timeIdx=(()=>{const h=new Date().getHours();return h>=6&&h<17?0:h<19?1:2})();
 $('scene').dataset.time=TIMES[timeIdx];
 $('skyBtn').addEventListener('click',()=>{timeIdx=(timeIdx+1)%3;$('scene').dataset.time=TIMES[timeIdx];refreshCompanionMood();syncWorldLife();});
-$('panelToggle').addEventListener('click',()=>setPanelCollapsed(!document.querySelector('.game-shell').classList.contains('panel-collapsed')));
+$('panelToggle').addEventListener('click',()=>{
+  const shell=document.querySelector('.game-shell');
+  setPanelCollapsed(!shell.classList.contains('panel-collapsed'),{animate:true});
+});
 
 function openModal(id){$(id).classList.add('open');}
 function closeModal(id){$(id).classList.remove('open');}
