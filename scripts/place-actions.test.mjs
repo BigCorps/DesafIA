@@ -30,3 +30,11 @@ test('Colina respeita o horário',()=>{
   assert.equal(placeActionFor('colina',{period:'dia'}).label,'Brincar no cantinho');
   assert.equal(placeActionFor('colina',{period:'noite'}).label,'Descansar um pouco');
 });
+
+
+test('todas as ações próprias fazem o ambiente reagir',()=>{
+  const ids=['colina','parque','leitura','jardim','observatorio'];
+  const actions=ids.map((id)=>placeActionFor(id,{treasures:[{icon:'🗺️',title:'Mapa Secreto'}]}));
+  assert.ok(actions.every((a)=>a.sceneEffect?.kind));
+  assert.ok(actions.every((a)=>Array.isArray(a.sceneEffect?.chars)&&a.sceneEffect.chars.length>0));
+});
