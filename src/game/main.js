@@ -26,6 +26,7 @@ import { patternForHabit, patternedHabitText, worldPatterns } from '../shared/wo
 import { patternReaction } from '../shared/world-pattern-reactions.js';
 import { patternPreference, preferredPatternReaction } from '../shared/world-pattern-preferences.js';
 import { personalizedWorldMoment, preferredPlaceAction } from '../shared/world-personalization.js';
+import { personalizedPlaceArrival, personalizedPlaceShort } from '../shared/world-place-personalization.js';
 import { worldObjectTarget } from '../shared/world-walk.js';
 
 const $=(id)=>document.getElementById(id);
@@ -490,7 +491,9 @@ function worldPlacesMarkup(){
   const level=levelOf(snap?.xp||0),favorite=currentFavoritePlace();
   return WORLD_PLACES.map((place)=>{
     const locked=level<place.level,active=worldPlace===place.id,isFavorite=!locked&&favorite?.id===place.id;
-    return `<button class="world-place-card ${active?'active':''} ${locked?'locked':''} ${isFavorite?'favorite':''}" data-world-place="${place.id}" ${locked?'disabled':''}><span>${locked?'🔒':place.icon}</span><strong>${esc(place.title)}</strong><small>${locked?`Libera no nível ${place.level}`:esc(place.short)}</small>${isFavorite?'<em class="favorite-place-badge" aria-label="Cantinho favorito do Pipo">💜</em>':''}</button>`;
+    const {preference}=currentPatternState(place.id);
+    const short=locked?`Libera no nível ${place.level}`:personalizedPlaceShort(place,preference);
+    return `<button class="world-place-card ${active?'active':''} ${locked?'locked':''} ${isFavorite?'favorite':''}" data-world-place="${place.id}" ${locked?'disabled':''}><span>${locked?'🔒':place.icon}</span><strong>${esc(place.title)}</strong><small>${esc(short)}</small>${isFavorite?'<em class="favorite-place-badge" aria-label="Cantinho favorito do Pipo">💜</em>':''}</button>`;
   }).join('');
 }
 function renderWorldMap(){if($('worldPlaceGrid'))$('worldPlaceGrid').innerHTML=worldPlacesMarkup()}
@@ -552,7 +555,8 @@ function visitWorldPlace(id){
   worldTravelTimer=setTimeout(()=>{
     worldPlace=next;try{uiStorage.setItem(worldPlaceKey,next)}catch{}
     syncWorldLife();renderWorldMap();if(tab==='casa')renderPanel();
-    say(worldPlaceById(next).speech,1800);
+    const nextPlace=worldPlaceById(next),{preference}=currentPatternState(next);
+    say(personalizedPlaceArrival(nextPlace,preference,petName()),1800);
     scheduleCurrentPlaceEvent(2600);
     scheduleWorldHabit(32000,{reset:true});
     setTimeout(()=>{scene.classList.remove('world-traveling');pet.classList.remove('march')},260);
