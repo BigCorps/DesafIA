@@ -15,6 +15,7 @@ import { createArcade } from '../games/arcade.js';
 import { parkTreasures } from '../games/registry.js';
 import { chooseWorldRoutine, unlockedWorldDetails, worldMoment, worldRoutineCandidates, worldStage } from '../shared/world-life.js';
 import { WORLD_PLACES, normalizeWorldPlace, placeShowsObject, worldPlaceById } from '../shared/world-places.js';
+import { worldObjectTarget } from '../shared/world-walk.js';
 
 const $=(id)=>document.getElementById(id);
 const esc=(v)=>String(v??'').replace(/[&<>"']/g,(c)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -28,7 +29,7 @@ const TIMES=['dia','tarde','noite'];
 const PERIOD={manha:'de manhã',tarde:'à tarde',noite:'à noite'};
 
 let api=null,snap=null,tab='missoes',parentMode=false,unsubscribe=()=>{},refreshing=false,lastReaction=-1,reactionLockedUntil=0;
-let companionMood='calm',petClickTimer=0,suppressPetClick=false,petHoldTimer=0,idleTimer=0,worldRoutineTimer=0,lastWorldRoutine='',petTravelTimer=0,worldTravelTimer=0;
+let companionMood='calm',petClickTimer=0,suppressPetClick=false,petHoldTimer=0,idleTimer=0,worldRoutineTimer=0,lastWorldRoutine='',petTravelTimer=0,worldTravelTimer=0,worldVisitTimer=0,worldVisitReturnTimer=0,worldVisitBusy=false;
 let worldPlace=(()=>{try{return uiStorage.getItem(worldPlaceKey)||'colina'}catch{return'colina'}})();
 let companionProfileState={traits:[],likes:[],memories:[]};
 let activeAdventure=null,adventureBusy=false;
@@ -76,6 +77,7 @@ function animatePetTravel(collapsed){
   petTravelTimer=setTimeout(()=>pet.classList.remove('pet-traveling','to-rug','to-hill','march'),720);
 }
 function setPanelCollapsed(collapsed,{persist=true,animate=false}={}){
+  stopPetWorldVisit();
   const shell=document.querySelector('.game-shell');
   if(!shell)return;
   const changed=shell.classList.contains('panel-collapsed')!==collapsed;
@@ -174,6 +176,53 @@ function performCompanionAction(action,{haptics=true}={}){
   if(action.text)say(action.text,1800);
   if(haptics)haptic([10,30,10]);
 }
+function stopPetWorldVisit(){
+  clearTimeout(worldVisitTimer);clearTimeout(worldVisitReturnTimer);
+  worldVisitBusy=false;
+  const pet=$('pet');if(!pet)return;
+  pet.classList.remove('world-walking','world-visiting','world-returning','march');
+  pet.removeAttribute('data-walk-direction');
+  pet.style.left='';
+}
+function visitWorldObject(action,{haptics=false}={}){
+  if(!action)return false;
+  const target=action.objectId?$(action.objectId):null,scene=$('scene'),pet=$('pet');
+  if(reduce||!target||target.offsetParent===null||!scene||!pet){
+    performCompanionAction(action,{haptics});return true;
+  }
+  if(worldVisitBusy)return false;
+  const sceneRect=scene.getBoundingClientRect(),targetRect=target.getBoundingClientRect(),petRect=pet.getBoundingClientRect();
+  const destination=worldObjectTarget({
+    sceneWidth:sceneRect.width,
+    petWidth:petRect.width,
+    objectCenterX:targetRect.left-sceneRect.left+targetRect.width/2
+  });
+  worldVisitBusy=true;
+  clearTimeout(worldVisitTimer);clearTimeout(worldVisitReturnTimer);
+  clearPetMotions();
+  pet.dataset.walkDirection=destination.direction;
+  pet.classList.add('world-walking','march');
+  pet.style.left=`${destination.x}px`;
+  worldVisitTimer=setTimeout(()=>{
+    pet.classList.remove('world-walking','march');
+    pet.classList.add('world-visiting');
+    performCompanionAction(action,{haptics});
+    worldVisitReturnTimer=setTimeout(()=>{
+      pet.classList.remove('world-visiting');
+      clearPetMotions();
+      pet.dataset.walkDirection=destination.direction==='left'?'right':destination.direction==='right'?'left':'center';
+      pet.classList.add('world-returning','march');
+      pet.style.left='50%';
+      worldVisitTimer=setTimeout(()=>{
+        pet.classList.remove('world-returning','march');
+        pet.removeAttribute('data-walk-direction');
+        pet.style.left='';
+        worldVisitBusy=false;
+      },520);
+    },1100);
+  },520);
+  return true;
+}
 function petReaction(){
   const now=Date.now();
   if(now<reactionLockedUntil){tinyTap();return}
@@ -266,6 +315,7 @@ function worldPlacesMarkup(){
 function renderWorldMap(){if($('worldPlaceGrid'))$('worldPlaceGrid').innerHTML=worldPlacesMarkup()}
 function visitWorldPlace(id){
   if(!snap)return;
+  stopPetWorldVisit();
   const next=normalizeWorldPlace(id,snap.xp);
   if(next!==id){toast('Lugar ainda fechado',`Esse cantinho abre no nível ${worldPlaceById(id).level}.`);return}
   if(next===worldPlace){closeModal('worldMapModal');return}
@@ -280,7 +330,7 @@ function visitWorldPlace(id){
   closeModal('worldMapModal');
 }
 function canRunWorldRoutine(){
-  return Boolean(snap&&document.visibilityState==='visible'&&!$('scene').classList.contains('speaking')&&!document.querySelector('.modal.open')&&!document.querySelector('.arcade-player:not([hidden])'));
+  return Boolean(snap&&!worldVisitBusy&&document.visibilityState==='visible'&&!$('scene').classList.contains('speaking')&&!document.querySelector('.modal.open')&&!document.querySelector('.arcade-player:not([hidden])'));
 }
 function runWorldRoutine(forObject=null){
   if(!canRunWorldRoutine())return;
@@ -298,7 +348,7 @@ function runWorldRoutine(forObject=null){
   if(!action)return;
   lastWorldRoutine=action.id;
   const burstChars=action.treasure?[action.treasure.icon,'✨','💜']:['✨','💜'];
-  performCompanionAction({...action,burst:burstChars},{haptics:false});
+  visitWorldObject({...action,burst:burstChars},{haptics:false});
 }
 function scheduleWorldRoutine(){
   clearTimeout(worldRoutineTimer);
@@ -509,7 +559,7 @@ petButton.addEventListener('dblclick',(e)=>{e.preventDefault();clearTimeout(petC
 document.querySelectorAll('[data-companion-action]').forEach((el)=>el.addEventListener('click',()=>{
   if(el.disabled)return;
   rememberInteraction(el.id);
-  performCompanionAction(worldCompanionAction(el.id,petName()));
+  visitWorldObject(worldCompanionAction(el.id,petName()),{haptics:true});
 }));
 document.querySelectorAll('[data-world-detail]').forEach((el)=>el.addEventListener('click',()=>{if(!el.disabled)runWorldRoutine(el.id);}));
 $('sceneTreasure').addEventListener('click',()=>{if(!$('sceneTreasure').disabled)runWorldRoutine('sceneTreasure');});
