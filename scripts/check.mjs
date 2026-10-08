@@ -56,7 +56,7 @@ if(!parent.includes("function cleanAuthUrl()")||!parent.includes("function sugge
 if(!readFileSync(join(root,'src/shared/base.css'),'utf8').includes('[hidden]{display:none!important}'))fail('hidden global não protegido');else ok('hidden sempre prevalece');
 if(!game.includes("window.location.assign('/pais/')"))fail('área dos pais não navega ao portal');else ok('área dos pais abre portal real');
 const gameCss=readFileSync(join(root,'src/game/game.css'),'utf8');
-if(!gameCss.includes('top:57%;bottom:auto;--pet-y:-50%'))fail('personagem não centralizado no modo imersivo');else ok('personagem centralizado no modo imersivo');
+if(!gameCss.includes('--pet-rug-bottom')||!gameCss.includes('--pet-hill-bottom')||!gameCss.includes('.game-shell.panel-collapsed .pet')||!game.includes("dataset.petHome=collapsed?'rug':'hill'"))fail('Pipo não está ancorado entre montanha e tapete');else ok('Pipo usa âncoras responsivas de montanha/tapete');
 if(!gameCss.includes('height:100dvh;overflow:hidden'))fail('viewport mobile ainda pode rolar externamente');else ok('viewport mobile fixa e painel rolável');
 const gameHtml=readFileSync(join(root,'index.html'),'utf8');
 const hudStart=gameHtml.indexOf('<header class="hud">'), hudEnd=gameHtml.indexOf('</header>',hudStart);
