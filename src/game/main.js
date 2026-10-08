@@ -15,6 +15,7 @@ import { createArcade } from '../games/arcade.js';
 import { parkTreasures } from '../games/registry.js';
 import { chooseWorldRoutine, unlockedWorldDetails, worldMoment, worldRoutineCandidates, worldStage } from '../shared/world-life.js';
 import { WORLD_PLACES, normalizeWorldPlace, placeShowsObject, worldPlaceById } from '../shared/world-places.js';
+import { placeActionFor } from '../shared/place-actions.js';
 import { worldObjectTarget } from '../shared/world-walk.js';
 
 const $=(id)=>document.getElementById(id);
@@ -31,6 +32,7 @@ const PERIOD={manha:'de manhã',tarde:'à tarde',noite:'à noite'};
 let api=null,snap=null,tab='missoes',parentMode=false,unsubscribe=()=>{},refreshing=false,lastReaction=-1,reactionLockedUntil=0;
 let companionMood='calm',petClickTimer=0,suppressPetClick=false,petHoldTimer=0,idleTimer=0,worldRoutineTimer=0,lastWorldRoutine='',petTravelTimer=0,worldTravelTimer=0,worldVisitTimer=0,worldVisitReturnTimer=0,worldVisitBusy=false;
 let worldPlace=(()=>{try{return uiStorage.getItem(worldPlaceKey)||'colina'}catch{return'colina'}})();
+let placeActionIndex=0;
 let companionProfileState={traits:[],likes:[],memories:[]};
 let activeAdventure=null,adventureBusy=false;
 let qaController=null;
@@ -293,6 +295,10 @@ function syncWorldLife(){
   scene.dataset.worldStage=worldStage(snap.xp);
   scene.dataset.place=place.id;
   if($('worldPlaceLabel'))$('worldPlaceLabel').textContent=place.title.replace(' do Pipo','');
+  const placeAction=placeActionFor(place.id,{...worldContext(),index:placeActionIndex});
+  if($('worldActionIcon'))$('worldActionIcon').textContent=placeAction.icon;
+  if($('worldActionLabel'))$('worldActionLabel').textContent=placeAction.label;
+  if($('worldActionBtn'))$('worldActionBtn').setAttribute('aria-label',`${placeAction.label} em ${place.title}`);
   for(const id of ['sceneRug','sceneLamp','scenePlant','sceneBooks','sceneTree','sceneCushion','sceneTelescope','sceneLittleHouse','sceneFlowers']){
     const el=$(id);if(!el)continue;const open=unlocked.has(id)&&placeShowsObject(place.id,id);
     el.classList.toggle('unlocked',open);
@@ -317,6 +323,16 @@ function worldPlacesMarkup(){
   }).join('');
 }
 function renderWorldMap(){if($('worldPlaceGrid'))$('worldPlaceGrid').innerHTML=worldPlacesMarkup()}
+function currentPlaceAction(){return placeActionFor(worldPlace,{...worldContext(),index:placeActionIndex})}
+function runPlaceAction(){
+  if(!snap||worldVisitBusy)return;
+  const action=currentPlaceAction();
+  if(!action)return;
+  placeActionIndex=(placeActionIndex+1)%99;
+  rememberInteraction(action.objectId||'tap');
+  const ok=visitWorldObject(action,{haptics:true});
+  if(ok)syncWorldLife();
+}
 function visitWorldPlace(id){
   if(!snap)return;
   stopPetWorldVisit();
@@ -539,6 +555,7 @@ $('celebrationClose').addEventListener('click',()=>closeModal('celebrationModal'
 $('celebrationAdventure').addEventListener('click',()=>{closeModal('celebrationModal');openAdventure();});
 $('adventureBtn').addEventListener('click',openAdventure);
 $('worldMapBtn').addEventListener('click',()=>{renderWorldMap();openModal('worldMapModal');});
+$('worldActionBtn').addEventListener('click',runPlaceAction);
 $('worldMapClose').addEventListener('click',()=>closeModal('worldMapModal'));
 $('worldMapModal').addEventListener('click',(e)=>{if(e.target===$('worldMapModal'))closeModal('worldMapModal');});
 document.addEventListener('click',(e)=>{const b=e.target.closest('[data-world-place]');if(b)visitWorldPlace(b.dataset.worldPlace);});
