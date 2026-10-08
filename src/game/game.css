@@ -828,3 +828,24 @@
     top:28%;
   }
 }
+
+
+/* Mundo 2.4 — indicador discreto de acontecimento do dia */
+.world-map-btn.has-event::after{
+  content:'';
+  position:absolute;
+  width:9px;
+  height:9px;
+  right:5px;
+  top:5px;
+  border-radius:50%;
+  background:#ffca4b;
+  box-shadow:0 0 0 3px rgba(255,255,255,.9),0 0 10px rgba(255,202,75,.75);
+}
+@media(prefers-reduced-motion:no-preference){
+  .world-map-btn.has-event::after{animation:placeEventPing 2.2s ease-in-out infinite}
+}
+@keyframes placeEventPing{
+  0%,100%{transform:scale(.9);opacity:.8}
+  50%{transform:scale(1.15);opacity:1}
+}
