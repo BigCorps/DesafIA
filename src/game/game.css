@@ -302,3 +302,154 @@
   .family-goal span,.family-goal strong{font-size:9px}
   .game-shell.panel-collapsed .identity .mood-text{display:block}
 }
+
+
+/* Companheiro Vivo — Fase 4: Mundo Vivo */
+.world-glow{
+  position:absolute;
+  inset:28% 4% 4%;
+  z-index:1;
+  pointer-events:none;
+  opacity:0;
+  border-radius:50%;
+  background:
+    radial-gradient(circle at 18% 76%,rgba(255,238,132,.38) 0 2px,transparent 3px),
+    radial-gradient(circle at 82% 70%,rgba(255,255,255,.32) 0 2px,transparent 3px),
+    radial-gradient(circle at 62% 88%,rgba(174,255,204,.28) 0 2px,transparent 3px);
+  transition:opacity .6s ease;
+}
+.scene[data-world-stage="vivo"] .world-glow{opacity:.25}
+.scene[data-world-stage="aconchegante"] .world-glow{opacity:.4}
+.scene[data-world-stage="ampliado"] .world-glow{opacity:.55}
+.scene[data-world-stage="florido"] .world-glow{opacity:.75}
+
+.scene-detail{
+  position:absolute;
+  z-index:4;
+  border:0;
+  background:transparent;
+  padding:0;
+  line-height:1;
+  opacity:0;
+  transform:scale(.72);
+  filter:drop-shadow(0 5px 5px rgba(24,52,50,.14));
+  transition:opacity .45s ease,transform .45s cubic-bezier(.2,.9,.3,1.25);
+  pointer-events:none;
+}
+.scene-detail.unlocked{
+  opacity:1;
+  transform:scale(1);
+  pointer-events:auto;
+}
+.scene-detail.rug{
+  left:50%;
+  bottom:24px;
+  width:190px;
+  height:52px;
+  border-radius:50%;
+  transform:translateX(-50%) scale(.72);
+  background:radial-gradient(ellipse at center,#b8a5ff 0 52%,#8d78e7 54% 70%,rgba(104,82,187,.18) 72% 100%);
+  box-shadow:inset 0 0 0 3px rgba(255,255,255,.28),0 9px 20px rgba(57,42,118,.12);
+  z-index:3;
+}
+.scene-detail.rug.unlocked{transform:translateX(-50%) scale(1);pointer-events:none}
+.scene-detail.lamp{left:15px;bottom:120px;font-size:34px}
+.scene-detail.cushion{right:112px;bottom:40px;font-size:33px}
+.scene-detail.little-house{right:13px;bottom:142px;font-size:44px;z-index:3}
+.scene-detail.flowers{left:88px;bottom:42px;font-size:28px;display:flex;gap:1px;align-items:flex-end}
+.scene-detail.flowers span{font-size:22px;transform:translateY(3px)}
+.scene-detail.companion-active,.scene-treasure.companion-active{animation:worldDetailHello .9s cubic-bezier(.2,.85,.25,1)}
+@keyframes worldDetailHello{
+  0%,100%{filter:drop-shadow(0 5px 5px rgba(24,52,50,.14));}
+  35%{transform:scale(1.18) rotate(-7deg);filter:drop-shadow(0 8px 10px rgba(92,74,176,.25))}
+  65%{transform:scale(1.08) rotate(6deg)}
+}
+.scene-detail.rug.companion-active{animation:rugHello .9s ease}
+@keyframes rugHello{
+  0%,100%{transform:translateX(-50%) scale(1)}
+  45%{transform:translateX(-50%) scale(1.08,.95)}
+}
+
+.scene[data-time="noite"] .scene-detail.lamp.unlocked{
+  text-shadow:0 0 16px rgba(255,232,112,.95),0 0 34px rgba(255,216,79,.55);
+}
+.scene[data-world-stage="florido"] .hill.front{
+  box-shadow:inset 0 10px 0 rgba(123,215,139,.2);
+}
+
+.scene-treasure{
+  position:absolute;
+  z-index:7;
+  left:94px;
+  bottom:103px;
+  min-width:54px;
+  border:0;
+  border-radius:17px;
+  padding:7px 9px 6px;
+  background:rgba(255,255,255,.9);
+  color:#514775;
+  box-shadow:0 7px 18px rgba(47,40,95,.13);
+  backdrop-filter:blur(6px);
+  cursor:pointer;
+  opacity:0;
+  transform:translateY(5px) scale(.9);
+  transition:opacity .35s ease,transform .35s ease;
+}
+.scene-treasure.unlocked{opacity:1;transform:none}
+.scene-treasure>span{display:block;font-size:25px;line-height:1}
+.scene-treasure>small{display:block;margin-top:3px;font-size:8px;font-weight:900;text-transform:uppercase;letter-spacing:.04em}
+.scene-treasure:focus-visible,.scene-detail:focus-visible{
+  outline:3px solid rgba(255,255,255,.95);
+  outline-offset:3px;
+  border-radius:14px;
+}
+
+.world-moment{
+  display:grid;
+  grid-template-columns:52px minmax(0,1fr);
+  gap:11px;
+  align-items:center;
+  margin:0 0 14px;
+  padding:12px 13px;
+  border-radius:19px;
+  background:linear-gradient(135deg,#eef9f2,#f5f1ff);
+  border:1px solid #e3e7f5;
+}
+.world-moment>span{
+  width:52px;
+  height:52px;
+  display:grid;
+  place-items:center;
+  border-radius:16px;
+  background:#fff;
+  font-size:28px;
+  box-shadow:0 5px 15px rgba(50,60,100,.08);
+}
+.world-moment small,.world-moment strong,.world-moment p{display:block}
+.world-moment small{color:#766c94;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.04em}
+.world-moment strong{margin-top:2px;font:850 13px var(--display)}
+.world-moment p{margin:3px 0 0;color:#77708c;font-size:10px;line-height:1.4}
+
+.game-shell.panel-collapsed .scene-detail.rug{bottom:45px;width:min(52vw,220px)}
+.game-shell.panel-collapsed .scene-detail.lamp{bottom:155px}
+.game-shell.panel-collapsed .scene-detail.cushion{right:118px;bottom:72px}
+.game-shell.panel-collapsed .scene-detail.little-house{bottom:178px}
+.game-shell.panel-collapsed .scene-detail.flowers{bottom:74px}
+.game-shell.panel-collapsed .scene-treasure{bottom:136px}
+
+@media(max-width:380px){
+  .scene-detail.lamp{left:8px;font-size:30px}
+  .scene-detail.cushion{right:86px;font-size:29px}
+  .scene-detail.little-house{right:8px;font-size:38px}
+  .scene-detail.flowers{left:72px;font-size:25px}
+  .scene-treasure{left:76px;min-width:49px;padding:6px 7px}
+  .scene-treasure>span{font-size:22px}
+}
+@media(max-height:720px){
+  .scene-detail.little-house{display:none!important}
+  .scene-treasure{bottom:88px}
+}
+@media(prefers-reduced-motion:reduce){
+  .world-glow,.scene-detail,.scene-treasure{transition:none!important}
+  .scene-detail.companion-active,.scene-treasure.companion-active,.scene-detail.rug.companion-active{animation:none!important}
+}
