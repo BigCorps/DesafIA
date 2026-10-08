@@ -987,3 +987,18 @@
 @media(prefers-reduced-motion:reduce){
   .game-shell.panel-collapsed .scene.favorite-place::before{opacity:.65}
 }
+
+
+/* Mundo 2.8 — sugestão espontânea do cantinho favorito */
+.world-map-btn.favorite-nudge{
+  animation:favoriteMapNudge 1.45s ease-in-out;
+}
+@keyframes favoriteMapNudge{
+  0%,100%{transform:translateX(0);box-shadow:0 6px 16px rgba(43,45,100,.1)}
+  28%{transform:translateX(-4px);box-shadow:0 8px 20px rgba(118,88,245,.2)}
+  52%{transform:translateX(0)}
+  76%{transform:translateX(-2px)}
+}
+@media(prefers-reduced-motion:reduce){
+  .world-map-btn.favorite-nudge{animation:none!important}
+}
