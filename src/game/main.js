@@ -27,6 +27,7 @@ import { patternReaction } from '../shared/world-pattern-reactions.js';
 import { patternPreference, preferredPatternReaction } from '../shared/world-pattern-preferences.js';
 import { personalizedWorldMoment, preferredPlaceAction } from '../shared/world-personalization.js';
 import { personalizedPlaceArrival, personalizedPlaceShort } from '../shared/world-place-personalization.js';
+import { personalizedPlaceEvent } from '../shared/world-behavior-personalization.js';
 import { worldObjectTarget } from '../shared/world-walk.js';
 
 const $=(id)=>document.getElementById(id);
@@ -502,7 +503,11 @@ function currentPlaceAction(){
   const {preference}=currentPatternState(worldPlace);
   return preferredPlaceAction(base,preference,petName());
 }
-function currentPlaceEvent(){return placeDailyEvent(worldPlace,worldContext())}
+function currentPlaceEvent(){
+  const base=placeDailyEvent(worldPlace,worldContext());
+  const {preference}=currentPatternState(worldPlace);
+  return personalizedPlaceEvent(base,preference,petName());
+}
 function placeEventStorageKey(){return `${placeEventSeenKey}:${placeDayKey(snap||{})}`}
 function isPlaceEventSeen(event=currentPlaceEvent()){return seenList(placeEventStorageKey()).includes(`${worldPlace}:${event.id}`)}
 function syncPlaceEventIndicator(){
@@ -568,7 +573,8 @@ function canRunWorldRoutine(){
 }
 function runWorldRoutine(forObject=null){
   if(!canRunWorldRoutine())return;
-  const ctx=worldContext();
+  const {preference}=currentPatternState(worldPlace);
+  const ctx={...worldContext(),preference};
   let candidates=worldRoutineCandidates(ctx).filter((item)=>{
     if(forObject&&item.objectId!==forObject)return false;
     const target=item.objectId?$(item.objectId):null;
