@@ -134,5 +134,16 @@ if(!readFileSync(join(root,'public/sw.js'),'utf8').includes('matchAll(/assets'))
 const pkg=JSON.parse(readFileSync(join(root,'package.json'),'utf8'));
 if(pkg.version!=='0.6.0')fail(`versão inesperada: ${pkg.version}`);else ok('versão final 0.6.0');
 
+
+// Mundo 4.5/4.6 — polimento e regressão final
+const habitsSrc=readFileSync(join(root,'src/shared/world-habits.js'),'utf8');
+if(!habitsSrc.includes("return habit?.id?\`\${day}:\${period}\`"))fail('hábito ainda pode repetir ao trocar de lugar no mesmo período');else ok('hábito limitado a uma vez por dia/período');
+if(!game.includes("const immersive=document.querySelector('.game-shell')?.classList.contains('panel-collapsed')"))fail('rotinas espontâneas não estão restritas ao modo imersivo');else ok('rotinas espontâneas só rodam no modo imersivo');
+if(!game.includes('if(started&&seenId)markSeen(worldHabitSeenKey,seenId)'))fail('hábito pode ser consumido antes de iniciar');else ok('hábito só é marcado visto após iniciar');
+if(!game.includes('if(reduce||!snap||favoriteSuggestionTimer)return'))fail('timer de sugestão favorita ainda pode ser rearmado por render');else ok('timer de sugestão favorita não é adiado por render frequente');
+if(!game.includes('scheduleFavoriteSuggestion(18000,{reset:true})'))fail('retorno de visibilidade não reinicia sugestão favorita de forma explícita');else ok('retorno de visibilidade reinicia sugestão favorita com segurança');
+if(!game.includes('if(reduce||!snap||worldHabitTimer||worldHabitSeen())return'))fail('reduced motion não bloqueia hábito espontâneo');else ok('reduced motion bloqueia hábitos espontâneos');
+if(!game.includes('if(reduce||!snap||favoriteSuggestionTimer)return'))fail('reduced motion não bloqueia sugestão favorita');else ok('reduced motion bloqueia sugestão favorita');
+
 if(failed)process.exit(1);
 console.log('\nDesafIA: checagem estática concluída.');
