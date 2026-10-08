@@ -23,11 +23,11 @@ test('rotinas respeitam horário, nível e personalidade', () => {
     {id:'caring',points:2}
   ]};
   assert.equal(dominantTrait(profile),'curious');
-  const night=worldRoutineCandidates({xp:800,period:'noite',profile,treasures:[]});
+  const night=worldRoutineCandidates({xp:1400,period:'noite',profile,treasures:[]});
   assert.ok(night.some((r)=>r.id==='telescopio'));
   assert.ok(night.some((r)=>r.id==='almofada'));
   assert.ok(!night.some((r)=>r.id==='arvore'));
-  assert.ok(['telescopio','leitura','casinha','tesouro','tapete','almofada','luz'].includes(chooseWorldRoutine({xp:800,period:'noite',profile},0)?.id));
+  assert.ok(['telescopio','leitura','tesouro','tapete','almofada','luz'].includes(chooseWorldRoutine({xp:1400,period:'noite',profile},0)?.id));
 });
 
 test('Tesouros do Parque e memórias alimentam o mundo sem nova persistência', () => {
