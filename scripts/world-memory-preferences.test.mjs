@@ -4,7 +4,7 @@ import { visibleMemoryFor, memoryWorldAction } from '../src/shared/world-memory.
 
 const memories=[
   {id:'found:cometa_mirim',icon:'☄️',text:'Quando vimos um cometa'},
-  {id:'found:estrela_guia',icon:'🌟',text:'Quando vimos uma estrela especial'}
+  {id:'found:coelho_lunar',icon:'🐇',text:'Quando vimos uma constelação especial'}
 ];
 
 test('caçador de cometas prioriza memória de cometa quando existe',()=>{
