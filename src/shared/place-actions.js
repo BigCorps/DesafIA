@@ -19,6 +19,7 @@ export function placeActionFor(placeId,{profile={},treasures=[],period='dia',ind
     id:'regar-jardim',icon:'💧',label:'Cuidar do jardim',objectId:'scenePlant',
     motion:trait==='caring'?'hug':'wave',
     burst:['💧','🌱','✨'],
+    sceneEffect:{kind:'garden-bloom',chars:['💧','🌱','🌼','✨'],count:10},
     text:trait==='curious'?'Será que cresceu alguma folhinha nova? Vou olhar bem de pertinho! 🌱':'Um pouquinho de cuidado deixa o jardim ainda mais feliz. 💧🌻'
   };
 
@@ -26,12 +27,14 @@ export function placeActionFor(placeId,{profile={},treasures=[],period='dia',ind
     id:'imaginar-historia',icon:'📖',label:'Imaginar história',objectId:'sceneBooks',
     motion:trait==='artist'?'dance':'wiggle',
     burst:['📖','✨','💜'],
+    sceneEffect:{kind:'story-pages',chars:['📖','✨','⭐'],count:8},
     text:pick(STORY_BITS)
   };
 
   if(placeId==='observatorio')return{
     id:'procurar-estrela',icon:'🌟',label:'Procurar estrela',objectId:'sceneTelescope',
     motion:'curious',burst:['⭐','✨','🌙'],
+    sceneEffect:{kind:'shooting-star',chars:['🌟','✨'],count:1},
     text:pick(STAR_BITS)
   };
 
@@ -40,10 +43,12 @@ export function placeActionFor(placeId,{profile={},treasures=[],period='dia',ind
     return treasure?{
       id:'rever-tesouro',icon:treasure.icon||'🏆',label:'Rever tesouro',objectId:'sceneTreasure',
       motion:'proud',burst:[treasure.icon||'🏆','✨','💜'],
+      sceneEffect:{kind:'treasure-glow',chars:[treasure.icon||'🏆','✨','⭐'],count:9},
       text:`Esse ${treasure.title} lembra uma conquista nossa. Eu gosto de olhar para ele! ${treasure.icon||''}`
     }:{
       id:'brincar-parque',icon:'🎵',label:'Brincar no Parque',objectId:'sceneRug',
       motion:'dance',burst:['🎵','✨','⭐'],
+      sceneEffect:{kind:'park-sparkle',chars:['🎵','⭐','✨'],count:9},
       text:'Enquanto nosso primeiro tesouro não chega, dá para inventar uma dancinha por aqui! 🎵'
     };
   }
@@ -52,6 +57,9 @@ export function placeActionFor(placeId,{profile={},treasures=[],period='dia',ind
     id:'curtir-colina',icon:period==='noite'?'🌙':'💜',label:period==='noite'?'Descansar um pouco':'Brincar no cantinho',
     objectId:'sceneRug',motion:period==='noite'?'hug':trait==='artist'?'dance':'proud',
     burst:period==='noite'?['🌙','💜','✨']:['💜','✨','🌈'],
+    sceneEffect:period==='noite'
+      ? {kind:'fireflies',chars:['✨','💛'],count:8}
+      : {kind:'hill-glow',chars:['💜','✨','🌈'],count:8},
     text:period==='noite'?'Esse cantinho está tão tranquilo. Vou descansar só um pouquinho. 🌙':'Gosto de voltar para o nosso cantinho. Ele já tem um pouco da nossa história! 💜'
   };
 }
