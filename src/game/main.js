@@ -183,6 +183,7 @@ function stopPetWorldVisit(){
   pet.classList.remove('world-walking','world-visiting','world-returning','march');
   pet.removeAttribute('data-walk-direction');
   pet.style.left='';
+  const bubble=$('bubble');if(bubble)bubble.style.left='';
 }
 function visitWorldObject(action,{haptics=false}={}){
   if(!action)return false;
@@ -203,6 +204,7 @@ function visitWorldObject(action,{haptics=false}={}){
   pet.dataset.walkDirection=destination.direction;
   pet.classList.add('world-walking','march');
   pet.style.left=`${destination.x}px`;
+  const bubble=$('bubble');if(bubble)bubble.style.left=`${destination.x}px`;
   worldVisitTimer=setTimeout(()=>{
     pet.classList.remove('world-walking','march');
     pet.classList.add('world-visiting');
@@ -213,10 +215,12 @@ function visitWorldObject(action,{haptics=false}={}){
       pet.dataset.walkDirection=destination.direction==='left'?'right':destination.direction==='right'?'left':'center';
       pet.classList.add('world-returning','march');
       pet.style.left='50%';
+      if(bubble)bubble.style.left='50%';
       worldVisitTimer=setTimeout(()=>{
         pet.classList.remove('world-returning','march');
         pet.removeAttribute('data-walk-direction');
         pet.style.left='';
+        if(bubble)bubble.style.left='';
         worldVisitBusy=false;
       },520);
     },1100);
