@@ -69,7 +69,7 @@ function animatePetTravel(collapsed){
   clearTimeout(petTravelTimer);
   pet.classList.remove('pet-traveling','to-rug','to-hill','march');
   void pet.offsetWidth;
-  pet.classList.add('pet-traveling',collapsed?'to-rug':'to-hill','march');
+  pet.classList.add('pet-traveling',collapsed?'to-center':'to-rug','march');
   petTravelTimer=setTimeout(()=>pet.classList.remove('pet-traveling','to-rug','to-hill','march'),720);
 }
 function setPanelCollapsed(collapsed,{persist=true,animate=false}={}){
@@ -79,7 +79,7 @@ function setPanelCollapsed(collapsed,{persist=true,animate=false}={}){
   const scroller=$('panel');
   if(scroller)scroller.scrollTop=0;
   shell.classList.toggle('panel-collapsed',collapsed);
-  $('scene').dataset.petHome=collapsed?'rug':'hill';
+  $('scene').dataset.petHome=collapsed?'center':'rug';
   $('panelToggle').setAttribute('aria-expanded',String(!collapsed));
   $('panelToggleHint').textContent=collapsed?'toque para ver missões, casa e prêmios':'toque para esconder missões e menus';
   syncPetLabels();
