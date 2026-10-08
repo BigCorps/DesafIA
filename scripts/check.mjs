@@ -67,6 +67,7 @@ if(!game.includes('visibleMemoryFor')||!game.includes('memoryWorldAction')||!gam
 if(!game.includes('favoriteWorldPlace')||!game.includes('favoritePlaceView')||!gameCss.includes('.favorite-place-badge')||!gameCss.includes('.favorite-place-note'))fail('cantinho favorito do Pipo ausente');else ok('afinidade por lugar integrada sem recompensa');
 if(!game.includes('favoriteSuggestion')||!game.includes('scheduleFavoriteSuggestion')||!gameCss.includes('.world-map-btn.favorite-nudge'))fail('sugestões espontâneas do favorito ausentes');else ok('Pipo sugere cantinho favorito sem missão ou recompensa');
 if(!game.includes('dailyHabit')||!game.includes('scheduleWorldHabit')||!game.includes('habitSeenId'))fail('hábitos próprios do Pipo ausentes');else ok('Pipo mantém hábitos por horário/lugar sem nova missão');
+if(!game.includes('worldPatterns')||!game.includes('worldPatternsView')||!game.includes('patternedHabitText')||!gameCss.includes('.world-patterns-note'))fail('padrões pessoais do Pipo ausentes');else ok('hábitos, memórias e personalidade formam padrões sem novo progresso');
 if(!gameCss.includes('height:100dvh;overflow:hidden'))fail('viewport mobile ainda pode rolar externamente');else ok('viewport mobile fixa e painel rolável');
 const hudStart=gameHtml.indexOf('<header class="hud">'), hudEnd=gameHtml.indexOf('</header>',hudStart);
 const hudHtml=hudStart>=0&&hudEnd>hudStart?gameHtml.slice(hudStart,hudEnd):'';
