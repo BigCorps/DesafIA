@@ -74,6 +74,7 @@ if(!game.includes('preference')||!game.includes('scene.dataset.preference')||!ga
 if(!game.includes('preferredPlaceAction')||!game.includes('personalizedWorldMoment')||!game.includes('currentPatternState'))fail('ações/momento personalizados ausentes');else ok('preferências personalizam ação contextual e Mundo de hoje');
 if(!game.includes('personalizedPlaceArrival')||!game.includes('personalizedPlaceShort'))fail('chegada/mapa personalizados ausentes');else ok('preferências personalizam chegada e subtítulo dos lugares');
 if(!game.includes('personalizedPlaceEvent')||!game.includes('preference}=currentPatternState(worldPlace)')||!readFileSync(join(root,'src/shared/world-life.js'),'utf8').includes('preferredRoutineIds'))fail('rotinas/eventos personalizados ausentes');else ok('preferências personalizam rotinas espontâneas e acontecimentos do dia');
+if(!game.includes('featuredParkTreasure')||!game.includes('treasureMemoryLine')||!game.includes('visibleMemoryFor(worldPlace')||!game.includes('memoryWorldAction(memory,worldPlace,preference'))fail('memórias/tesouros personalizados ausentes');else ok('preferências contextualizam memórias e Tesouros sem alterar recompensas');
 if(!gameCss.includes('height:100dvh;overflow:hidden'))fail('viewport mobile ainda pode rolar externamente');else ok('viewport mobile fixa e painel rolável');
 const hudStart=gameHtml.indexOf('<header class="hud">'), hudEnd=gameHtml.indexOf('</header>',hudStart);
 const hudHtml=hudStart>=0&&hudEnd>hudStart?gameHtml.slice(hudStart,hudEnd):'';
