@@ -32,7 +32,7 @@
   background:linear-gradient(135deg,#FF7AA8,#7B61FF);box-shadow:0 6px 0 #5134bd,0 10px 24px rgba(63,48,120,.3);display:none;align-items:center;gap:6px;cursor:pointer}
 .arcade-float.show{display:inline-flex;animation:arcPulse 2.2s ease-in-out infinite}
 @keyframes arcPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
-.game-shell.panel-collapsed .arcade-float{bottom:calc(18px + var(--safe-bottom,0px))}
+.game-shell.panel-collapsed .arcade-float{top:calc(var(--stage-ground-y) + 35px);bottom:auto}
 
 /* ---------- Tela de jogo (player) ---------- */
 .arcade-player{position:fixed;inset:0;z-index:300;display:flex;flex-direction:column;background:#F4F1FF;color:#2A2350;
