@@ -44,14 +44,14 @@ export function worldRoutineCandidates({ xp=0, period='dia', profile={}, treasur
   const list = [];
 
   list.push(routine('tapete','sceneRug','dance','Esse tapete é perfeito para uma dancinha bem curtinha! 🎵',{traits:['artist']}));
-  if (level >= 2 && period === 'noite') list.push(routine('luz','sceneLamp','wave','Vou deixar uma luz bem tranquila acesa por aqui. 💡',{traits:['caring']}));
+  if (level >= 2) list.push(routine('luz','sceneLamp','wave',period==='noite'?'Vou deixar uma luz bem tranquila acesa por aqui. 💡':'A nossa luminária também faz parte deste cantinho. 💡',{traits:['caring']}));
   if (level >= 3 && period !== 'noite') list.push(routine('plantinha','scenePlant','squish','A plantinha está crescendo com a gente. Vou dar uma olhadinha nela! 🌱',{traits:['caring','curious']}));
   if (level >= 4) list.push(routine('leitura','sceneBooks','wiggle','Acho que hoje cabe mais uma história aqui. 📚',{traits:['artist','curious']}));
   if (level >= 5 && period !== 'noite') list.push(routine('arvore','sceneTree','march','Será que apareceu alguma novidade perto da árvore? 🍃',{traits:['adventurous','curious']}));
-  if (level >= 6 && period === 'noite') list.push(routine('almofada','sceneCushion','hug','Essa almofada parece um ótimo lugar para descansar um pouquinho. 💜',{traits:['caring']}));
+  if (level >= 6) list.push(routine('almofada','sceneCushion','hug',period==='noite'?'Essa almofada parece um ótimo lugar para descansar um pouquinho. 💜':'Vou sentar um pouquinho no nosso cantinho macio. 💜',{traits:['caring']}));
   if (level >= 7 && period === 'noite') list.push(routine('telescopio','sceneTelescope','curious','O céu está bonito. Vou procurar uma estrelinha diferente! 🔭',{traits:['curious','adventurous']}));
   if (level >= 9) list.push(routine('casinha','sceneLittleHouse','proud','Nossa casinha mudou tanto desde o começo! 🏡',{traits:['caring','adventurous']}));
-  if (level >= 12 && period !== 'noite') list.push(routine('jardim','sceneFlowers','wave','Olha quantas flores apareceram por aqui! 🌻',{traits:['caring','artist']}));
+  if (level >= 12) list.push(routine('jardim','sceneFlowers','wave',period==='noite'?'As flores também estão descansando. 🌻':'Olha quantas flores apareceram por aqui! 🌻',{traits:['caring','artist']}));
   if (treasures.length) {
     const treasure = treasures.at(-1);
     list.push(routine('tesouro','sceneTreasure','proud',`Olha o meu ${treasure.title}! Ele lembra uma conquista nossa. ${treasure.icon}`,{traits:['adventurous','curious'],treasure}));
