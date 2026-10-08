@@ -1002,3 +1002,42 @@
 @media(prefers-reduced-motion:reduce){
   .world-map-btn.favorite-nudge{animation:none!important}
 }
+
+
+/* Mundo 3.0 — padrões pessoais emergentes */
+.world-patterns-note{
+  margin:12px 0 4px;
+  padding:12px;
+  border-radius:18px;
+  background:linear-gradient(145deg,#fffdf7,#faf7ff);
+  border:1px solid #ece5ff;
+  box-shadow:0 7px 18px rgba(62,50,105,.06);
+}
+.world-patterns-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:9px;
+}
+.world-patterns-head small,.world-patterns-head strong{display:block}
+.world-patterns-head small{font-size:10px;color:var(--muted);font-weight:800}
+.world-patterns-head strong{margin-top:2px;font:850 13px/1.25 var(--display);color:#453d66}
+.world-patterns-head>span{font-size:19px}
+.world-pattern-list{display:grid;gap:7px}
+.world-pattern-list article{
+  display:flex;
+  align-items:flex-start;
+  gap:9px;
+  padding:9px 10px;
+  border-radius:14px;
+  background:rgba(255,255,255,.78);
+}
+.world-pattern-list article>span{font-size:20px;line-height:1}
+.world-pattern-list article strong,.world-pattern-list article p{display:block;margin:0}
+.world-pattern-list article strong{font-size:11px;color:#554a78}
+.world-pattern-list article p{margin-top:3px;font-size:10px;line-height:1.35;color:#807793}
+@media(max-width:360px){
+  .world-patterns-note{padding:10px}
+  .world-pattern-list article{padding:8px}
+}
