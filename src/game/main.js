@@ -239,9 +239,9 @@ function runWorldRoutine(forObject=null){
   const ctx=worldContext();
   let candidates=worldRoutineCandidates(ctx).filter((item)=>!forObject||item.objectId===forObject);
   if(!candidates.length)return;
-  if(candidates.length>1)candidates=candidates.filter((item)=>item.id!==lastWorldRoutine)||candidates;
-  const chosen=forObject?candidates[0]:chooseWorldRoutine({...ctx},Math.floor(Math.random()*1000));
-  const action=chosen&&candidates.find((item)=>item.id===chosen.id)||candidates[Math.floor(Math.random()*candidates.length)];
+  if(candidates.length>1){const fresh=candidates.filter((item)=>item.id!==lastWorldRoutine);if(fresh.length)candidates=fresh;}
+  const chosen=forObject?candidates[0]:candidates[Math.floor(Math.random()*candidates.length)]||chooseWorldRoutine(ctx,0);
+  const action=chosen;
   if(!action)return;
   lastWorldRoutine=action.id;
   const burstChars=action.treasure?[action.treasure.icon,'✨','💜']:['✨','💜'];
