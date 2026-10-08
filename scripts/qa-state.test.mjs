@@ -80,7 +80,7 @@ test('QA tudo liberado abre gates sem tocar em Supabase', async () => {
   assert.equal(levelOf(snap.xp), LEVEL_THRESHOLDS.length);
   assert.ok(snap.missions.every((m) => m.status === 'done'));
   assert.equal(snap.dailyBonusDay, snap.adventure.day);
-  assert.equal(snap.completedDays.length, 7);
+  assert.equal(snap.streak, 7);
   assert.deepEqual(play.unlocked, GAME_IDS);
   assert.equal(play.plus, true);
   assert.equal(play.catalog.length, GAME_IDS.length);
