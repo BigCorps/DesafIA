@@ -24,6 +24,7 @@ import { favoriteSuggestion, shouldSuggestFavorite } from '../shared/favorite-su
 import { dailyHabit, habitSeenId } from '../shared/world-habits.js';
 import { patternForHabit, patternedHabitText, worldPatterns } from '../shared/world-patterns.js';
 import { patternReaction } from '../shared/world-pattern-reactions.js';
+import { patternPreference, preferredPatternReaction } from '../shared/world-pattern-preferences.js';
 import { worldObjectTarget } from '../shared/world-walk.js';
 
 const $=(id)=>document.getElementById(id);
@@ -438,7 +439,9 @@ function runWorldHabit(){
   const patterns=currentWorldPatterns();
   const pattern=patternForHabit(habit,patterns);
   const reaction=patternReaction(pattern,habit,petName());
-  visitWorldObject(reaction||{
+  const preference=patternPreference(pattern,{profile:companionProfileState,treasures:currentParkTreasures()});
+  const preferredReaction=preferredPatternReaction(reaction,preference,petName());
+  visitWorldObject(preferredReaction||{
     ...habit,
     text:patternedHabitText(habit,pattern,petName()),
     burst:habit.sceneEffect?.chars||['✨','💜']
@@ -458,7 +461,11 @@ function currentWorldPatterns(){return worldPatterns({profile:companionProfileSt
 function worldPatternsView(){
   const patterns=currentWorldPatterns();
   if(!patterns.length)return '';
-  return `<section class="world-patterns-note"><div class="world-patterns-head"><div><small>Jeitos que estão virando costume</small><strong>O mundo está ganhando a cara do ${esc(petName())}</strong></div><span>✨</span></div><div class="world-pattern-list">${patterns.map((pattern)=>`<article><span>${esc(pattern.icon)}</span><div><strong>${esc(pattern.title)}</strong><p>${esc(pattern.text)}</p></div></article>`).join('')}</div></section>`;
+  const items=patterns.map((pattern)=>{
+    const preference=patternPreference(pattern,{profile:companionProfileState,treasures:currentParkTreasures()});
+    return `<article><span>${esc(pattern.icon)}</span><div><strong>${esc(pattern.title)}</strong><p>${esc(pattern.text)}</p>${preference?`<small class="world-pattern-preference"><b>${esc(preference.icon)} ${esc(preference.label)}</b> · ${esc(preference.text)}</small>`:''}</div></article>`;
+  }).join('');
+  return `<section class="world-patterns-note"><div class="world-patterns-head"><div><small>Jeitos que estão virando costume</small><strong>O mundo está ganhando a cara do ${esc(petName())}</strong></div><span>✨</span></div><div class="world-pattern-list">${items}</div></section>`;
 }
 function favoritePlaceView(){
   const favorite=currentFavoritePlace();
