@@ -1,6 +1,6 @@
 import './game.css';
 import { createChildNotificationUI } from './notifications.js';
-import { qaEnabled, uiStorage } from '../shared/qa-environment.js';
+import { qaEnabled, qaAllEnabled, uiStorage } from '../shared/qa-environment.js';
 import { petMarkup, applyLook, COLORS, HATS, ACCS, PET_NAMES } from '../shared/pet.js';
 import { HOUSE_ITEMS, levelOf, levelProgress } from '../shared/progression.js';
 import { companionAmbientLine, companionMoodLabel, deriveCompanionMood, missionCompanionAction, worldCompanionAction } from '../shared/companion.js';
@@ -429,9 +429,12 @@ document.addEventListener('click',(e)=>{const b=e.target.closest('[data-act]');i
       storage:uiStorage, beforeChange:()=>arcade.close(),
       onChange:async()=>{api=qaController.api;await refresh();await arcade.refresh();},
       onboarding:(show)=>{closeModal('connectModal');closeModal('celebrationModal');show?openModal('onboardingModal'):closeModal('onboardingModal');},
-      games:()=>{tab='jogos';expandPanel();renderPanel();}
+      games:()=>{tab='jogos';expandPanel();renderPanel();},
+      allMode:qaAllEnabled
     });
+    if(qaAllEnabled)await qaController.unlockEverything();
     await startLocal();
+    await arcade.refresh();
     return;
   }
   setupPWA();
