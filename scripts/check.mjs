@@ -58,6 +58,12 @@ if(!game.includes("window.location.assign('/pais/')"))fail('área dos pais não 
 const gameCss=readFileSync(join(root,'src/game/game.css'),'utf8');
 if(!gameCss.includes('top:57%;bottom:auto;--pet-y:-50%'))fail('personagem não centralizado no modo imersivo');else ok('personagem centralizado no modo imersivo');
 if(!gameCss.includes('height:100dvh;overflow:hidden'))fail('viewport mobile ainda pode rolar externamente');else ok('viewport mobile fixa e painel rolável');
+const gameHtml=readFileSync(join(root,'index.html'),'utf8');
+const hudStart=gameHtml.indexOf('<header class="hud">'), hudEnd=gameHtml.indexOf('</header>',hudStart);
+const hudHtml=hudStart>=0&&hudEnd>hudStart?gameHtml.slice(hudStart,hudEnd):'';
+if(!hudHtml.includes('class="hud-left"')||!hudHtml.includes('id="familyGoalBtn"'))fail('meta familiar não está no fluxo do HUD');else ok('HUD empilha identidade e meta sem posição fixa');
+if(!gameCss.includes('.hud-left .family-goal')||!gameCss.includes('position:relative')||!gameCss.includes('.game-shell.panel-collapsed .wallet'))fail('HUD responsivo/minimizado incompleto');else ok('HUD responsivo permanece visível no modo minimizado');
+if(!game.includes('qaAllEnabled')||!game.includes('unlockEverything'))fail('preset QA tudo liberado ausente');else ok('preset QA tudo liberado integrado');
 
 const billingClient=readFileSync(join(root,'src/pais/billing.js'),'utf8');
 const platform=readFileSync(join(root,'src/shared/platform.js'),'utf8');
