@@ -21,6 +21,7 @@ import { createWorldVisualMemory } from '../shared/world-visual.js';
 import { memoryWorldAction, visibleMemoryFor } from '../shared/world-memory.js';
 import { favoritePlaceLine, favoriteWorldPlace } from '../shared/world-favorite.js';
 import { favoriteSuggestion, shouldSuggestFavorite } from '../shared/favorite-suggestion.js';
+import { dailyHabit, habitSeenId } from '../shared/world-habits.js';
 import { worldObjectTarget } from '../shared/world-walk.js';
 
 const $=(id)=>document.getElementById(id);
@@ -32,13 +33,14 @@ const panelStateKey='desafia-panel-collapsed-v1';
 const worldPlaceKey='desafia-world-place-v1';
 const placeEventSeenKey='desafia-place-event-seen-v1';
 const favoriteSuggestionSeenKey='desafia-favorite-suggestion-seen-v1';
+const worldHabitSeenKey='desafia-world-habit-seen-v1';
 const worldVisualMemory=createWorldVisualMemory(uiStorage);
 const companionJournal=createCompanionJournal(uiStorage);
 const TIMES=['dia','tarde','noite'];
 const PERIOD={manha:'de manhã',tarde:'à tarde',noite:'à noite'};
 
 let api=null,snap=null,tab='missoes',parentMode=false,unsubscribe=()=>{},refreshing=false,lastReaction=-1,reactionLockedUntil=0;
-let companionMood='calm',petClickTimer=0,suppressPetClick=false,petHoldTimer=0,idleTimer=0,worldRoutineTimer=0,lastWorldRoutine='',petTravelTimer=0,worldTravelTimer=0,worldVisitTimer=0,worldVisitReturnTimer=0,worldVisitBusy=false,placeEventTimer=0,favoriteSuggestionTimer=0;
+let companionMood='calm',petClickTimer=0,suppressPetClick=false,petHoldTimer=0,idleTimer=0,worldRoutineTimer=0,lastWorldRoutine='',petTravelTimer=0,worldTravelTimer=0,worldVisitTimer=0,worldVisitReturnTimer=0,worldVisitBusy=false,placeEventTimer=0,favoriteSuggestionTimer=0,worldHabitTimer=0;
 let worldPlace=(()=>{try{return uiStorage.getItem(worldPlaceKey)||'colina'}catch{return'colina'}})();
 let placeActionIndex=0;
 let companionProfileState={traits:[],likes:[],memories:[]};
@@ -110,7 +112,7 @@ syncViewport();
 window.addEventListener('pageshow',restoreGameLayout);
 window.addEventListener('resize',syncViewport,{passive:true});
 window.visualViewport?.addEventListener('resize',syncViewport,{passive:true});
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){restoreGameLayout();scheduleFavoriteSuggestion(18000);if(!qaEnabled)childNotifications.refresh(api,{visible:true});}});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){restoreGameLayout();scheduleFavoriteSuggestion(18000);scheduleWorldHabit(30000,{reset:true});if(!qaEnabled)childNotifications.refresh(api,{visible:true});}});
 
 $('petMount').innerHTML=petMarkup('main');
 $('connectPet').innerHTML=petMarkup('connect');
@@ -120,7 +122,7 @@ const mouth=petSvg.querySelector('.mouth');
 
 let timeIdx=(()=>{const h=new Date().getHours();return h>=6&&h<17?0:h<19?1:2})();
 $('scene').dataset.time=TIMES[timeIdx];
-$('skyBtn').addEventListener('click',()=>{timeIdx=(timeIdx+1)%3;$('scene').dataset.time=TIMES[timeIdx];refreshCompanionMood();syncWorldLife();});
+$('skyBtn').addEventListener('click',()=>{timeIdx=(timeIdx+1)%3;$('scene').dataset.time=TIMES[timeIdx];refreshCompanionMood();syncWorldLife();scheduleWorldHabit(26000,{reset:true});});
 $('panelToggle').addEventListener('click',()=>{
   const shell=document.querySelector('.game-shell');
   setPanelCollapsed(!shell.classList.contains('panel-collapsed'),{animate:true});
@@ -411,6 +413,41 @@ function scheduleFavoriteSuggestion(delay=65000){
     scheduleFavoriteSuggestion(22000);
   },delay);
 }
+function currentWorldHabit(){
+  return dailyHabit({
+    ...worldContext(),
+    currentPlace:worldPlace,
+    favorite:currentFavoritePlace()
+  });
+}
+function worldHabitSeen(habit=currentWorldHabit()){
+  const id=habitSeenId(placeDayKey(snap||{}),TIMES[timeIdx],habit);
+  return Boolean(id&&seenList(worldHabitSeenKey).includes(id));
+}
+function runWorldHabit(){
+  worldHabitTimer=0;
+  if(!snap||!canRunWorldRoutine())return false;
+  const habit=currentWorldHabit();
+  if(!habit||worldHabitSeen(habit))return false;
+  const target=habit.objectId?$(habit.objectId):null;
+  if(habit.objectId&&(!target||target.offsetParent===null))return false;
+  const seenId=habitSeenId(placeDayKey(snap||{}),TIMES[timeIdx],habit);
+  if(seenId)markSeen(worldHabitSeenKey,seenId);
+  visitWorldObject({
+    ...habit,
+    burst:habit.sceneEffect?.chars||['✨','💜']
+  },{haptics:false});
+  return true;
+}
+function scheduleWorldHabit(delay=88000,{reset=false}={}){
+  if(reset){clearTimeout(worldHabitTimer);worldHabitTimer=0}
+  if(reduce||!snap||worldHabitTimer||worldHabitSeen())return;
+  worldHabitTimer=setTimeout(()=>{
+    worldHabitTimer=0;
+    if(runWorldHabit())return;
+    scheduleWorldHabit(26000);
+  },delay);
+}
 function favoritePlaceView(){
   const favorite=currentFavoritePlace();
   if(!favorite)return '';
@@ -481,6 +518,7 @@ function visitWorldPlace(id){
     syncWorldLife();renderWorldMap();if(tab==='casa')renderPanel();
     say(worldPlaceById(next).speech,1800);
     scheduleCurrentPlaceEvent(2600);
+    scheduleWorldHabit(32000,{reset:true});
     setTimeout(()=>{scene.classList.remove('world-traveling');pet.classList.remove('march')},260);
   },reduce?0:220);
   closeModal('worldMapModal');
@@ -650,7 +688,7 @@ function renderPanel(){
   $('panel').innerHTML=tab==='missoes'?missionsView():tab==='casa'?houseView():tab==='premios'?rewardsView():tab==='familia'?familyView():tab==='jogos'?arcade.view():visualView();
   if(tab==='visual'){const svg=$('visualPreview')?.querySelector('svg');applyLook(svg,snap.look,snap.xp);$('petNameInput')?.addEventListener('change',async(e)=>{await savePet(e.target.value,snap.look)});}
 }
-function renderAll(){companionProfileState=companionJournal.observe(snap);renderStats();syncWorldLife();renderNext();renderPanel();scheduleCurrentPlaceEvent(3800);scheduleFavoriteSuggestion();}
+function renderAll(){companionProfileState=companionJournal.observe(snap);renderStats();syncWorldLife();renderNext();renderPanel();scheduleCurrentPlaceEvent(3800);scheduleFavoriteSuggestion();scheduleWorldHabit();}
 function missionReaction(m){performCompanionAction(missionCompanionAction(m));}
 function checkFresh(prev,next){
   if(prev){for(const m of next.missions||[]){const old=prev.missions?.find((x)=>x.id===m.id);if(old?.status==='pending'&&m.status==='done'){jump();burst(['⭐','✨',m.icon],14);missionReaction(m);}}}
