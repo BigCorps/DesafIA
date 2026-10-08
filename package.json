@@ -8,12 +8,13 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "check": "node scripts/check.mjs && npm run test:notifications && npm run test:companion && npm run test:adventures && npm run test:games",
+    "check": "node scripts/check.mjs && npm run test:notifications && npm run test:companion && npm run test:adventures && npm run test:games && npm run test:qa",
     "icons": "python3 brand/gerar_icones.py",
     "test:notifications": "node --test scripts/notifications.test.mjs",
     "test:companion": "node --test scripts/companion*.test.mjs",
     "test:adventures": "node --test scripts/adventures.test.mjs",
-    "test:games": "node --test scripts/games-plus.test.mjs"
+    "test:games": "node --test scripts/games-plus.test.mjs",
+    "test:qa": "node --test scripts/qa-state.test.mjs"
   },
   "engines": {
     "node": ">=22.12.0"
