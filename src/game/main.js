@@ -353,6 +353,9 @@ function syncWorldLife(){
   if($('worldPlaceLabel'))$('worldPlaceLabel').textContent=place.title.replace(' do Pipo','');
   const favorite=currentFavoritePlace();
   scene.classList.toggle('favorite-place',favorite?.id===place.id);
+  const activePattern=currentWorldPatterns().find((item)=>item.placeId===place.id)||null;
+  const activePreference=patternPreference(activePattern,{profile:companionProfileState,treasures:currentParkTreasures()});
+  if(activePreference)scene.dataset.preference=activePreference.id;else delete scene.dataset.preference;
   const placeAction=placeActionFor(place.id,{...worldContext(),index:placeActionIndex});
   if($('worldActionIcon'))$('worldActionIcon').textContent=placeAction.icon;
   if($('worldActionLabel'))$('worldActionLabel').textContent=placeAction.label;
@@ -417,10 +420,14 @@ function scheduleFavoriteSuggestion(delay=65000){
   },delay);
 }
 function currentWorldHabit(){
+  const patterns=currentWorldPatterns();
+  const pattern=patterns.find((item)=>item.placeId===worldPlace)||null;
+  const preference=patternPreference(pattern,{profile:companionProfileState,treasures:currentParkTreasures()});
   return dailyHabit({
     ...worldContext(),
     currentPlace:worldPlace,
-    favorite:currentFavoritePlace()
+    favorite:currentFavoritePlace(),
+    preference
   });
 }
 function worldHabitSeen(habit=currentWorldHabit()){
