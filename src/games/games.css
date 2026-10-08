@@ -190,3 +190,38 @@
 .park-treasure-grid article{display:grid;grid-template-columns:48px minmax(0,1fr) auto;align-items:center;gap:10px;padding:11px;border-radius:17px;background:linear-gradient(135deg,#fff8df,#f5f0ff);border:1px solid #e8dff9}
 .park-treasure-grid article>span{width:48px;height:48px;display:grid;place-items:center;border-radius:14px;background:#fff;font-size:28px;box-shadow:0 5px 14px rgba(70,50,130,.08)}
 .park-treasure-grid article strong,.park-treasure-grid article small{display:block}.park-treasure-grid article small{margin-top:2px;color:#776f91;font-size:10px;line-height:1.35}.park-treasure-grid article em{font-style:normal;font-size:20px}
+
+
+/* ---------- Quebra-Cabeça Plus ---------- */
+.g-puzzle{height:100%;display:flex;flex-direction:column;align-items:center;padding:12px;background:linear-gradient(#fff0e8,#fffaf6)}
+.g-puzzle-top,.g-robo-top,.g-kitchen-top{width:min(100%,430px);display:grid;grid-template-columns:72px 1fr 1fr;align-items:center;gap:10px;margin-bottom:10px}
+.g-puzzle-top>div:not(:first-child),.g-robo-top>div:not(:first-child),.g-kitchen-top>div:not(:first-child){background:#fff;border-radius:16px;padding:8px;text-align:center;box-shadow:0 5px 16px rgba(49,76,70,.08)}
+.g-puzzle-top small,.g-robo-top small,.g-kitchen-top small{display:block;color:#776f91;font-size:10px;font-weight:800}
+.g-puzzle-top strong,.g-robo-top strong,.g-kitchen-top strong{font:900 15px var(--display)}
+.g-puzzle-pet,.g-robo-pet,.g-kitchen-pet{width:68px;height:68px}
+.g-puzzle-pet.cheer,.g-robo-pet.cheer,.g-kitchen-pet.cheer{animation:gamePetCheer .65s ease}
+.g-puzzle-preview{display:grid;grid-template-columns:repeat(3,32px);gap:4px;margin:2px auto 10px;padding:7px;border-radius:14px;background:#fff8f3;box-shadow:inset 0 0 0 1px #f3d7c8}
+.g-puzzle-preview span{display:grid;place-items:center;width:32px;height:32px;border-radius:9px;background:#fff;font-size:18px}.g-puzzle-preview .blank{opacity:.42}
+.g-puzzle-board{width:min(82vw,360px);aspect-ratio:1;display:grid;grid-template-columns:repeat(3,1fr);gap:7px;padding:8px;border-radius:24px;background:#f1c8b3;box-shadow:0 12px 30px rgba(120,72,40,.15)}
+.g-puzzle-tile{position:relative;border:0;border-radius:18px;background:linear-gradient(145deg,#fff,#fff5ef);font-size:38px;box-shadow:0 5px 0 #d6a78f,0 8px 18px rgba(104,66,44,.1);cursor:pointer;touch-action:manipulation}
+.g-puzzle-tile span{display:block}.g-puzzle-tile small{position:absolute;right:7px;bottom:5px;color:#9a7867;font-size:9px;font-weight:950}.g-puzzle-tile.blank{background:rgba(255,255,255,.26);box-shadow:inset 0 0 0 2px rgba(255,255,255,.45)}
+.g-puzzle-tile:active{transform:translateY(2px);box-shadow:0 3px 0 #d6a78f}
+
+/* ---------- Caminho do Robô ---------- */
+.g-robo{height:100%;display:flex;flex-direction:column;align-items:center;padding:12px;background:linear-gradient(#e7f8ff,#f8fdff)}
+.g-robo-grid{width:min(76vw,330px);aspect-ratio:1;display:grid;grid-template-columns:repeat(5,1fr);gap:4px;padding:7px;border-radius:22px;background:#bfe4f1;box-shadow:0 12px 28px rgba(48,105,125,.14)}
+.g-robo-cell{display:grid;place-items:center;border-radius:10px;background:#f9feff;font-size:25px;min-width:0;min-height:0;box-shadow:inset 0 0 0 1px rgba(78,148,173,.12)}
+.g-robo-program{width:min(92vw,430px);min-height:52px;margin:10px 0 8px;padding:9px;border-radius:16px;background:#fff;display:flex;align-items:center;justify-content:center;gap:4px;flex-wrap:wrap;box-shadow:0 5px 16px rgba(48,105,125,.08)}
+.g-robo-program span{display:grid;place-items:center;width:32px;height:32px;border-radius:9px;background:#eff9ff;font-size:20px}.g-robo-program small{color:#8a829f;font-weight:750}
+.g-robo-controls{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;width:min(92vw,360px)}.g-robo-controls button{height:48px;border:0;border-radius:14px;background:#fff;font-size:23px;box-shadow:0 5px 0 #afd7e6;cursor:pointer}.g-robo-controls button:active{transform:translateY(2px);box-shadow:0 3px 0 #afd7e6}
+.g-robo-actions{display:flex;gap:8px;margin-top:10px}
+
+/* ---------- Cozinha Divertida ---------- */
+.g-kitchen{height:100%;display:flex;flex-direction:column;align-items:center;padding:12px;background:linear-gradient(#fff5d9,#fffdf8)}
+.g-kitchen-card{width:min(92vw,430px);display:flex;align-items:center;gap:12px;padding:10px 13px;border-radius:18px;background:#fff;box-shadow:0 6px 20px rgba(120,90,35,.08)}
+.g-kitchen-card small{display:block;color:#8a829f;font-size:10px;font-weight:800}.g-kitchen-card h3{margin:2px 0 0;font:900 17px var(--display)}.g-kitchen-dish{font-size:38px}
+.g-kitchen-recipe{display:flex;gap:7px;justify-content:center;flex-wrap:wrap;margin:10px 0}.g-kitchen-recipe span{width:42px;height:42px;display:grid;place-items:center;border-radius:13px;background:#fff;border:2px solid #f0dca5;font-size:24px}.g-kitchen-recipe span.next{border-color:#f2b84b;box-shadow:0 0 0 4px rgba(242,184,75,.16)}.g-kitchen-recipe span.done{background:#eaf8e8;border-color:#8fd38a;opacity:.72}
+.g-kitchen-bowl{width:min(92vw,430px);display:flex;align-items:center;gap:10px;justify-content:center;min-height:62px;padding:8px;border-radius:18px;background:rgba(255,255,255,.7);border:1px dashed #ebc96e}.g-kitchen-bowl>span{font-size:36px}.g-kitchen-bowl>div{display:flex;gap:3px;flex-wrap:wrap}.g-kitchen-bowl>div span{font-size:22px}
+.g-kitchen-ingredients{width:min(94vw,440px);display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:10px}.g-kitchen-ingredients button{min-height:72px;border:0;border-radius:15px;background:#fff;box-shadow:0 5px 0 #efd493,0 8px 18px rgba(120,90,35,.07);cursor:pointer}.g-kitchen-ingredients button span,.g-kitchen-ingredients button small{display:block}.g-kitchen-ingredients button span{font-size:29px}.g-kitchen-ingredients button small{margin-top:2px;color:#756b5b;font-size:9px;font-weight:850}.g-kitchen-ingredients button:active{transform:translateY(2px);box-shadow:0 3px 0 #efd493}
+@media(max-width:360px){.g-kitchen-ingredients{grid-template-columns:repeat(3,1fr)}.g-robo-cell{font-size:21px}.g-puzzle-tile{font-size:32px}}
+@media(prefers-reduced-motion:reduce){.g-puzzle-pet.cheer,.g-robo-pet.cheer,.g-kitchen-pet.cheer{animation:none!important}}
