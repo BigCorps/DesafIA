@@ -64,8 +64,11 @@ export function worldRoutineCandidates({ xp=0, period='dia', profile={}, treasur
 export function chooseWorldRoutine(input, index = 0) {
   const list = worldRoutineCandidates(input);
   if (!list.length) return null;
-  const safe = Math.abs(Number(index)||0) % list.length;
-  return list[safe];
+  const safe = Math.abs(Number(index)||0);
+  const trait = dominantTrait(input?.profile);
+  const favored = trait ? list.filter((item) => item.traits?.includes(trait)) : [];
+  const pool = favored.length && safe % 4 !== 0 ? favored : list;
+  return pool[safe % pool.length];
 }
 
 export function worldMoment({ xp=0, period='dia', profile={}, treasures=[] } = {}) {
