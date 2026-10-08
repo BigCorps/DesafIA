@@ -12,6 +12,8 @@ import { createLocal } from './local.js';
 import { setupPWA } from '../shared/pwa.js';
 import { initDistribution } from '../shared/platform.js';
 import { createArcade } from '../games/arcade.js';
+import { parkTreasures } from '../games/registry.js';
+import { chooseWorldRoutine, unlockedWorldDetails, worldMoment, worldRoutineCandidates, worldStage } from '../shared/world-life.js';
 
 const $=(id)=>document.getElementById(id);
 const esc=(v)=>String(v??'').replace(/[&<>"']/g,(c)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -24,12 +26,13 @@ const TIMES=['dia','tarde','noite'];
 const PERIOD={manha:'de manhã',tarde:'à tarde',noite:'à noite'};
 
 let api=null,snap=null,tab='missoes',parentMode=false,unsubscribe=()=>{},refreshing=false,lastReaction=-1,reactionLockedUntil=0;
-let companionMood='calm',petClickTimer=0,suppressPetClick=false,petHoldTimer=0,idleTimer=0;
+let companionMood='calm',petClickTimer=0,suppressPetClick=false,petHoldTimer=0,idleTimer=0,worldRoutineTimer=0,lastWorldRoutine='';
+let companionProfileState={traits:[],likes:[],memories:[]};
 let activeAdventure=null,adventureBusy=false;
 let qaController=null;
 const kidSb=qaEnabled?null:createKidSupabase();
 const childNotifications=createChildNotificationUI(kidSb);
-const arcade=createArcade({getApi:()=>api,getSnap:()=>snap,say:(t,ms)=>say(t,ms),toast:(a,b)=>toast(a,b),onChange:(goTab)=>{if(goTab){tab=goTab;expandPanel();renderPanel();return}if(tab==='jogos')renderPanel();}});
+const arcade=createArcade({getApi:()=>api,getSnap:()=>snap,say:(t,ms)=>say(t,ms),toast:(a,b)=>toast(a,b),onChange:(goTab)=>{syncWorldLife();if(goTab){tab=goTab;expandPanel();renderPanel();return}if(tab==='jogos')renderPanel();}});
 if(!qaEnabled)initDistribution();
 
 function petName(){return String(snap?.petName||$('onboardName')?.value||'Pipo').trim().slice(0,12)||'Pipo'}
@@ -87,7 +90,7 @@ const mouth=petSvg.querySelector('.mouth');
 
 let timeIdx=(()=>{const h=new Date().getHours();return h>=6&&h<17?0:h<19?1:2})();
 $('scene').dataset.time=TIMES[timeIdx];
-$('skyBtn').addEventListener('click',()=>{timeIdx=(timeIdx+1)%3;$('scene').dataset.time=TIMES[timeIdx];refreshCompanionMood();});
+$('skyBtn').addEventListener('click',()=>{timeIdx=(timeIdx+1)%3;$('scene').dataset.time=TIMES[timeIdx];refreshCompanionMood();syncWorldLife();});
 $('panelToggle').addEventListener('click',()=>setPanelCollapsed(!document.querySelector('.game-shell').classList.contains('panel-collapsed')));
 
 function openModal(id){$(id).classList.add('open');}
@@ -204,6 +207,52 @@ function burst(chars=['⭐','✨','💜'],n=12){
 function seenList(key){try{return JSON.parse(uiStorage.getItem(key)||'[]')}catch{return[]}}
 function markSeen(key,id){const a=[...new Set([...seenList(key),id])].slice(-100);uiStorage.setItem(key,JSON.stringify(a));}
 
+function currentParkTreasures(){return parkTreasures(arcade.status?.best||{})}
+function worldContext(){
+  return {xp:snap?.xp||0,period:TIMES[timeIdx],profile:companionProfileState,treasures:currentParkTreasures()};
+}
+function syncWorldLife(){
+  if(!snap)return;
+  const scene=$('scene'),unlocked=new Set(unlockedWorldDetails(snap.xp).map((item)=>item.id));
+  scene.dataset.worldStage=worldStage(snap.xp);
+  for(const id of ['sceneRug','sceneLamp','scenePlant','sceneBooks','sceneTree','sceneCushion','sceneTelescope','sceneLittleHouse','sceneFlowers']){
+    const el=$(id);if(!el)continue;const open=unlocked.has(id);
+    el.classList.toggle('unlocked',open);
+    if(el.matches('button')){el.hidden=!open;el.disabled=!open;el.setAttribute('aria-hidden',String(!open));}
+  }
+  const treasures=currentParkTreasures(),treasure=$('sceneTreasure');
+  if(treasure){
+    const latest=treasures.at(-1);
+    treasure.hidden=!latest;treasure.disabled=!latest;treasure.classList.toggle('unlocked',Boolean(latest));
+    if(latest){$('sceneTreasureIcon').textContent=latest.icon;treasure.dataset.treasureTitle=latest.title;treasure.setAttribute('aria-label',`Ver ${latest.title}, Tesouro do Parque`);}
+  }
+}
+function worldMomentView(){
+  const moment=worldMoment(worldContext());
+  return `<section class="world-moment"><span>${esc(moment.icon)}</span><div><small>Mundo de hoje</small><strong>${esc(moment.title)}</strong><p>${esc(moment.text)}</p></div></section>`;
+}
+function canRunWorldRoutine(){
+  return Boolean(snap&&document.visibilityState==='visible'&&!$('scene').classList.contains('speaking')&&!document.querySelector('.modal.open')&&!document.querySelector('.arcade-player:not([hidden])'));
+}
+function runWorldRoutine(forObject=null){
+  if(!canRunWorldRoutine())return;
+  const ctx=worldContext();
+  let candidates=worldRoutineCandidates(ctx).filter((item)=>!forObject||item.objectId===forObject);
+  if(!candidates.length)return;
+  if(candidates.length>1)candidates=candidates.filter((item)=>item.id!==lastWorldRoutine)||candidates;
+  const chosen=forObject?candidates[0]:chooseWorldRoutine({...ctx},Math.floor(Math.random()*1000));
+  const action=chosen&&candidates.find((item)=>item.id===chosen.id)||candidates[Math.floor(Math.random()*candidates.length)];
+  if(!action)return;
+  lastWorldRoutine=action.id;
+  const burstChars=action.treasure?[action.treasure.icon,'✨','💜']:['✨','💜'];
+  performCompanionAction({...action,burst:burstChars},{haptics:false});
+}
+function scheduleWorldRoutine(){
+  clearTimeout(worldRoutineTimer);
+  if(reduce)return;
+  worldRoutineTimer=setTimeout(()=>{runWorldRoutine();scheduleWorldRoutine();},52000+Math.random()*26000);
+}
+
 function adventureState(){
   return snap?.adventure||{day:null,eligible:false,completed_today:false,today:null,discoveries:[]};
 }
@@ -229,18 +278,21 @@ function discoveryAlbumView(){
 function rememberInteraction(action){
   if(!snap)return;
   companionJournal.action(snap,action);
+  companionProfileState=companionJournal.observe(snap);
+  syncWorldLife();
   if(tab==='casa')renderPanel();
   if(api?.kind==='cloud'&&typeof api.recordCompanionAction==='function'){
     api.recordCompanionAction(action).then((remote)=>{
       if(!snap||!remote)return;
       snap.companionJournal=remote;
-      companionJournal.observe(snap);
+      companionProfileState=companionJournal.observe(snap);
+      syncWorldLife();
       if(tab==='casa')renderPanel();
     }).catch((err)=>console.warn('companion sync',err));
   }
 }
 function companionJournalView(){
-  const profile=companionJournal.observe(snap);
+  const profile=companionProfileState?.traits?.length?companionProfileState:companionJournal.observe(snap);
   const traits=profile.traits.map((t)=>`<article class="companion-trait"><strong>${esc(t.icon)} ${esc(t.name)}</strong><small>${esc(t.expression)}</small><p>${esc(t.text)}</p></article>`).join('');
   const likes=profile.likes.length?`<ul class="companion-likes">${profile.likes.map((l)=>`<li>${esc(l.icon)} ${esc(l.name)}</li>`).join('')}</ul>`:'<p class="hint">Os gostos aparecem aos pouquinhos, nas brincadeiras e descobertas.</p>';
   const memories=profile.memories.length?`<ul class="companion-memories">${profile.memories.map((m)=>`<li><span aria-hidden="true">${esc(m.icon)}</span> ${esc(m.text)}</li>`).join('')}</ul>`:'<p class="hint">Nosso caderninho está pronto para guardar momentos juntos.</p>';
@@ -322,7 +374,7 @@ function rewardsView(){
   const rows=snap.rewards.map((r)=>{const can=snap.wallet>=r.cost;let act=r.pending?(parentMode?`<div><button class="btn btn-soft" data-act="deny" data-id="${r.id}">↩</button> <button class="btn btn-ok" data-act="deliver" data-id="${r.id}">✓</button></div>`:'<span class="badge badge-pending">Pedido feito</span>'):(can&&!parentMode?`<button class="btn btn-gold" data-act="redeem" data-id="${r.id}">Trocar</button>`:`<span class="badge badge-soft">${r.cost} ⭐</span>`);return `<li class="reward"><span class="item-icon">${esc(r.icon)}</span><span class="item-body"><strong>${esc(r.title)}</strong><small>${r.pending?'Esperando um adulto':can?'Você já tem estrelas suficientes':`Faltam ${Math.max(0,r.cost-snap.wallet)} estrelas`}</small></span>${act}</li>`;}).join('');
   return `<div class="panel-title"><h2>Prêmios combinados</h2><span class="badge badge-soft">${snap.wallet} ⭐</span></div><p class="hint">As estrelas viram experiências e combinados reais — nada é comprado dentro do jogo.</p><ul class="reward-list">${rows}</ul>`;
 }
-function houseView(){const level=levelOf(snap.xp);return `<div class="panel-title"><h2>Casa do ${esc(snap.petName)}</h2><span class="badge badge-soft">Nível ${level}</span></div><p class="hint">Sua rotina transforma o mundo do ${esc(snap.petName)}. Continue evoluindo para liberar novos cantinhos.</p><div class="house-grid">${HOUSE_ITEMS.map((it)=>`<article class="house-item ${level<it.level?'locked':''}"><span class="hi">${level<it.level?'🔒':it.icon}</span><strong>${esc(it.title)}</strong><small>${esc(it.text)}</small><em>${level<it.level?`Libera no nível ${it.level}`:'Desbloqueado ✓'}</em></article>`).join('')}</div>${companionJournalView()}${discoveryAlbumView()}`;}
+function houseView(){const level=levelOf(snap.xp);return `<div class="panel-title"><h2>Casa do ${esc(snap.petName)}</h2><span class="badge badge-soft">Nível ${level}</span></div><p class="hint">Sua rotina transforma o mundo do ${esc(snap.petName)}. Continue evoluindo para liberar novos cantinhos.</p>${worldMomentView()}<div class="house-grid">${HOUSE_ITEMS.map((it)=>`<article class="house-item ${level<it.level?'locked':''}"><span class="hi">${level<it.level?'🔒':it.icon}</span><strong>${esc(it.title)}</strong><small>${esc(it.text)}</small><em>${level<it.level?`Libera no nível ${it.level}`:'Desbloqueado ✓'}</em></article>`).join('')}</div>${companionJournalView()}${discoveryAlbumView()}`;}
 function rankRows(items=[]){const max=Math.max(1,...items.map((i)=>Number(i.points)||0));return items.map((it,i)=>`<li class="${it.me||it.mine?'me':''}"><span class="rank-pos">${i+1}</span><span class="rank-avatar">${esc(it.avatar||'🌟')}</span><span><span class="rank-name">${esc(it.nickname||'Família')}</span><span class="rank-bar"><i style="width:${Math.round((Number(it.points)||0)/max*100)}%"></i></span></span><span class="rank-points">${Number(it.points)||0} ⭐</span></li>`).join('');}
 function familyView(){
   const goal=snap.familyGoal||{current:snap.weekPoints,target:500};let extra='';
@@ -339,7 +391,7 @@ function renderPanel(){
   $('panel').innerHTML=tab==='missoes'?missionsView():tab==='casa'?houseView():tab==='premios'?rewardsView():tab==='familia'?familyView():tab==='jogos'?arcade.view():visualView();
   if(tab==='visual'){const svg=$('visualPreview')?.querySelector('svg');applyLook(svg,snap.look,snap.xp);$('petNameInput')?.addEventListener('change',async(e)=>{await savePet(e.target.value,snap.look)});}
 }
-function renderAll(){companionJournal.observe(snap);renderStats();renderNext();renderPanel();}
+function renderAll(){companionProfileState=companionJournal.observe(snap);renderStats();syncWorldLife();renderNext();renderPanel();}
 function missionReaction(m){performCompanionAction(missionCompanionAction(m));}
 function checkFresh(prev,next){
   if(prev){for(const m of next.missions||[]){const old=prev.missions?.find((x)=>x.id===m.id);if(old?.status==='pending'&&m.status==='done'){jump();burst(['⭐','✨',m.icon],14);missionReaction(m);}}}
@@ -402,7 +454,10 @@ document.querySelectorAll('[data-companion-action]').forEach((el)=>el.addEventLi
   rememberInteraction(el.id);
   performCompanionAction(worldCompanionAction(el.id,petName()));
 }));
+document.querySelectorAll('[data-world-detail]').forEach((el)=>el.addEventListener('click',()=>{if(!el.disabled)runWorldRoutine(el.id);}));
+$('sceneTreasure').addEventListener('click',()=>{if(!$('sceneTreasure').disabled)runWorldRoutine('sceneTreasure');});
 scheduleCompanionIdle();
+scheduleWorldRoutine();
 document.querySelector('.game-nav').addEventListener('click',(e)=>{const b=e.target.closest('[data-tab]');if(!b)return;tab=b.dataset.tab;renderPanel();});
 document.addEventListener('click',(e)=>{const b=e.target.closest('[data-tab-go]');if(!b)return;tab=b.dataset.tabGo;expandPanel();renderPanel();});
 
