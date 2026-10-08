@@ -8,7 +8,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "check": "node scripts/check.mjs && npm run test:notifications && npm run test:companion && npm run test:adventures && npm run test:games && npm run test:qa && npm run test:world && npm run test:places",
+    "check": "node scripts/check.mjs && npm run test:notifications && npm run test:companion && npm run test:adventures && npm run test:games && npm run test:qa && npm run test:world && npm run test:places && npm run test:walk",
     "icons": "python3 brand/gerar_icones.py",
     "test:notifications": "node --test scripts/notifications.test.mjs",
     "test:companion": "node --test scripts/companion*.test.mjs",
@@ -16,7 +16,8 @@
     "test:games": "node --test scripts/games-plus.test.mjs",
     "test:qa": "node --test scripts/qa-state.test.mjs",
     "test:world": "node --test scripts/world-life.test.mjs",
-    "test:places": "node --test scripts/world-places.test.mjs"
+    "test:places": "node --test scripts/world-places.test.mjs",
+    "test:walk": "node --test scripts/world-walk.test.mjs"
   },
   "engines": {
     "node": ">=22.12.0"
