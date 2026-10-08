@@ -87,22 +87,23 @@ if(!gameCss.includes('--app-height')||!gameCss.includes('.panel-chevron svg'))fa
 if(!gameCss.includes('0.5.3: personagem novamente apoiado no terreno')||!gameCss.includes('height:330px;min-height:0;bottom:-92px')||!gameCss.includes('.scene::after'))fail('correção de apoio do personagem 0.5.3 ausente');else ok('personagem apoiado no terreno no modo imersivo');
 if(!gameCss.includes('bottom:-13%'))fail('cobertura inferior do terreno imersivo ausente');else ok('terreno imersivo cobre a base da cena');
 
-// 0.6.0+ — parque de minijogos (10 grátis + expansão Plus)
+// 0.6.0+ — parque de minijogos (10 grátis + 6 Plus)
 const registry=readFileSync(join(root,'src/games/registry.js'),'utf8');
 const gameIds=[...registry.matchAll(/id: '([a-z]+)'/g)].map((m)=>m[1]);
 const plusIds=[...registry.matchAll(/id: '([a-z]+)'[^\n]*tier: 'plus'/g)].map((m)=>m[1]);
 const playSql=readFileSync(join(root,'supabase/migrations/20260930000200_desafia_minijogos.sql'),'utf8');
 const plusGamesSql=readFileSync(join(root,'supabase/migrations/20261008000500_desafia_plus_games.sql'),'utf8');
-const catalogBlock=(plusGamesSql.match(/create or replace function desafia\.game_catalog\(\)[\s\S]*?select array\[([\s\S]*?)\]::text\[\]/)||[])[1]||'';
+const plusPack2Sql=readFileSync(join(root,'supabase/migrations/20261008004500_desafia_plus_games_pack2.sql'),'utf8');
+const catalogBlock=(plusPack2Sql.match(/create or replace function desafia\.game_catalog\(\)[\s\S]*?select array\[([\s\S]*?)\]::text\[\]/)||[])[1]||'';
 const freeBlock=(plusGamesSql.match(/create or replace function desafia\.game_catalog_free\(\)[\s\S]*?select array\[([\s\S]*?)\]::text\[\]/)||[])[1]||'';
 const sqlIds=[...catalogBlock.matchAll(/'([a-z]+)'/g)].map((m)=>m[1]);
 const freeSqlIds=[...freeBlock.matchAll(/'([a-z]+)'/g)].map((m)=>m[1]);
-if(gameIds.length!==13)fail(`catálogo deveria ter 13 jogos, tem ${gameIds.length}`);else ok('catálogo com 13 minijogos');
-if(plusIds.length!==3)fail(`expansão deveria ter 3 jogos Plus, tem ${plusIds.length}`);else ok('expansão com 3 jogos Plus');
+if(gameIds.length!==16)fail(`catálogo deveria ter 16 jogos, tem ${gameIds.length}`);else ok('catálogo com 16 minijogos');
+if(plusIds.length!==6)fail(`expansão deveria ter 6 jogos Plus, tem ${plusIds.length}`);else ok('expansão com 6 jogos Plus');
 if(freeSqlIds.length!==10)fail(`catálogo grátis deveria ter 10 jogos, tem ${freeSqlIds.length}`);else ok('catálogo grátis preserva 10 jogos');
 if(gameIds.join(',')!==sqlIds.join(','))fail('catálogo do front diferente do catálogo final do banco');else ok('catálogo final igual no front e no banco');
 for(const id of gameIds){if(!existsSync(join(root,`src/games/${id}.js`)))fail(`arquivo do jogo ${id} ausente`)}
-ok('arquivos dos 13 jogos presentes');
+ok('arquivos dos 16 jogos presentes');
 if(!/grant execute on function desafia\.play_tick\(text, integer\) to anon/.test(playSql)||/grant[^;]*play_state[^;]*to (anon|authenticated)/.test(playSql))fail('permissões dos minijogos incorretas');else ok('RPCs do parque expostas só pelo segredo do aparelho');
 if(!/least\(\s*greatest\(coalesce\(p_seconds,0\),0\),\s*60,/.test(playSql))fail('play_tick sem limite de tempo real');else ok('tempo de jogo limitado no servidor');
 if(!plusGamesSql.includes("raise exception 'GAME_REQUIRES_PLUS'")||!plusGamesSql.includes('game_catalog_for_family'))fail('gate Plus dos jogos ausente no backend');else ok('gate Plus validado no backend');
