@@ -75,6 +75,27 @@ export const GAMES = [
     medals: [600, 1300, 2200],
     collectible: { icon: '🎵', title: 'Sino de Estrelas', text: 'Um sininho que parece tocar baixinho quando o céu está tranquilo.' },
     load: () => import('./ritmo.js')
+  },
+  {
+    id: 'quebracabeca', title: 'Quebra-Cabeça', icon: '🧩', color: '#F28A5B', ages: '5+', tier: 'plus',
+    how: 'Deslize as peças para montar a imagem. Quanto menos movimentos, maior a pontuação.',
+    medals: [500, 1000, 1700],
+    collectible: { icon: '🧩', title: 'Peça Arco-Íris', text: 'Uma peça especial que lembra que cada parte encontra seu lugar.' },
+    load: () => import('./quebracabeca.js')
+  },
+  {
+    id: 'robo', title: 'Caminho do Robô', icon: '🤖', color: '#4FB5D8', ages: '6+', tier: 'plus',
+    how: 'Monte uma sequência de setas e ajude o robô a chegar até a bateria.',
+    medals: [500, 1100, 1900],
+    collectible: { icon: '🔋', title: 'Bateria Brilhante', text: 'Uma bateria do robozinho, guardada depois de encontrar o caminho certo.' },
+    load: () => import('./robo.js')
+  },
+  {
+    id: 'cozinha', title: 'Cozinha Divertida', icon: '🍳', color: '#F2B84B', ages: '4+', tier: 'plus',
+    how: 'Veja a receita e toque nos ingredientes na ordem certa para preparar pratos divertidos.',
+    medals: [500, 1100, 1900],
+    collectible: { icon: '🥄', title: 'Colher Dourada', text: 'Uma colher de brincadeira para lembrar das receitas feitas em equipe.' },
+    load: () => import('./cozinha.js')
   }
 ];
 
