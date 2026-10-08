@@ -14,6 +14,7 @@ import { initDistribution } from '../shared/platform.js';
 import { createArcade } from '../games/arcade.js';
 import { parkTreasures } from '../games/registry.js';
 import { chooseWorldRoutine, unlockedWorldDetails, worldMoment, worldRoutineCandidates, worldStage } from '../shared/world-life.js';
+import { WORLD_PLACES, normalizeWorldPlace, placeShowsObject, worldPlaceById } from '../shared/world-places.js';
 
 const $=(id)=>document.getElementById(id);
 const esc=(v)=>String(v??'').replace(/[&<>"']/g,(c)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -21,12 +22,14 @@ const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const seenRewardKey='desafia-seen-rewards-v3';
 const seenDayKey='desafia-seen-day-v3';
 const panelStateKey='desafia-panel-collapsed-v1';
+const worldPlaceKey='desafia-world-place-v1';
 const companionJournal=createCompanionJournal(uiStorage);
 const TIMES=['dia','tarde','noite'];
 const PERIOD={manha:'de manhã',tarde:'à tarde',noite:'à noite'};
 
 let api=null,snap=null,tab='missoes',parentMode=false,unsubscribe=()=>{},refreshing=false,lastReaction=-1,reactionLockedUntil=0;
-let companionMood='calm',petClickTimer=0,suppressPetClick=false,petHoldTimer=0,idleTimer=0,worldRoutineTimer=0,lastWorldRoutine='',petTravelTimer=0;
+let companionMood='calm',petClickTimer=0,suppressPetClick=false,petHoldTimer=0,idleTimer=0,worldRoutineTimer=0,lastWorldRoutine='',petTravelTimer=0,worldTravelTimer=0;
+let worldPlace=(()=>{try{return uiStorage.getItem(worldPlaceKey)||'colina'}catch{return'colina'}})();
 let companionProfileState={traits:[],likes:[],memories:[]};
 let activeAdventure=null,adventureBusy=false;
 let qaController=null;
@@ -232,22 +235,49 @@ function worldContext(){
 function syncWorldLife(){
   if(!snap)return;
   const scene=$('scene'),unlocked=new Set(unlockedWorldDetails(snap.xp).map((item)=>item.id));
+  worldPlace=normalizeWorldPlace(worldPlace,snap.xp);
+  const place=worldPlaceById(worldPlace);
   scene.dataset.worldStage=worldStage(snap.xp);
+  scene.dataset.place=place.id;
+  if($('worldPlaceLabel'))$('worldPlaceLabel').textContent=place.title.replace(' do Pipo','');
   for(const id of ['sceneRug','sceneLamp','scenePlant','sceneBooks','sceneTree','sceneCushion','sceneTelescope','sceneLittleHouse','sceneFlowers']){
-    const el=$(id);if(!el)continue;const open=unlocked.has(id);
+    const el=$(id);if(!el)continue;const open=unlocked.has(id)&&placeShowsObject(place.id,id);
     el.classList.toggle('unlocked',open);
     if(el.matches('button')){el.hidden=!open;el.disabled=!open;el.setAttribute('aria-hidden',String(!open));}
   }
   const treasures=currentParkTreasures(),treasure=$('sceneTreasure');
   if(treasure){
-    const latest=treasures.at(-1);
-    treasure.hidden=!latest;treasure.disabled=!latest;treasure.classList.toggle('unlocked',Boolean(latest));
+    const latest=treasures.at(-1),open=Boolean(latest)&&placeShowsObject(place.id,'sceneTreasure');
+    treasure.hidden=!open;treasure.disabled=!open;treasure.classList.toggle('unlocked',open);
     if(latest){$('sceneTreasureIcon').textContent=latest.icon;treasure.dataset.treasureTitle=latest.title;treasure.setAttribute('aria-label',`Ver ${latest.title}, Tesouro do Parque`);}
   }
 }
 function worldMomentView(){
   const moment=worldMoment(worldContext());
   return `<section class="world-moment"><span>${esc(moment.icon)}</span><div><small>Mundo de hoje</small><strong>${esc(moment.title)}</strong><p>${esc(moment.text)}</p></div></section>`;
+}
+function worldPlacesMarkup(){
+  const level=levelOf(snap?.xp||0);
+  return WORLD_PLACES.map((place)=>{
+    const locked=level<place.level,active=worldPlace===place.id;
+    return `<button class="world-place-card ${active?'active':''} ${locked?'locked':''}" data-world-place="${place.id}" ${locked?'disabled':''}><span>${locked?'🔒':place.icon}</span><strong>${esc(place.title)}</strong><small>${locked?`Libera no nível ${place.level}`:esc(place.short)}</small></button>`;
+  }).join('');
+}
+function renderWorldMap(){if($('worldPlaceGrid'))$('worldPlaceGrid').innerHTML=worldPlacesMarkup()}
+function visitWorldPlace(id){
+  if(!snap)return;
+  const next=normalizeWorldPlace(id,snap.xp);
+  if(next!==id){toast('Lugar ainda fechado',`Esse cantinho abre no nível ${worldPlaceById(id).level}.`);return}
+  if(next===worldPlace){closeModal('worldMapModal');return}
+  const scene=$('scene'),pet=$('pet');clearTimeout(worldTravelTimer);
+  scene.classList.add('world-traveling');pet.classList.add('march');
+  worldTravelTimer=setTimeout(()=>{
+    worldPlace=next;try{uiStorage.setItem(worldPlaceKey,next)}catch{}
+    syncWorldLife();renderWorldMap();if(tab==='casa')renderPanel();
+    say(worldPlaceById(next).speech,1800);
+    setTimeout(()=>{scene.classList.remove('world-traveling');pet.classList.remove('march')},260);
+  },reduce?0:220);
+  closeModal('worldMapModal');
 }
 function canRunWorldRoutine(){
   return Boolean(snap&&document.visibilityState==='visible'&&!$('scene').classList.contains('speaking')&&!document.querySelector('.modal.open')&&!document.querySelector('.arcade-player:not([hidden])'));
@@ -397,7 +427,7 @@ function rewardsView(){
   const rows=snap.rewards.map((r)=>{const can=snap.wallet>=r.cost;let act=r.pending?(parentMode?`<div><button class="btn btn-soft" data-act="deny" data-id="${r.id}">↩</button> <button class="btn btn-ok" data-act="deliver" data-id="${r.id}">✓</button></div>`:'<span class="badge badge-pending">Pedido feito</span>'):(can&&!parentMode?`<button class="btn btn-gold" data-act="redeem" data-id="${r.id}">Trocar</button>`:`<span class="badge badge-soft">${r.cost} ⭐</span>`);return `<li class="reward"><span class="item-icon">${esc(r.icon)}</span><span class="item-body"><strong>${esc(r.title)}</strong><small>${r.pending?'Esperando um adulto':can?'Você já tem estrelas suficientes':`Faltam ${Math.max(0,r.cost-snap.wallet)} estrelas`}</small></span>${act}</li>`;}).join('');
   return `<div class="panel-title"><h2>Prêmios combinados</h2><span class="badge badge-soft">${snap.wallet} ⭐</span></div><p class="hint">As estrelas viram experiências e combinados reais — nada é comprado dentro do jogo.</p><ul class="reward-list">${rows}</ul>`;
 }
-function houseView(){const level=levelOf(snap.xp);return `<div class="panel-title"><h2>Casa do ${esc(snap.petName)}</h2><span class="badge badge-soft">Nível ${level}</span></div><p class="hint">Sua rotina transforma o mundo do ${esc(snap.petName)}. Continue evoluindo para liberar novos cantinhos.</p>${worldMomentView()}<div class="house-grid">${HOUSE_ITEMS.map((it)=>`<article class="house-item ${level<it.level?'locked':''}"><span class="hi">${level<it.level?'🔒':it.icon}</span><strong>${esc(it.title)}</strong><small>${esc(it.text)}</small><em>${level<it.level?`Libera no nível ${it.level}`:'Desbloqueado ✓'}</em></article>`).join('')}</div>${companionJournalView()}${discoveryAlbumView()}`;}
+function houseView(){const level=levelOf(snap.xp);return `<div class="panel-title"><h2>Casa do ${esc(snap.petName)}</h2><span class="badge badge-soft">Nível ${level}</span></div><p class="hint">Sua rotina transforma o mundo do ${esc(snap.petName)}. Continue evoluindo para liberar novos cantinhos.</p>${worldMomentView()}<section class="world-places-panel"><div class="world-places-title"><h3>Lugares do Pipo</h3><small>Toque para visitar</small></div><div class="world-place-grid compact">${worldPlacesMarkup()}</div></section><div class="house-grid">${HOUSE_ITEMS.map((it)=>`<article class="house-item ${level<it.level?'locked':''}"><span class="hi">${level<it.level?'🔒':it.icon}</span><strong>${esc(it.title)}</strong><small>${esc(it.text)}</small><em>${level<it.level?`Libera no nível ${it.level}`:'Desbloqueado ✓'}</em></article>`).join('')}</div>${companionJournalView()}${discoveryAlbumView()}`;}
 function rankRows(items=[]){const max=Math.max(1,...items.map((i)=>Number(i.points)||0));return items.map((it,i)=>`<li class="${it.me||it.mine?'me':''}"><span class="rank-pos">${i+1}</span><span class="rank-avatar">${esc(it.avatar||'🌟')}</span><span><span class="rank-name">${esc(it.nickname||'Família')}</span><span class="rank-bar"><i style="width:${Math.round((Number(it.points)||0)/max*100)}%"></i></span></span><span class="rank-points">${Number(it.points)||0} ⭐</span></li>`).join('');}
 function familyView(){
   const goal=snap.familyGoal||{current:snap.weekPoints,target:500};let extra='';
@@ -454,6 +484,10 @@ $('adultsClose').addEventListener('click',()=>closeModal('adultsModal'));
 $('celebrationClose').addEventListener('click',()=>closeModal('celebrationModal'));
 $('celebrationAdventure').addEventListener('click',()=>{closeModal('celebrationModal');openAdventure();});
 $('adventureBtn').addEventListener('click',openAdventure);
+$('worldMapBtn').addEventListener('click',()=>{renderWorldMap();openModal('worldMapModal');});
+$('worldMapClose').addEventListener('click',()=>closeModal('worldMapModal'));
+$('worldMapModal').addEventListener('click',(e)=>{if(e.target===$('worldMapModal'))closeModal('worldMapModal');});
+document.addEventListener('click',(e)=>{const b=e.target.closest('[data-world-place]');if(b)visitWorldPlace(b.dataset.worldPlace);});
 $('adventureClose').addEventListener('click',()=>closeModal('adventureModal'));
 $('adventureModal').addEventListener('click',(e)=>{if(e.target===$('adventureModal'))closeModal('adventureModal');});
 $('adventureBody').addEventListener('click',(e)=>{const b=e.target.closest('[data-adventure-choice]');if(b)chooseAdventure(b.dataset.adventureChoice,b);});
