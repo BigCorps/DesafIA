@@ -18,6 +18,7 @@ import { WORLD_PLACES, normalizeWorldPlace, placeShowsObject, worldPlaceById } f
 import { placeActionFor } from '../shared/place-actions.js';
 import { placeDailyEvent, placeDayKey, shouldAutoShowPlaceEvent } from '../shared/place-events.js';
 import { createWorldVisualMemory } from '../shared/world-visual.js';
+import { memoryWorldAction, visibleMemoryFor } from '../shared/world-memory.js';
 import { worldObjectTarget } from '../shared/world-walk.js';
 
 const $=(id)=>document.getElementById(id);
@@ -360,6 +361,16 @@ function syncWorldLife(){
     const shelf=$('worldTreasureShelf');
     if(shelf){shelf.hidden=place.id!=='parque'||treasures.length<2;shelf.innerHTML=treasures.slice(-3).map((t)=>`<span title="${esc(t.title)}">${esc(t.icon)}</span>`).join('');}
   }
+  const memory=visibleMemoryFor(place.id,{memories:companionProfileState?.memories||[],day:placeDayKey(snap||{})});
+  const token=$('worldMemoryToken');
+  if(token){
+    token.hidden=!memory;
+    token.disabled=!memory;
+    token.classList.toggle('unlocked',Boolean(memory));
+    token.dataset.memoryId=memory?.id||'';
+    $('worldMemoryIcon').textContent=memory?.icon||'💜';
+    token.setAttribute('aria-label',memory?`Relembrar: ${memory.text}`:'Relembrar um momento');
+  }
 }
 function worldMomentView(){
   const moment=worldMoment(worldContext());
@@ -668,6 +679,11 @@ document.querySelectorAll('[data-companion-action]').forEach((el)=>el.addEventLi
 }));
 document.querySelectorAll('[data-world-detail]').forEach((el)=>el.addEventListener('click',()=>{if(!el.disabled)runWorldRoutine(el.id);}));
 $('sceneTreasure').addEventListener('click',()=>{if(!$('sceneTreasure').disabled)runWorldRoutine('sceneTreasure');});
+$('worldMemoryToken').addEventListener('click',()=>{
+  const memory=visibleMemoryFor(worldPlace,{memories:companionProfileState?.memories||[],day:placeDayKey(snap||{})});
+  const action=memoryWorldAction(memory,worldPlace);
+  if(action)visitWorldObject(action,{haptics:true});
+});
 scheduleCompanionIdle();
 scheduleWorldRoutine();
 document.querySelector('.game-nav').addEventListener('click',(e)=>{const b=e.target.closest('[data-tab]');if(!b)return;tab=b.dataset.tab;renderPanel();});
