@@ -8,7 +8,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "check": "node scripts/check.mjs && npm run test:notifications && npm run test:companion && npm run test:adventures && npm run test:games && npm run test:qa && npm run test:world && npm run test:places && npm run test:walk && npm run test:place-actions && npm run test:place-events && npm run test:memory && npm run test:favorite",
+    "check": "node scripts/check.mjs && npm run test:notifications && npm run test:companion && npm run test:adventures && npm run test:games && npm run test:qa && npm run test:world && npm run test:places && npm run test:walk && npm run test:place-actions && npm run test:place-events && npm run test:memory && npm run test:favorite && npm run test:favorite-suggestion",
     "icons": "python3 brand/gerar_icones.py",
     "test:notifications": "node --test scripts/notifications.test.mjs",
     "test:companion": "node --test scripts/companion*.test.mjs",
@@ -21,7 +21,8 @@
     "test:place-actions": "node --test scripts/place-actions.test.mjs",
     "test:place-events": "node --test scripts/place-events.test.mjs",
     "test:memory": "node --test scripts/world-memory.test.mjs",
-    "test:favorite": "node --test scripts/world-favorite.test.mjs"
+    "test:favorite": "node --test scripts/world-favorite.test.mjs",
+    "test:favorite-suggestion": "node --test scripts/favorite-suggestion.test.mjs"
   },
   "engines": {
     "node": ">=22.12.0"
