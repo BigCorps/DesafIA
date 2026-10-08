@@ -455,43 +455,121 @@
 }
 
 
-/* Pipo troca de base conforme o painel:
-   expandido = montanha; minimizado = tapete.
-   Ambos usam bottom como referência para não depender da altura da viewport. */
+/* Palco responsivo do Pipo:
+   painel aberto = Pipo apoiado no tapete/montanha;
+   tela cheia = Pipo centralizado e o mundo sobe junto. */
 .game-shell{
-  --pet-rug-size:min(58vw,255px);
-  --pet-rug-bottom:calc(54px + var(--safe-bottom));
-  --pet-hill-bottom:clamp(72px,10dvh,96px);
+  --pet-expanded-size:205px;
+  --pet-full-size:min(58vw,255px);
+  --pet-expanded-y:66%;
+  --pet-full-y:52%;
+  --stage-ground-y:calc(var(--pet-full-y) + min(24vw,105px));
 }
+
+/* Cards informativos nunca cobrem o personagem. */
+.hud{z-index:5}
 .pet{
-  top:auto;
-  bottom:var(--pet-hill-bottom);
-  --pet-y:0%;
+  z-index:11;
+  top:var(--pet-expanded-y);
+  bottom:auto;
+  --pet-y:-50%;
+  width:var(--pet-expanded-size);
+  height:var(--pet-expanded-size);
+  transform:translate(-50%,var(--pet-y));
   transition:
-    bottom .52s cubic-bezier(.2,.8,.2,1),
-    width .52s cubic-bezier(.2,.8,.2,1),
-    height .52s cubic-bezier(.2,.8,.2,1),
+    top .54s cubic-bezier(.2,.8,.2,1),
+    width .54s cubic-bezier(.2,.8,.2,1),
+    height .54s cubic-bezier(.2,.8,.2,1),
     filter .28s ease,
     transform .3s;
 }
 .game-shell.panel-collapsed .pet{
-  top:auto;
-  bottom:var(--pet-rug-bottom);
-  --pet-y:0%;
-  width:var(--pet-rug-size);
-  height:var(--pet-rug-size);
+  top:var(--pet-full-y);
+  bottom:auto;
+  --pet-y:-50%;
+  width:var(--pet-full-size);
+  height:var(--pet-full-size);
 }
-.game-shell.panel-collapsed .scene-detail.rug{
-  bottom:45px;
-  width:min(62vw,270px);
-}
+
+/* O tapete acompanha o Pipo em vez de ficar preso ao rodapé. */
 .scene-detail.rug{
+  top:calc(var(--pet-expanded-y) + 70px);
+  bottom:auto;
   transition:
     opacity .45s ease,
     transform .45s cubic-bezier(.2,.9,.3,1.25),
-    width .52s cubic-bezier(.2,.8,.2,1),
-    bottom .52s cubic-bezier(.2,.8,.2,1);
+    width .54s cubic-bezier(.2,.8,.2,1),
+    top .54s cubic-bezier(.2,.8,.2,1);
 }
+.game-shell.panel-collapsed .scene-detail.rug{
+  top:calc(var(--stage-ground-y) - 18px);
+  bottom:auto;
+  width:min(62vw,270px);
+}
+
+/* No modo imersivo o próprio terreno forma um palco central. */
+.game-shell.panel-collapsed .hill.back{
+  height:58%;
+  bottom:-16%;
+}
+.game-shell.panel-collapsed .hill.front{
+  height:50%;
+  bottom:-17%;
+}
+.game-shell.panel-collapsed .scene::after{
+  height:0;
+  background:transparent;
+}
+
+/* Objetos acompanham o palco central em telas altas ou baixas. */
+.game-shell.panel-collapsed .scene-object.tree{
+  top:calc(var(--stage-ground-y) - 82px);
+  bottom:auto;
+}
+.game-shell.panel-collapsed .scene-object.books{
+  top:calc(var(--stage-ground-y) - 43px);
+  bottom:auto;
+}
+.game-shell.panel-collapsed .scene-object.plant{
+  top:calc(var(--stage-ground-y) - 38px);
+  bottom:auto;
+}
+.game-shell.panel-collapsed .scene-object.telescope{
+  top:calc(var(--stage-ground-y) - 103px);
+  bottom:auto;
+}
+.game-shell.panel-collapsed .scene-detail.lamp{
+  top:calc(var(--stage-ground-y) - 138px);
+  bottom:auto;
+}
+.game-shell.panel-collapsed .scene-detail.cushion{
+  top:calc(var(--stage-ground-y) - 28px);
+  bottom:auto;
+}
+.game-shell.panel-collapsed .scene-detail.little-house{
+  top:calc(var(--stage-ground-y) - 152px);
+  bottom:auto;
+}
+.game-shell.panel-collapsed .scene-detail.flowers{
+  top:calc(var(--stage-ground-y) - 27px);
+  bottom:auto;
+}
+.game-shell.panel-collapsed .scene-treasure{
+  top:calc(var(--stage-ground-y) - 98px);
+  bottom:auto;
+}
+.game-shell.panel-collapsed .adventure-float{
+  top:calc(var(--stage-ground-y) + 35px);
+  bottom:auto;
+}
+
+/* O balão acompanha o topo do personagem centralizado. */
+.game-shell.panel-collapsed .speech{
+  top:calc(var(--pet-full-y) - min(29vw,127.5px) - 58px);
+  bottom:auto;
+  max-width:min(78vw,280px);
+}
+
 .pet.pet-traveling{
   filter:drop-shadow(0 16px 15px rgba(30,72,70,.16));
 }
@@ -506,25 +584,27 @@
   50%{transform:translate(3px,-6px) rotate(7deg)}
 }
 
-/* Balão sempre acompanha a nova posição do Pipo no tapete. */
-.game-shell.panel-collapsed .speech{
-  bottom:calc(var(--pet-rug-bottom) + var(--pet-rug-size) + 12px);
-}
-
-/* Em telas mais baixas o Pipo continua chegando ao tapete,
-   apenas com escala menor para preservar espaço. */
 @media(max-height:720px){
   .game-shell{
-    --pet-rug-size:200px;
-    --pet-rug-bottom:calc(46px + var(--safe-bottom));
-    --pet-hill-bottom:62px;
+    --pet-expanded-size:170px;
+    --pet-full-size:200px;
+    --pet-expanded-y:67%;
+    --pet-full-y:51%;
+    --stage-ground-y:calc(var(--pet-full-y) + 92px);
+  }
+  .game-shell.panel-collapsed .scene-detail.rug{
+    top:calc(var(--stage-ground-y) - 17px);
+    width:230px;
   }
   .game-shell.panel-collapsed .speech{
-    bottom:calc(var(--pet-rug-bottom) + var(--pet-rug-size) + 10px);
+    top:calc(var(--pet-full-y) - 142px);
   }
 }
 @media(max-width:360px){
-  .game-shell{--pet-rug-size:220px}
+  .game-shell{
+    --pet-full-size:220px;
+    --stage-ground-y:calc(var(--pet-full-y) + 94px);
+  }
 }
 @media(prefers-reduced-motion:reduce){
   .pet,.scene-detail.rug{transition:none!important}
