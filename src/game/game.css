@@ -757,3 +757,74 @@
 @media(max-height:560px){
   .world-action-btn{top:166px}
 }
+
+
+/* Mundo 2.3 — o ambiente reage ao Pipo */
+.place-effect{
+  position:absolute;
+  z-index:19;
+  pointer-events:none;
+  font-size:clamp(16px,5vw,24px);
+  transform:translate(-50%,-50%) scale(.7);
+  opacity:0;
+  animation:placeEffectFloat 1.35s ease-out var(--fx-delay,0ms) forwards;
+  will-change:transform,opacity;
+}
+.place-effect.garden-bloom{filter:drop-shadow(0 3px 5px rgba(47,116,65,.18))}
+.place-effect.story-pages{animation-name:placeEffectStory}
+.place-effect.treasure-glow,.place-effect.park-sparkle{animation-name:placeEffectSpark}
+.place-effect.fireflies{font-size:15px;animation-name:placeEffectFirefly}
+.place-effect.hill-glow{animation-name:placeEffectGlow}
+.place-effect.shooting-star{
+  left:10%;
+  top:24%;
+  font-size:28px;
+  opacity:0;
+  animation:placeShootingStar 1.25s ease-in forwards;
+  filter:drop-shadow(0 0 9px rgba(255,247,171,.95));
+}
+@keyframes placeEffectFloat{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(.55)}
+  18%{opacity:1}
+  72%{opacity:.95}
+  100%{opacity:0;transform:translate(calc(-50% + var(--fx-x)),calc(-50% + var(--fx-y))) scale(1.12) rotate(7deg)}
+}
+@keyframes placeEffectStory{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(.55) rotate(-8deg)}
+  20%{opacity:1}
+  100%{opacity:0;transform:translate(calc(-50% + var(--fx-x)),calc(-50% + var(--fx-y))) scale(1) rotate(12deg)}
+}
+@keyframes placeEffectSpark{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(.3)}
+  28%{opacity:1;transform:translate(-50%,-50%) scale(1.2)}
+  100%{opacity:0;transform:translate(calc(-50% + var(--fx-x)),calc(-50% + var(--fx-y))) scale(.75)}
+}
+@keyframes placeEffectFirefly{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(.5)}
+  25%{opacity:.95}
+  55%{opacity:.45}
+  76%{opacity:1}
+  100%{opacity:0;transform:translate(calc(-50% + var(--fx-x)),calc(-50% + var(--fx-y))) scale(.8)}
+}
+@keyframes placeEffectGlow{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(.45)}
+  35%{opacity:1;transform:translate(-50%,-50%) scale(1.15)}
+  100%{opacity:0;transform:translate(calc(-50% + var(--fx-x)),calc(-50% + var(--fx-y))) scale(.85)}
+}
+@keyframes placeShootingStar{
+  0%{opacity:0;transform:translate(-50%,-50%) rotate(-16deg) scale(.7)}
+  12%{opacity:1}
+  86%{opacity:1}
+  100%{opacity:0;transform:translate(250px,120px) rotate(-16deg) scale(1.05)}
+}
+@media(prefers-reduced-motion:reduce){
+  .place-effect{
+    animation:none!important;
+    opacity:.72;
+    transform:translate(-50%,-50%) scale(.85)!important;
+  }
+  .place-effect.shooting-star{
+    left:50%;
+    top:28%;
+  }
+}
