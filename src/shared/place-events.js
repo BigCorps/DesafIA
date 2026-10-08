@@ -37,7 +37,7 @@ export function placeDailyEvent(placeId,{
     return{
       id:'jardim-visita',icon:trait==='caring'?'🐞':'🦋',title:'Uma visita no jardim',
       text:trait==='caring'?'Uma joaninha resolveu descansar perto da plantinha.':'Uma borboleta passou voando bem perto das flores.',
-      objectId:'sceneFlowers',effect:{kind:'garden-bloom',chars:[trait==='caring'?'🐞':'🦋','🌼','✨'],count:8},rarity:'common'
+      objectId:'scenePlant',effect:{kind:'garden-bloom',chars:[trait==='caring'?'🐞':'🦋','🌼','✨'],count:8},rarity:'common'
     };
   }
 
