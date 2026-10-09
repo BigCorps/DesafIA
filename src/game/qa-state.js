@@ -6,7 +6,7 @@ export function createQAState(storage) {
   const options = { storage, stateKey: 'state', playKey: 'play' };
   // QA models the parent's approval gate; the ordinary demo keeps its own rules.
   function localWithApproval() {
-    const local = createLocal(options);
+    const local = createLocal({ ...options, allowPlus: true });
     return {
       ...local,
       async playStatus() {

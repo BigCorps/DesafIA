@@ -46,7 +46,7 @@ O DesafIA é um jogo familiar de hábitos: a criança cumpre missões reais, um 
 - **Backend:** mesmo projeto Supabase da minhAi, em schema isolado `desafia`.
 - **Deploy:** projeto Vercel próprio do repositório DesafIA.
 - **Criança conectada:** segredo aleatório local do aparelho; **não usa Anonymous Auth**.
-- **Modo local:** funciona sem Supabase para demonstração e testes rápidos.
+- **Modo local:** funciona sem Supabase para demonstração e testes rápidos, com os 10 minijogos gratuitos (os 6 Plus exigem entitlement remoto; o QA isolado pode simulá-los).
 
 ```text
 BigCorps/DesafIA

@@ -104,7 +104,7 @@ async function checkInter(txid: string) {
   const data = raw?.data || raw
   return {
     paid: isPaidStatus(data?.status),
-    amount: data?.valor ?? data?.amount?.original ?? null,
+    amount: (data?.valor && typeof data.valor === 'object' ? data.valor.original : data?.valor) ?? data?.amount?.original ?? null,
     paidAt: data?.datapagamento || data?.horario || data?.paid_at || new Date().toISOString(),
     raw,
   }

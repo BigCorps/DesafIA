@@ -1,5 +1,5 @@
 import { DEFAULT_LOOK } from '../shared/pet.js';
-import { GAME_IDS } from '../games/registry.js';
+import { GAME_IDS, FREE_GAME_IDS } from '../games/registry.js';
 import { findAdventureChoice } from '../shared/adventures.js';
 
 const PLAY_KEY = 'desafia-local-play-v1';
@@ -93,7 +93,8 @@ function loadPlay(storage, key) {
 }
 function savePlay(p, storage, key) { try { storage.setItem(key, JSON.stringify(p)); } catch { /* ignora */ } }
 
-export function createLocal({ storage = globalThis.localStorage, stateKey = KEY, playKey = PLAY_KEY } = {}) {
+export function createLocal({ storage = globalThis.localStorage, stateKey = KEY, playKey = PLAY_KEY, allowPlus = false } = {}) {
+  const catalog = allowPlus ? GAME_IDS : FREE_GAME_IDS;
   const load = () => loadState(storage, stateKey);
   const save = (s) => saveState(s, storage, stateKey);
   const playLoad = () => loadPlay(storage, playKey);
@@ -108,8 +109,11 @@ export function createLocal({ storage = globalThis.localStorage, stateKey = KEY,
       used_seconds: p.used, remaining_seconds: Math.max(0, LOCAL_PLAY_MINUTES * 60 - p.used),
       started: p.startedDay === p.day,
       missions: { total, done, waiting, requires_approval: false, ok: total > 0 && done + waiting === total },
-      unlocked: p.unlocked, new_games: p.startedDay === p.day ? p.newGames : [], featured: p.startedDay === p.day ? p.featured : null,
-      disabled: [], best: p.best, plus:true, catalog:GAME_IDS
+      unlocked: p.unlocked.filter((id)=>catalog.includes(id)),
+      new_games: (p.startedDay === p.day ? p.newGames : []).filter((id)=>catalog.includes(id)),
+      featured: p.startedDay === p.day && catalog.includes(p.featured) ? p.featured : null,
+      disabled: [], best: Object.fromEntries(Object.entries(p.best).filter(([id])=>catalog.includes(id))),
+      plus:allowPlus, catalog
     };
   }
   let state = normalize(load()); save(state);
@@ -166,10 +170,12 @@ export function createLocal({ storage = globalThis.localStorage, stateKey = KEY,
       if(!st.missions.ok) throw new Error('MISSIONS_PENDING');
       const p=playLoad();
       if(p.startedDay===p.day) return st;
-      const pool=GAME_IDS.filter((id)=>!p.unlocked.includes(id)).sort(()=>Math.random()-0.5).slice(0,p.unlocked.length?1:2);
+      const available=p.unlocked.filter((id)=>catalog.includes(id));
+      const pool=catalog.filter((id)=>!available.includes(id)).sort(()=>Math.random()-0.5).slice(0,available.length?1:2);
       p.unlocked.push(...pool);
       p.newGames=pool;
-      p.featured=pool[0]||[...p.unlocked].filter((id)=>id!==p.featured).sort(()=>Math.random()-0.5)[0]||p.unlocked[0];
+      const unlocked=p.unlocked.filter((id)=>catalog.includes(id));
+      p.featured=pool[0]||unlocked.filter((id)=>id!==p.featured).sort(()=>Math.random()-0.5)[0]||unlocked[0];
       p.startedDay=p.day;
       playSave(p);
       return playState();
@@ -181,7 +187,8 @@ export function createLocal({ storage = globalThis.localStorage, stateKey = KEY,
       return { remaining_seconds: Math.max(0,LOCAL_PLAY_MINUTES*60-p.used) };
     },
     async gameScore(game,score){
-      const p=playLoad();if(!p.unlocked.includes(game))throw new Error('GAME_LOCKED');const before=Number(p.best[game]||0);
+      const p=playLoad();if(!catalog.includes(game))throw new Error('GAME_REQUIRES_PLUS');
+      if(!p.unlocked.includes(game))throw new Error('GAME_LOCKED');const before=Number(p.best[game]||0);
       p.best[game]=Math.max(before,Number(score)||0);playSave(p);
       return { best:p.best[game], record:p.best[game]>before };
     },
