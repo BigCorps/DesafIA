@@ -57,6 +57,8 @@ export function createCloud(sb) {
         p_label: /Android/i.test(navigator.userAgent) ? 'Android' : /iPhone|iPad/i.test(navigator.userAgent) ? 'iPhone/iPad' : 'Navegador'
       });
       if(error) throw error;
+      // Invalid codes return NULL so the failure counter commits in PostgreSQL.
+      if (!data) throw new Error('INVALID_CODE');
       return data;
     },
     markDone:(id)=>call('mark_mission_done',{p_mission:id}),

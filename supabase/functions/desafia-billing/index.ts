@@ -1,4 +1,5 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2'
+import { paymentAmountMatches } from './payment-validation.js'
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? ''
 const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -86,7 +87,7 @@ async function generatePix(amountCents: number, label: string, pixKey: string) {
   })
   const data = await response.json().catch(() => ({}))
   if (!response.ok || !data?.txid || !data?.pixCopiaECola) {
-    console.error('[desafia-billing] Inter create:', data)
+    console.error('[desafia-billing] Inter create failed:', response.status)
     throw new Error('pix_create_failed')
   }
   return data
@@ -103,7 +104,7 @@ async function checkInter(txid: string) {
   const data = raw?.data || raw
   return {
     paid: isPaidStatus(data?.status),
-    amount: Number(data?.valor ?? data?.amount?.original ?? 0),
+    amount: data?.valor ?? data?.amount?.original ?? null,
     paidAt: data?.datapagamento || data?.horario || data?.paid_at || new Date().toISOString(),
     raw,
   }
@@ -313,8 +314,8 @@ Deno.serve(async (req: Request) => {
       const result = await checkInter(String(invoice.txid))
       if (!result.paid) return json({ success: false, status: 'pending', payment: paymentPayload(invoice) })
 
-      const expected = Number(invoice.amount_cents || 0) / 100
-      if (Number.isFinite(result.amount) && result.amount > 0 && Math.abs(result.amount - expected) > 0.01) {
+      // Reject paid responses without a strictly valid, matching amount.
+      if (!paymentAmountMatches(result.amount, Number(invoice.amount_cents))) {
         return json({ error: 'paid_amount_mismatch' }, 409)
       }
 

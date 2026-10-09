@@ -8,16 +8,22 @@ function safeSet(key, value) {
   try { localStorage.setItem(key, value); } catch { /* storage indisponível */ }
 }
 
-export function initDistribution() {
-  let current = safeGet(DISTRIBUTION_KEY);
-  try {
-    const incoming = new URLSearchParams(location.search).get('store');
-    if (incoming && ALLOWED.has(incoming)) {
-      current = incoming;
-      safeSet(DISTRIBUTION_KEY, incoming);
-    }
-  } catch { /* URL indisponível */ }
+// Once tagged as Play, a URL parameter cannot downgrade it to web checkout.
+// Defense in depth only; JavaScript cannot attest a native TWA install.
+export function selectDistribution(current, incoming) {
+  if (current === 'play' || incoming === 'play') return 'play';
+  if (ALLOWED.has(incoming)) return incoming;
   return ALLOWED.has(current) ? current : 'web';
+}
+
+export function initDistribution() {
+  const current = safeGet(DISTRIBUTION_KEY);
+  let incoming = null;
+  try { incoming = new URLSearchParams(location.search).get('store'); }
+  catch { /* URL indisponível */ }
+  const selected = selectDistribution(current, incoming);
+  if (selected !== current) safeSet(DISTRIBUTION_KEY, selected);
+  return selected;
 }
 
 export function distributionChannel() {
